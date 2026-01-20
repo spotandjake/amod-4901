@@ -1,11 +1,10 @@
 using Antlr4.Runtime;
+using Compiler;
 
 [TestClass]
 public class DecafTests {
   private DecafLexer Setup(string text) {
-    AntlrInputStream inputStream = new AntlrInputStream(text);
-    DecafLexer lexer = new DecafLexer(inputStream);
-    return lexer;
+    return Compiler.Compiler.LexString(text, null); ;
   }
   // NOTE: There isn't a ton of testing on the lexer as it is rather basic in operation.
   //   Most of the stress testing of the lexer will happen during parser testing, as it 

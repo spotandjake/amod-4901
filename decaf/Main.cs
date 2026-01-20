@@ -6,12 +6,18 @@ using CommandLine;
 namespace Compiler {
   public class Compiler {
 #nullable enable
-    public static void LexString(string source, string? inputFileName) {
+    public static DecafLexer LexString(string source, string? inputFileName) {
       // Create Input Stream
       AntlrInputStream inputStream = new AntlrInputStream(source);
       // Create Lexer Instance
       DecafLexer lexer = new DecafLexer(inputStream);
-      // Print Tokens
+      return lexer;
+    }
+#nullable enable
+    public static void CompileString(string source, string? inputFileName) {
+      // Lexing
+      DecafLexer lexer = LexString(source, inputFileName);
+      // TODO: Parsing
       while (true) {
         IToken token = lexer.NextToken();
         if (token.Type == TokenConstants.EOF)
@@ -20,13 +26,6 @@ namespace Compiler {
           $"Token Type: {DecafLexer.ruleNames[token.Type - 1]}, Text: '{token.Text}'"
         );
       }
-      // TODO: Either return a lexer or return tokens
-    }
-#nullable enable
-    public static void CompileString(string source, string? inputFileName) {
-      // Lexing
-      LexString(source, inputFileName);
-      // TODO: Parsing
       // TODO: Semantic Analysis
       // TODO: TypeChecking
       // TODO: Code Generation

@@ -41,7 +41,7 @@ method_call_param_list: expr (COMMA expr)*;
 callout_arg: expr | STRINGLIT;
 
 // method_name: ((simple_expr | ID) DOT)? ID;
-method_name: ID; // TODO: Refactor out left recursion from method calls
+method_name: ID;
 
 expr:
   simple_expr
