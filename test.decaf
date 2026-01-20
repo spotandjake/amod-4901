@@ -2,9 +2,21 @@ class Main extends Base {
   int x, y;
   boolean flag;
 
-  int add(int a, int b)
-    int result;
+  int add(int a, int b) {
+    int test;
+    test = 1;
+    if (!false) {
+      return;
+    } else {
+      return;
+    }
+    while (true) {
+      return;
+    }
+    return 1 + 1;
+  }
 
-  void noop()
-    int temp;
+  void noop() {
+
+  }
 }

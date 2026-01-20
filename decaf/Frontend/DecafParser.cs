@@ -44,19 +44,22 @@ public partial class DecafParser : Parser {
 		DIV=32, LEQ=33, GEQ=34, GT=35, LT=36, EQ=37, NEQ=38, AND=39, OR=40, ASSIGN=41, 
 		STRINGLIT=42, CHARLIT=43, INTLIT=44, ID=45;
 	public const int
-		RULE_program = 0, RULE_class_decl = 1, RULE_optional_int_size = 2, RULE_method_decl = 3, 
+		RULE_program = 0, RULE_class_decl = 1, RULE_method_decl = 2, RULE_method_return_type = 3, 
 		RULE_method_decl_param = 4, RULE_method_decl_param_list = 5, RULE_method_decl_param_typ = 6, 
 		RULE_block = 7, RULE_var_decl = 8, RULE_var_bind_list = 9, RULE_var_bind = 10, 
-		RULE_type = 11, RULE_statement = 12, RULE_method_call = 13, RULE_method_call_param_list = 14, 
-		RULE_callout_arg = 15, RULE_method_name = 16, RULE_expr = 17, RULE_simple_expr = 18, 
-		RULE_location = 19, RULE_bin_op = 20, RULE_arith_op = 21, RULE_rel_op = 22, 
-		RULE_eq_op = 23, RULE_cond_op = 24, RULE_literal = 25, RULE_bool_literal = 26;
+		RULE_type = 11, RULE_statement = 12, RULE_assign_stmt = 13, RULE_if_stmt = 14, 
+		RULE_while_stmt = 15, RULE_return_stmt = 16, RULE_method_call = 17, RULE_method_call_args = 18, 
+		RULE_callout = 19, RULE_callout_args = 20, RULE_expr = 21, RULE_simple_expr = 22, 
+		RULE_location = 23, RULE_bin_op = 24, RULE_arith_op = 25, RULE_rel_op = 26, 
+		RULE_eq_op = 27, RULE_cond_op = 28, RULE_literal = 29, RULE_bool_literal = 30, 
+		RULE_optional_int_size = 31;
 	public static readonly string[] ruleNames = {
-		"program", "class_decl", "optional_int_size", "method_decl", "method_decl_param", 
+		"program", "class_decl", "method_decl", "method_return_type", "method_decl_param", 
 		"method_decl_param_list", "method_decl_param_typ", "block", "var_decl", 
-		"var_bind_list", "var_bind", "type", "statement", "method_call", "method_call_param_list", 
-		"callout_arg", "method_name", "expr", "simple_expr", "location", "bin_op", 
-		"arith_op", "rel_op", "eq_op", "cond_op", "literal", "bool_literal"
+		"var_bind_list", "var_bind", "type", "statement", "assign_stmt", "if_stmt", 
+		"while_stmt", "return_stmt", "method_call", "method_call_args", "callout", 
+		"callout_args", "expr", "simple_expr", "location", "bin_op", "arith_op", 
+		"rel_op", "eq_op", "cond_op", "literal", "bool_literal", "optional_int_size"
 	};
 
 	private static readonly string[] _LiteralNames = {
@@ -127,17 +130,17 @@ public partial class DecafParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 55;
+			State = 65;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			do {
 				{
 				{
-				State = 54;
+				State = 64;
 				class_decl();
 				}
 				}
-				State = 57;
+				State = 67;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			} while ( _la==CLASS );
@@ -191,55 +194,55 @@ public partial class DecafParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 59;
+			State = 69;
 			Match(CLASS);
-			State = 60;
+			State = 70;
 			Match(ID);
-			State = 63;
+			State = 73;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==EXTENDS) {
 				{
-				State = 61;
+				State = 71;
 				Match(EXTENDS);
-				State = 62;
+				State = 72;
 				Match(ID);
 				}
 			}
 
-			State = 65;
+			State = 75;
 			Match(LBRACE);
-			State = 69;
+			State = 79;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,2,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 66;
+					State = 76;
 					var_decl();
 					}
 					} 
 				}
-				State = 71;
+				State = 81;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,2,Context);
 			}
-			State = 75;
+			State = 85;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 35184372105474L) != 0)) {
 				{
 				{
-				State = 72;
+				State = 82;
 				method_decl();
 				}
 				}
-				State = 77;
+				State = 87;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 78;
+			State = 88;
 			Match(RBRACE);
 			}
 		}
@@ -254,33 +257,39 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
-	public partial class Optional_int_sizeContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTLIT() { return GetToken(DecafParser.INTLIT, 0); }
-		public Optional_int_sizeContext(ParserRuleContext parent, int invokingState)
+	public partial class Method_declContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Method_return_typeContext method_return_type() {
+			return GetRuleContext<Method_return_typeContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public Method_decl_paramContext method_decl_param() {
+			return GetRuleContext<Method_decl_paramContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block() {
+			return GetRuleContext<BlockContext>(0);
+		}
+		public Method_declContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_optional_int_size; } }
+		public override int RuleIndex { get { return RULE_method_decl; } }
 	}
 
 	[RuleVersion(0)]
-	public Optional_int_sizeContext optional_int_size() {
-		Optional_int_sizeContext _localctx = new Optional_int_sizeContext(Context, State);
-		EnterRule(_localctx, 4, RULE_optional_int_size);
-		int _la;
+	public Method_declContext method_decl() {
+		Method_declContext _localctx = new Method_declContext(Context, State);
+		EnterRule(_localctx, 4, RULE_method_decl);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 81;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if (_la==INTLIT) {
-				{
-				State = 80;
-				Match(INTLIT);
-				}
-			}
-
+			State = 90;
+			method_return_type();
+			State = 91;
+			Match(ID);
+			State = 92;
+			method_decl_param();
+			State = 93;
+			block();
 			}
 		}
 		catch (RecognitionException re) {
@@ -294,58 +303,44 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
-	public partial class Method_declContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public Method_decl_paramContext method_decl_param() {
-			return GetRuleContext<Method_decl_paramContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block() {
-			return GetRuleContext<BlockContext>(0);
-		}
+	public partial class Method_return_typeContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
 			return GetRuleContext<TypeContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode VOID() { return GetToken(DecafParser.VOID, 0); }
-		public Method_declContext(ParserRuleContext parent, int invokingState)
+		public Method_return_typeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_method_decl; } }
+		public override int RuleIndex { get { return RULE_method_return_type; } }
 	}
 
 	[RuleVersion(0)]
-	public Method_declContext method_decl() {
-		Method_declContext _localctx = new Method_declContext(Context, State);
-		EnterRule(_localctx, 6, RULE_method_decl);
+	public Method_return_typeContext method_return_type() {
+		Method_return_typeContext _localctx = new Method_return_typeContext(Context, State);
+		EnterRule(_localctx, 6, RULE_method_return_type);
 		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 85;
+			State = 97;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case BOOLEAN:
 			case INT:
 			case ID:
+				EnterOuterAlt(_localctx, 1);
 				{
-				State = 83;
+				State = 95;
 				type();
 				}
 				break;
 			case VOID:
+				EnterOuterAlt(_localctx, 2);
 				{
-				State = 84;
+				State = 96;
 				Match(VOID);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
-			}
-			State = 87;
-			Match(ID);
-			State = 88;
-			method_decl_param();
-			State = 89;
-			block();
 			}
 		}
 		catch (RecognitionException re) {
@@ -380,19 +375,19 @@ public partial class DecafParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 91;
+			State = 99;
 			Match(LPAREN);
-			State = 93;
+			State = 101;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 35184372089090L) != 0)) {
 				{
-				State = 92;
+				State = 100;
 				method_decl_param_list();
 				}
 			}
 
-			State = 95;
+			State = 103;
 			Match(RPAREN);
 			}
 		}
@@ -433,21 +428,21 @@ public partial class DecafParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 97;
+			State = 105;
 			method_decl_param_typ();
-			State = 102;
+			State = 110;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				State = 98;
+				State = 106;
 				Match(COMMA);
-				State = 99;
+				State = 107;
 				method_decl_param_typ();
 				}
 				}
-				State = 104;
+				State = 112;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -482,36 +477,26 @@ public partial class DecafParser : Parser {
 	public Method_decl_param_typContext method_decl_param_typ() {
 		Method_decl_param_typContext _localctx = new Method_decl_param_typContext(Context, State);
 		EnterRule(_localctx, 12, RULE_method_decl_param_typ);
+		int _la;
 		try {
+			EnterOuterAlt(_localctx, 1);
+			{
 			State = 113;
+			type();
+			State = 114;
+			Match(ID);
+			State = 117;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,8,Context) ) {
-			case 1:
-				EnterOuterAlt(_localctx, 1);
+			_la = TokenStream.LA(1);
+			if (_la==LBRACK) {
 				{
-				{
-				State = 105;
-				type();
-				State = 106;
-				Match(ID);
-				}
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				{
-				State = 108;
-				type();
-				State = 109;
-				Match(ID);
-				State = 110;
+				State = 115;
 				Match(LBRACK);
-				State = 111;
+				State = 116;
 				Match(RBRACK);
 				}
-				}
-				break;
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -526,26 +511,19 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class BlockContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
-			return GetRuleContext<TypeContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LBRACE() { return GetToken(DecafParser.LBRACE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RBRACE() { return GetToken(DecafParser.RBRACE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public Var_declContext[] var_decl() {
+			return GetRuleContexts<Var_declContext>();
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] ID() { return GetTokens(DecafParser.ID); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID(int i) {
-			return GetToken(DecafParser.ID, i);
+		[System.Diagnostics.DebuggerNonUserCode] public Var_declContext var_decl(int i) {
+			return GetRuleContext<Var_declContext>(i);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] LBRACK() { return GetTokens(DecafParser.LBRACK); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LBRACK(int i) {
-			return GetToken(DecafParser.LBRACK, i);
+		[System.Diagnostics.DebuggerNonUserCode] public StatementContext[] statement() {
+			return GetRuleContexts<StatementContext>();
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public Optional_int_sizeContext[] optional_int_size() {
-			return GetRuleContexts<Optional_int_sizeContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public Optional_int_sizeContext optional_int_size(int i) {
-			return GetRuleContext<Optional_int_sizeContext>(i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] RBRACK() { return GetTokens(DecafParser.RBRACK); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RBRACK(int i) {
-			return GetToken(DecafParser.RBRACK, i);
+		[System.Diagnostics.DebuggerNonUserCode] public StatementContext statement(int i) {
+			return GetRuleContext<StatementContext>(i);
 		}
 		public BlockContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
@@ -558,52 +536,45 @@ public partial class DecafParser : Parser {
 	public BlockContext block() {
 		BlockContext _localctx = new BlockContext(Context, State);
 		EnterRule(_localctx, 14, RULE_block);
+		int _la;
 		try {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 115;
-			type();
-			State = 122;
+			State = 119;
+			Match(LBRACE);
+			State = 123;
 			ErrorHandler.Sync(this);
-			_alt = 1;
-			do {
-				switch (_alt) {
-				case 1:
+			_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
+			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
+				if ( _alt==1 ) {
 					{
-					State = 122;
-					ErrorHandler.Sync(this);
-					switch ( Interpreter.AdaptivePredict(TokenStream,9,Context) ) {
-					case 1:
-						{
-						State = 116;
-						Match(ID);
-						}
-						break;
-					case 2:
-						{
-						{
-						State = 117;
-						Match(ID);
-						State = 118;
-						Match(LBRACK);
-						State = 119;
-						optional_int_size();
-						State = 120;
-						Match(RBRACK);
-						}
-						}
-						break;
+					{
+					State = 120;
+					var_decl();
 					}
-					}
-					break;
-				default:
-					throw new NoViableAltException(this);
+					} 
 				}
-				State = 124;
+				State = 125;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,10,Context);
-			} while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER );
+				_alt = Interpreter.AdaptivePredict(TokenStream,8,Context);
+			}
+			State = 129;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 35184374220932L) != 0)) {
+				{
+				{
+				State = 126;
+				statement();
+				}
+				}
+				State = 131;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+			}
+			State = 132;
+			Match(RBRACE);
 			}
 		}
 		catch (RecognitionException re) {
@@ -639,11 +610,11 @@ public partial class DecafParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 126;
+			State = 134;
 			type();
-			State = 127;
+			State = 135;
 			var_bind_list();
-			State = 128;
+			State = 136;
 			Match(SEMI);
 			}
 		}
@@ -684,21 +655,21 @@ public partial class DecafParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 130;
+			State = 138;
 			var_bind();
-			State = 135;
+			State = 143;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				State = 131;
+				State = 139;
 				Match(COMMA);
-				State = 132;
+				State = 140;
 				var_bind();
 				}
 				}
-				State = 137;
+				State = 145;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -733,32 +704,26 @@ public partial class DecafParser : Parser {
 	public Var_bindContext var_bind() {
 		Var_bindContext _localctx = new Var_bindContext(Context, State);
 		EnterRule(_localctx, 20, RULE_var_bind);
+		int _la;
 		try {
-			State = 144;
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 146;
+			Match(ID);
+			State = 151;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,12,Context) ) {
-			case 1:
-				EnterOuterAlt(_localctx, 1);
+			_la = TokenStream.LA(1);
+			if (_la==LBRACK) {
 				{
-				State = 138;
-				Match(ID);
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				{
-				State = 139;
-				Match(ID);
-				State = 140;
+				State = 147;
 				Match(LBRACK);
-				State = 141;
+				State = 148;
 				optional_int_size();
-				State = 142;
+				State = 149;
 				Match(RBRACK);
 				}
-				}
-				break;
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -773,274 +738,60 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class TypeContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INT() { return GetToken(DecafParser.INT, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOOLEAN() { return GetToken(DecafParser.BOOLEAN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
 		public TypeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_type; } }
+	 
+		public TypeContext() { }
+		public virtual void CopyFrom(TypeContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class CustomTypeContext : TypeContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
+		public CustomTypeContext(TypeContext context) { CopyFrom(context); }
+	}
+	public partial class BooleanTypeContext : TypeContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOOLEAN() { return GetToken(DecafParser.BOOLEAN, 0); }
+		public BooleanTypeContext(TypeContext context) { CopyFrom(context); }
+	}
+	public partial class IntTypeContext : TypeContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INT() { return GetToken(DecafParser.INT, 0); }
+		public IntTypeContext(TypeContext context) { CopyFrom(context); }
 	}
 
 	[RuleVersion(0)]
 	public TypeContext type() {
 		TypeContext _localctx = new TypeContext(Context, State);
 		EnterRule(_localctx, 22, RULE_type);
-		int _la;
 		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 146;
-			_la = TokenStream.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 35184372089090L) != 0)) ) {
-			ErrorHandler.RecoverInline(this);
-			}
-			else {
-				ErrorHandler.ReportMatch(this);
-			    Consume();
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class StatementContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public LocationContext location() {
-			return GetRuleContext<LocationContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ASSIGN() { return GetToken(DecafParser.ASSIGN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
-			return GetRuleContext<ExprContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(DecafParser.SEMI, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public Method_callContext method_call() {
-			return GetRuleContext<Method_callContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode IF() { return GetToken(DecafParser.IF, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public BlockContext[] block() {
-			return GetRuleContexts<BlockContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block(int i) {
-			return GetRuleContext<BlockContext>(i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ELSE() { return GetToken(DecafParser.ELSE, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode WHILE() { return GetToken(DecafParser.WHILE, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RETURN() { return GetToken(DecafParser.RETURN, 0); }
-		public StatementContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_statement; } }
-	}
-
-	[RuleVersion(0)]
-	public StatementContext statement() {
-		StatementContext _localctx = new StatementContext(Context, State);
-		EnterRule(_localctx, 24, RULE_statement);
-		int _la;
-		try {
-			State = 177;
-			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,15,Context) ) {
-			case 1:
-				EnterOuterAlt(_localctx, 1);
-				{
-				State = 148;
-				location();
-				State = 149;
-				Match(ASSIGN);
-				State = 150;
-				expr(0);
-				State = 151;
-				Match(SEMI);
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 153;
-				method_call();
-				State = 154;
-				Match(SEMI);
-				}
-				break;
-			case 3:
-				EnterOuterAlt(_localctx, 3);
-				{
-				State = 156;
-				Match(IF);
-				State = 157;
-				Match(LPAREN);
-				State = 158;
-				expr(0);
-				State = 159;
-				Match(RPAREN);
-				State = 160;
-				block();
-				State = 163;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
-				if (_la==ELSE) {
-					{
-					State = 161;
-					Match(ELSE);
-					State = 162;
-					block();
-					}
-				}
-
-				}
-				break;
-			case 4:
-				EnterOuterAlt(_localctx, 4);
-				{
-				State = 165;
-				Match(WHILE);
-				State = 166;
-				Match(LPAREN);
-				State = 167;
-				expr(0);
-				State = 168;
-				Match(RPAREN);
-				State = 169;
-				block();
-				}
-				break;
-			case 5:
-				EnterOuterAlt(_localctx, 5);
-				{
-				State = 171;
-				Match(RETURN);
-				State = 173;
-				ErrorHandler.Sync(this);
-				switch ( Interpreter.AdaptivePredict(TokenStream,14,Context) ) {
-				case 1:
-					{
-					State = 172;
-					expr(0);
-					}
-					break;
-				}
-				State = 175;
-				Match(SEMI);
-				}
-				break;
-			case 6:
-				EnterOuterAlt(_localctx, 6);
-				{
-				State = 176;
-				block();
-				}
-				break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class Method_callContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public Method_nameContext method_name() {
-			return GetRuleContext<Method_nameContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public Method_call_param_listContext method_call_param_list() {
-			return GetRuleContext<Method_call_param_listContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CALLOUT() { return GetToken(DecafParser.CALLOUT, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRINGLIT() { return GetToken(DecafParser.STRINGLIT, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] COMMA() { return GetTokens(DecafParser.COMMA); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode COMMA(int i) {
-			return GetToken(DecafParser.COMMA, i);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public Callout_argContext[] callout_arg() {
-			return GetRuleContexts<Callout_argContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public Callout_argContext callout_arg(int i) {
-			return GetRuleContext<Callout_argContext>(i);
-		}
-		public Method_callContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_method_call; } }
-	}
-
-	[RuleVersion(0)]
-	public Method_callContext method_call() {
-		Method_callContext _localctx = new Method_callContext(Context, State);
-		EnterRule(_localctx, 26, RULE_method_call);
-		int _la;
-		try {
-			State = 197;
+			State = 156;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
-			case ID:
+			case INT:
+				_localctx = new IntTypeContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 179;
-				method_name();
-				State = 180;
-				Match(LPAREN);
-				State = 182;
-				ErrorHandler.Sync(this);
-				switch ( Interpreter.AdaptivePredict(TokenStream,16,Context) ) {
-				case 1:
-					{
-					State = 181;
-					method_call_param_list();
-					}
-					break;
-				}
-				State = 184;
-				Match(RPAREN);
+				State = 153;
+				Match(INT);
 				}
 				break;
-			case CALLOUT:
+			case BOOLEAN:
+				_localctx = new BooleanTypeContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 186;
-				Match(CALLOUT);
-				State = 187;
-				Match(LPAREN);
-				State = 188;
-				Match(STRINGLIT);
-				State = 193;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
-				while (_la==COMMA) {
-					{
-					{
-					State = 189;
-					Match(COMMA);
-					State = 190;
-					callout_arg();
-					}
-					}
-					State = 195;
-					ErrorHandler.Sync(this);
-					_la = TokenStream.LA(1);
+				State = 154;
+				Match(BOOLEAN);
 				}
-				State = 196;
-				Match(RPAREN);
+				break;
+			case ID:
+				_localctx = new CustomTypeContext(_localctx);
+				EnterOuterAlt(_localctx, 3);
+				{
+				State = 155;
+				Match(ID);
 				}
 				break;
 			default:
@@ -1058,50 +809,446 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
-	public partial class Method_call_param_listContext : ParserRuleContext {
+	public partial class StatementContext : ParserRuleContext {
+		public StatementContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_statement; } }
+	 
+		public StatementContext() { }
+		public virtual void CopyFrom(StatementContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class IfStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public If_stmtContext if_stmt() {
+			return GetRuleContext<If_stmtContext>(0);
+		}
+		public IfStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+	public partial class MethodCallStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Method_callContext method_call() {
+			return GetRuleContext<Method_callContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(DecafParser.SEMI, 0); }
+		public MethodCallStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+	public partial class ReturnStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Return_stmtContext return_stmt() {
+			return GetRuleContext<Return_stmtContext>(0);
+		}
+		public ReturnStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+	public partial class BlockStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block() {
+			return GetRuleContext<BlockContext>(0);
+		}
+		public BlockStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+	public partial class WhileStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public While_stmtContext while_stmt() {
+			return GetRuleContext<While_stmtContext>(0);
+		}
+		public WhileStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+	public partial class AssignStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Assign_stmtContext assign_stmt() {
+			return GetRuleContext<Assign_stmtContext>(0);
+		}
+		public AssignStatementContext(StatementContext context) { CopyFrom(context); }
+	}
+
+	[RuleVersion(0)]
+	public StatementContext statement() {
+		StatementContext _localctx = new StatementContext(Context, State);
+		EnterRule(_localctx, 24, RULE_statement);
+		try {
+			State = 166;
+			ErrorHandler.Sync(this);
+			switch ( Interpreter.AdaptivePredict(TokenStream,13,Context) ) {
+			case 1:
+				_localctx = new AssignStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 1);
+				{
+				State = 158;
+				assign_stmt();
+				}
+				break;
+			case 2:
+				_localctx = new MethodCallStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 159;
+				method_call();
+				State = 160;
+				Match(SEMI);
+				}
+				break;
+			case 3:
+				_localctx = new IfStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 3);
+				{
+				State = 162;
+				if_stmt();
+				}
+				break;
+			case 4:
+				_localctx = new WhileStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 4);
+				{
+				State = 163;
+				while_stmt();
+				}
+				break;
+			case 5:
+				_localctx = new ReturnStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 5);
+				{
+				State = 164;
+				return_stmt();
+				}
+				break;
+			case 6:
+				_localctx = new BlockStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 6);
+				{
+				State = 165;
+				block();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class Assign_stmtContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public LocationContext location() {
+			return GetRuleContext<LocationContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ASSIGN() { return GetToken(DecafParser.ASSIGN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(DecafParser.SEMI, 0); }
+		public Assign_stmtContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_assign_stmt; } }
+	}
+
+	[RuleVersion(0)]
+	public Assign_stmtContext assign_stmt() {
+		Assign_stmtContext _localctx = new Assign_stmtContext(Context, State);
+		EnterRule(_localctx, 26, RULE_assign_stmt);
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 168;
+			location();
+			State = 169;
+			Match(ASSIGN);
+			State = 170;
+			expr(0);
+			State = 171;
+			Match(SEMI);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class If_stmtContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode IF() { return GetToken(DecafParser.IF, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public BlockContext[] block() {
+			return GetRuleContexts<BlockContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block(int i) {
+			return GetRuleContext<BlockContext>(i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ELSE() { return GetToken(DecafParser.ELSE, 0); }
+		public If_stmtContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_if_stmt; } }
+	}
+
+	[RuleVersion(0)]
+	public If_stmtContext if_stmt() {
+		If_stmtContext _localctx = new If_stmtContext(Context, State);
+		EnterRule(_localctx, 28, RULE_if_stmt);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 173;
+			Match(IF);
+			State = 174;
+			Match(LPAREN);
+			State = 175;
+			expr(0);
+			State = 176;
+			Match(RPAREN);
+			State = 177;
+			block();
+			State = 180;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if (_la==ELSE) {
+				{
+				State = 178;
+				Match(ELSE);
+				State = 179;
+				block();
+				}
+			}
+
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class While_stmtContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode WHILE() { return GetToken(DecafParser.WHILE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public BlockContext block() {
+			return GetRuleContext<BlockContext>(0);
+		}
+		public While_stmtContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_while_stmt; } }
+	}
+
+	[RuleVersion(0)]
+	public While_stmtContext while_stmt() {
+		While_stmtContext _localctx = new While_stmtContext(Context, State);
+		EnterRule(_localctx, 30, RULE_while_stmt);
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 182;
+			Match(WHILE);
+			State = 183;
+			Match(LPAREN);
+			State = 184;
+			expr(0);
+			State = 185;
+			Match(RPAREN);
+			State = 186;
+			block();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class Return_stmtContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RETURN() { return GetToken(DecafParser.RETURN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(DecafParser.SEMI, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		public Return_stmtContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_return_stmt; } }
+	}
+
+	[RuleVersion(0)]
+	public Return_stmtContext return_stmt() {
+		Return_stmtContext _localctx = new Return_stmtContext(Context, State);
+		EnterRule(_localctx, 32, RULE_return_stmt);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 188;
+			Match(RETURN);
+			State = 190;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 61572920129092L) != 0)) {
+				{
+				State = 189;
+				expr(0);
+				}
+			}
+
+			State = 192;
+			Match(SEMI);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class Method_callContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public LocationContext location() {
+			return GetRuleContext<LocationContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Method_call_argsContext method_call_args() {
+			return GetRuleContext<Method_call_argsContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public CalloutContext callout() {
+			return GetRuleContext<CalloutContext>(0);
+		}
+		public Method_callContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_method_call; } }
+	}
+
+	[RuleVersion(0)]
+	public Method_callContext method_call() {
+		Method_callContext _localctx = new Method_callContext(Context, State);
+		EnterRule(_localctx, 34, RULE_method_call);
+		try {
+			State = 199;
+			ErrorHandler.Sync(this);
+			switch (TokenStream.LA(1)) {
+			case ID:
+				EnterOuterAlt(_localctx, 1);
+				{
+				{
+				State = 194;
+				location();
+				State = 196;
+				ErrorHandler.Sync(this);
+				switch ( Interpreter.AdaptivePredict(TokenStream,16,Context) ) {
+				case 1:
+					{
+					State = 195;
+					method_call_args();
+					}
+					break;
+				}
+				}
+				}
+				break;
+			case CALLOUT:
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 198;
+				callout();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class Method_call_argsContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext[] expr() {
 			return GetRuleContexts<ExprContext>();
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr(int i) {
 			return GetRuleContext<ExprContext>(i);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] COMMA() { return GetTokens(DecafParser.COMMA); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode COMMA(int i) {
 			return GetToken(DecafParser.COMMA, i);
 		}
-		public Method_call_param_listContext(ParserRuleContext parent, int invokingState)
+		public Method_call_argsContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_method_call_param_list; } }
+		public override int RuleIndex { get { return RULE_method_call_args; } }
 	}
 
 	[RuleVersion(0)]
-	public Method_call_param_listContext method_call_param_list() {
-		Method_call_param_listContext _localctx = new Method_call_param_listContext(Context, State);
-		EnterRule(_localctx, 28, RULE_method_call_param_list);
+	public Method_call_argsContext method_call_args() {
+		Method_call_argsContext _localctx = new Method_call_argsContext(Context, State);
+		EnterRule(_localctx, 36, RULE_method_call_args);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 199;
+			State = 201;
+			Match(LPAREN);
+			State = 202;
 			expr(0);
-			State = 204;
+			State = 207;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				State = 200;
+				State = 203;
 				Match(COMMA);
-				State = 201;
+				State = 204;
 				expr(0);
 				}
 				}
-				State = 206;
+				State = 209;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
+			State = 210;
+			Match(RPAREN);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1115,71 +1262,122 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
-	public partial class Callout_argContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
-			return GetRuleContext<ExprContext>(0);
+	public partial class CalloutContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CALLOUT() { return GetToken(DecafParser.CALLOUT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public Callout_argsContext callout_args() {
+			return GetRuleContext<Callout_argsContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRINGLIT() { return GetToken(DecafParser.STRINGLIT, 0); }
-		public Callout_argContext(ParserRuleContext parent, int invokingState)
+		public CalloutContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
-		public override int RuleIndex { get { return RULE_callout_arg; } }
+		public override int RuleIndex { get { return RULE_callout; } }
 	}
 
 	[RuleVersion(0)]
-	public Callout_argContext callout_arg() {
-		Callout_argContext _localctx = new Callout_argContext(Context, State);
-		EnterRule(_localctx, 30, RULE_callout_arg);
-		try {
-			State = 209;
-			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,20,Context) ) {
-			case 1:
-				EnterOuterAlt(_localctx, 1);
-				{
-				State = 207;
-				expr(0);
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 208;
-				Match(STRINGLIT);
-				}
-				break;
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class Method_nameContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
-		public Method_nameContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_method_name; } }
-	}
-
-	[RuleVersion(0)]
-	public Method_nameContext method_name() {
-		Method_nameContext _localctx = new Method_nameContext(Context, State);
-		EnterRule(_localctx, 32, RULE_method_name);
+	public CalloutContext callout() {
+		CalloutContext _localctx = new CalloutContext(Context, State);
+		EnterRule(_localctx, 38, RULE_callout);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 211;
-			Match(ID);
+			State = 212;
+			Match(CALLOUT);
+			State = 213;
+			callout_args();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class Callout_argsContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] STRINGLIT() { return GetTokens(DecafParser.STRINGLIT); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STRINGLIT(int i) {
+			return GetToken(DecafParser.STRINGLIT, i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] COMMA() { return GetTokens(DecafParser.COMMA); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode COMMA(int i) {
+			return GetToken(DecafParser.COMMA, i);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext[] expr() {
+			return GetRuleContexts<ExprContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr(int i) {
+			return GetRuleContext<ExprContext>(i);
+		}
+		public Callout_argsContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_callout_args; } }
+	}
+
+	[RuleVersion(0)]
+	public Callout_argsContext callout_args() {
+		Callout_argsContext _localctx = new Callout_argsContext(Context, State);
+		EnterRule(_localctx, 40, RULE_callout_args);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 215;
+			Match(LPAREN);
+			State = 216;
+			Match(STRINGLIT);
+			State = 224;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			while (_la==COMMA) {
+				{
+				{
+				State = 217;
+				Match(COMMA);
+				State = 220;
+				ErrorHandler.Sync(this);
+				switch (TokenStream.LA(1)) {
+				case CALLOUT:
+				case FALSE:
+				case NEW:
+				case NULL:
+				case THIS:
+				case TRUE:
+				case LPAREN:
+				case NOT:
+				case CHARLIT:
+				case INTLIT:
+				case ID:
+					{
+					State = 218;
+					expr(0);
+					}
+					break;
+				case STRINGLIT:
+					{
+					State = 219;
+					Match(STRINGLIT);
+					}
+					break;
+				default:
+					throw new NoViableAltException(this);
+				}
+				}
+				}
+				State = 226;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+			}
+			State = 227;
+			Match(RPAREN);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1194,34 +1392,72 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class ExprContext : ParserRuleContext {
+		public ExprContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_expr; } }
+	 
+		public ExprContext() { }
+		public virtual void CopyFrom(ExprContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class SimpleExprContext : ExprContext {
 		[System.Diagnostics.DebuggerNonUserCode] public Simple_exprContext simple_expr() {
 			return GetRuleContext<Simple_exprContext>(0);
 		}
+		public SimpleExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class NewArrayExprContext : ExprContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NEW() { return GetToken(DecafParser.NEW, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
+			return GetRuleContext<TypeContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		public NewArrayExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class NewObjectExprContext : ExprContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NEW() { return GetToken(DecafParser.NEW, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
-			return GetRuleContext<TypeContext>(0);
+		public NewObjectExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class LiteralExprContext : ExprContext {
+		[System.Diagnostics.DebuggerNonUserCode] public LiteralContext literal() {
+			return GetRuleContext<LiteralContext>(0);
 		}
+		public LiteralExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class NotExprContext : ExprContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOT() { return GetToken(DecafParser.NOT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		public NotExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class ParenExprContext : ExprContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(DecafParser.LPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
+			return GetRuleContext<ExprContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(DecafParser.RPAREN, 0); }
+		public ParenExprContext(ExprContext context) { CopyFrom(context); }
+	}
+	public partial class BinaryOpExprContext : ExprContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext[] expr() {
 			return GetRuleContexts<ExprContext>();
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr(int i) {
 			return GetRuleContext<ExprContext>(i);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public LiteralContext literal() {
-			return GetRuleContext<LiteralContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOT() { return GetToken(DecafParser.NOT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public Bin_opContext bin_op() {
 			return GetRuleContext<Bin_opContext>(0);
 		}
-		public ExprContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_expr; } }
+		public BinaryOpExprContext(ExprContext context) { CopyFrom(context); }
 	}
 
 	[RuleVersion(0)]
@@ -1234,45 +1470,55 @@ public partial class DecafParser : Parser {
 		int _parentState = State;
 		ExprContext _localctx = new ExprContext(Context, _parentState);
 		ExprContext _prevctx = _localctx;
-		int _startState = 34;
-		EnterRecursionRule(_localctx, 34, RULE_expr, _p);
+		int _startState = 42;
+		EnterRecursionRule(_localctx, 42, RULE_expr, _p);
 		try {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 231;
+			State = 247;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,22,Context) ) {
 			case 1:
 				{
-				State = 214;
+				_localctx = new SimpleExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+
+				State = 230;
 				simple_expr();
 				}
 				break;
 			case 2:
 				{
-				State = 215;
+				_localctx = new NewObjectExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 231;
 				Match(NEW);
-				State = 216;
+				State = 232;
 				Match(ID);
-				State = 217;
+				State = 233;
 				Match(LPAREN);
-				State = 218;
+				State = 234;
 				Match(RPAREN);
 				}
 				break;
 			case 3:
 				{
-				State = 219;
+				_localctx = new NewArrayExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 235;
 				Match(NEW);
-				State = 220;
+				State = 236;
 				type();
-				State = 222;
+				State = 238;
 				ErrorHandler.Sync(this);
 				switch ( Interpreter.AdaptivePredict(TokenStream,21,Context) ) {
 				case 1:
 					{
-					State = 221;
+					State = 237;
 					expr(0);
 					}
 					break;
@@ -1281,31 +1527,40 @@ public partial class DecafParser : Parser {
 				break;
 			case 4:
 				{
-				State = 224;
+				_localctx = new LiteralExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 240;
 				literal();
 				}
 				break;
 			case 5:
 				{
-				State = 225;
+				_localctx = new NotExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 241;
 				Match(NOT);
-				State = 226;
+				State = 242;
 				expr(2);
 				}
 				break;
 			case 6:
 				{
-				State = 227;
+				_localctx = new ParenExprContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 243;
 				Match(LPAREN);
-				State = 228;
+				State = 244;
 				expr(0);
-				State = 229;
+				State = 245;
 				Match(RPAREN);
 				}
 				break;
 			}
 			Context.Stop = TokenStream.LT(-1);
-			State = 239;
+			State = 255;
 			ErrorHandler.Sync(this);
 			_alt = Interpreter.AdaptivePredict(TokenStream,23,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
@@ -1315,18 +1570,18 @@ public partial class DecafParser : Parser {
 					_prevctx = _localctx;
 					{
 					{
-					_localctx = new ExprContext(_parentctx, _parentState);
+					_localctx = new BinaryOpExprContext(new ExprContext(_parentctx, _parentState));
 					PushNewRecursionContext(_localctx, _startState, RULE_expr);
-					State = 233;
+					State = 249;
 					if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
-					State = 234;
+					State = 250;
 					bin_op();
-					State = 235;
+					State = 251;
 					expr(4);
 					}
 					} 
 				}
-				State = 241;
+				State = 257;
 				ErrorHandler.Sync(this);
 				_alt = Interpreter.AdaptivePredict(TokenStream,23,Context);
 			}
@@ -1344,6 +1599,9 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class Simple_exprContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public LocationContext location() {
+			return GetRuleContext<LocationContext>(0);
+		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode THIS() { return GetToken(DecafParser.THIS, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public Method_callContext method_call() {
 			return GetRuleContext<Method_callContext>(0);
@@ -1358,27 +1616,29 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Simple_exprContext simple_expr() {
 		Simple_exprContext _localctx = new Simple_exprContext(Context, State);
-		EnterRule(_localctx, 36, RULE_simple_expr);
+		EnterRule(_localctx, 44, RULE_simple_expr);
 		try {
-			State = 245;
+			State = 261;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,24,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
+				State = 258;
+				location();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 243;
+				State = 259;
 				Match(THIS);
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 244;
+				State = 260;
 				method_call();
 				}
 				break;
@@ -1396,16 +1656,16 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class LocationContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(DecafParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public Simple_exprContext simple_expr() {
-			return GetRuleContext<Simple_exprContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] ID() { return GetTokens(DecafParser.ID); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID(int i) {
+			return GetToken(DecafParser.ID, i);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DOT() { return GetToken(DecafParser.DOT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LBRACK() { return GetToken(DecafParser.LBRACK, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
 			return GetRuleContext<ExprContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RBRACK() { return GetToken(DecafParser.RBRACK, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DOT() { return GetToken(DecafParser.DOT, 0); }
 		public LocationContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
@@ -1416,42 +1676,38 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public LocationContext location() {
 		LocationContext _localctx = new LocationContext(Context, State);
-		EnterRule(_localctx, 38, RULE_location);
+		EnterRule(_localctx, 46, RULE_location);
 		try {
-			State = 257;
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 263;
+			Match(ID);
+			State = 270;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,25,Context) ) {
 			case 1:
-				EnterOuterAlt(_localctx, 1);
 				{
-				State = 247;
+				{
+				State = 264;
+				Match(DOT);
+				State = 265;
 				Match(ID);
+				}
 				}
 				break;
 			case 2:
-				EnterOuterAlt(_localctx, 2);
 				{
-				State = 248;
-				simple_expr();
-				State = 249;
+				{
+				State = 266;
 				Match(LBRACK);
-				State = 250;
+				State = 267;
 				expr(0);
-				State = 251;
+				State = 268;
 				Match(RBRACK);
 				}
-				break;
-			case 3:
-				EnterOuterAlt(_localctx, 3);
-				{
-				State = 253;
-				simple_expr();
-				State = 254;
-				Match(DOT);
-				State = 255;
-				Match(ID);
 				}
 				break;
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -1488,9 +1744,9 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Bin_opContext bin_op() {
 		Bin_opContext _localctx = new Bin_opContext(Context, State);
-		EnterRule(_localctx, 40, RULE_bin_op);
+		EnterRule(_localctx, 48, RULE_bin_op);
 		try {
-			State = 263;
+			State = 276;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case PLUS:
@@ -1499,7 +1755,7 @@ public partial class DecafParser : Parser {
 			case DIV:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 259;
+				State = 272;
 				arith_op();
 				}
 				break;
@@ -1509,7 +1765,7 @@ public partial class DecafParser : Parser {
 			case LT:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 260;
+				State = 273;
 				rel_op();
 				}
 				break;
@@ -1517,7 +1773,7 @@ public partial class DecafParser : Parser {
 			case NEQ:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 261;
+				State = 274;
 				eq_op();
 				}
 				break;
@@ -1525,7 +1781,7 @@ public partial class DecafParser : Parser {
 			case OR:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 262;
+				State = 275;
 				cond_op();
 				}
 				break;
@@ -1559,12 +1815,12 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Arith_opContext arith_op() {
 		Arith_opContext _localctx = new Arith_opContext(Context, State);
-		EnterRule(_localctx, 42, RULE_arith_op);
+		EnterRule(_localctx, 50, RULE_arith_op);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 265;
+			State = 278;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 8053063680L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1601,12 +1857,12 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Rel_opContext rel_op() {
 		Rel_opContext _localctx = new Rel_opContext(Context, State);
-		EnterRule(_localctx, 44, RULE_rel_op);
+		EnterRule(_localctx, 52, RULE_rel_op);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 267;
+			State = 280;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 128849018880L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1641,12 +1897,12 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Eq_opContext eq_op() {
 		Eq_opContext _localctx = new Eq_opContext(Context, State);
-		EnterRule(_localctx, 46, RULE_eq_op);
+		EnterRule(_localctx, 54, RULE_eq_op);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 269;
+			State = 282;
 			_la = TokenStream.LA(1);
 			if ( !(_la==EQ || _la==NEQ) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1681,12 +1937,12 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Cond_opContext cond_op() {
 		Cond_opContext _localctx = new Cond_opContext(Context, State);
-		EnterRule(_localctx, 48, RULE_cond_op);
+		EnterRule(_localctx, 56, RULE_cond_op);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 271;
+			State = 284;
 			_la = TokenStream.LA(1);
 			if ( !(_la==AND || _la==OR) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1709,53 +1965,74 @@ public partial class DecafParser : Parser {
 	}
 
 	public partial class LiteralContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTLIT() { return GetToken(DecafParser.INTLIT, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CHARLIT() { return GetToken(DecafParser.CHARLIT, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public Bool_literalContext bool_literal() {
-			return GetRuleContext<Bool_literalContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NULL() { return GetToken(DecafParser.NULL, 0); }
 		public LiteralContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_literal; } }
+	 
+		public LiteralContext() { }
+		public virtual void CopyFrom(LiteralContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class NullLitContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NULL() { return GetToken(DecafParser.NULL, 0); }
+		public NullLitContext(LiteralContext context) { CopyFrom(context); }
+	}
+	public partial class CharLitContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CHARLIT() { return GetToken(DecafParser.CHARLIT, 0); }
+		public CharLitContext(LiteralContext context) { CopyFrom(context); }
+	}
+	public partial class IntLitContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTLIT() { return GetToken(DecafParser.INTLIT, 0); }
+		public IntLitContext(LiteralContext context) { CopyFrom(context); }
+	}
+	public partial class BoolLitContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Bool_literalContext bool_literal() {
+			return GetRuleContext<Bool_literalContext>(0);
+		}
+		public BoolLitContext(LiteralContext context) { CopyFrom(context); }
 	}
 
 	[RuleVersion(0)]
 	public LiteralContext literal() {
 		LiteralContext _localctx = new LiteralContext(Context, State);
-		EnterRule(_localctx, 50, RULE_literal);
+		EnterRule(_localctx, 58, RULE_literal);
 		try {
-			State = 277;
+			State = 290;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case INTLIT:
+				_localctx = new IntLitContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 273;
+				State = 286;
 				Match(INTLIT);
 				}
 				break;
 			case CHARLIT:
+				_localctx = new CharLitContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 274;
+				State = 287;
 				Match(CHARLIT);
 				}
 				break;
 			case FALSE:
 			case TRUE:
+				_localctx = new BoolLitContext(_localctx);
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 275;
+				State = 288;
 				bool_literal();
 				}
 				break;
 			case NULL:
+				_localctx = new NullLitContext(_localctx);
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 276;
+				State = 289;
 				Match(NULL);
 				}
 				break;
@@ -1787,12 +2064,12 @@ public partial class DecafParser : Parser {
 	[RuleVersion(0)]
 	public Bool_literalContext bool_literal() {
 		Bool_literalContext _localctx = new Bool_literalContext(Context, State);
-		EnterRule(_localctx, 52, RULE_bool_literal);
+		EnterRule(_localctx, 60, RULE_bool_literal);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 279;
+			State = 292;
 			_la = TokenStream.LA(1);
 			if ( !(_la==FALSE || _la==TRUE) ) {
 			ErrorHandler.RecoverInline(this);
@@ -1814,9 +2091,49 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
+	public partial class Optional_int_sizeContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTLIT() { return GetToken(DecafParser.INTLIT, 0); }
+		public Optional_int_sizeContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_optional_int_size; } }
+	}
+
+	[RuleVersion(0)]
+	public Optional_int_sizeContext optional_int_size() {
+		Optional_int_sizeContext _localctx = new Optional_int_sizeContext(Context, State);
+		EnterRule(_localctx, 62, RULE_optional_int_size);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 295;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if (_la==INTLIT) {
+				{
+				State = 294;
+				Match(INTLIT);
+				}
+			}
+
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
 	public override bool Sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 17: return expr_sempred((ExprContext)_localctx, predIndex);
+		case 21: return expr_sempred((ExprContext)_localctx, predIndex);
 		}
 		return true;
 	}
@@ -1828,97 +2145,102 @@ public partial class DecafParser : Parser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,45,282,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,45,298,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
 		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,
-		2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,1,0,4,0,56,8,0,11,0,
-		12,0,57,1,1,1,1,1,1,1,1,3,1,64,8,1,1,1,1,1,5,1,68,8,1,10,1,12,1,71,9,1,
-		1,1,5,1,74,8,1,10,1,12,1,77,9,1,1,1,1,1,1,2,3,2,82,8,2,1,3,1,3,3,3,86,
-		8,3,1,3,1,3,1,3,1,3,1,4,1,4,3,4,94,8,4,1,4,1,4,1,5,1,5,1,5,5,5,101,8,5,
-		10,5,12,5,104,9,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,114,8,6,1,7,1,7,
-		1,7,1,7,1,7,1,7,1,7,4,7,123,8,7,11,7,12,7,124,1,8,1,8,1,8,1,8,1,9,1,9,
-		1,9,5,9,134,8,9,10,9,12,9,137,9,9,1,10,1,10,1,10,1,10,1,10,1,10,3,10,145,
-		8,10,1,11,1,11,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,
-		1,12,1,12,1,12,1,12,3,12,164,8,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,
-		12,3,12,174,8,12,1,12,1,12,3,12,178,8,12,1,13,1,13,1,13,3,13,183,8,13,
-		1,13,1,13,1,13,1,13,1,13,1,13,1,13,5,13,192,8,13,10,13,12,13,195,9,13,
-		1,13,3,13,198,8,13,1,14,1,14,1,14,5,14,203,8,14,10,14,12,14,206,9,14,1,
-		15,1,15,3,15,210,8,15,1,16,1,16,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,
-		1,17,3,17,223,8,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,3,17,232,8,17,1,
-		17,1,17,1,17,1,17,5,17,238,8,17,10,17,12,17,241,9,17,1,18,1,18,1,18,3,
-		18,246,8,18,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,3,19,258,
-		8,19,1,20,1,20,1,20,1,20,3,20,264,8,20,1,21,1,21,1,22,1,22,1,23,1,23,1,
-		24,1,24,1,25,1,25,1,25,1,25,3,25,278,8,25,1,26,1,26,1,26,0,1,34,27,0,2,
-		4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,
-		0,6,3,0,1,1,8,8,45,45,1,0,29,32,1,0,33,36,1,0,37,38,1,0,39,40,2,0,6,6,
-		13,13,296,0,55,1,0,0,0,2,59,1,0,0,0,4,81,1,0,0,0,6,85,1,0,0,0,8,91,1,0,
-		0,0,10,97,1,0,0,0,12,113,1,0,0,0,14,115,1,0,0,0,16,126,1,0,0,0,18,130,
-		1,0,0,0,20,144,1,0,0,0,22,146,1,0,0,0,24,177,1,0,0,0,26,197,1,0,0,0,28,
-		199,1,0,0,0,30,209,1,0,0,0,32,211,1,0,0,0,34,231,1,0,0,0,36,245,1,0,0,
-		0,38,257,1,0,0,0,40,263,1,0,0,0,42,265,1,0,0,0,44,267,1,0,0,0,46,269,1,
-		0,0,0,48,271,1,0,0,0,50,277,1,0,0,0,52,279,1,0,0,0,54,56,3,2,1,0,55,54,
-		1,0,0,0,56,57,1,0,0,0,57,55,1,0,0,0,57,58,1,0,0,0,58,1,1,0,0,0,59,60,5,
-		3,0,0,60,63,5,45,0,0,61,62,5,5,0,0,62,64,5,45,0,0,63,61,1,0,0,0,63,64,
-		1,0,0,0,64,65,1,0,0,0,65,69,5,21,0,0,66,68,3,16,8,0,67,66,1,0,0,0,68,71,
-		1,0,0,0,69,67,1,0,0,0,69,70,1,0,0,0,70,75,1,0,0,0,71,69,1,0,0,0,72,74,
-		3,6,3,0,73,72,1,0,0,0,74,77,1,0,0,0,75,73,1,0,0,0,75,76,1,0,0,0,76,78,
-		1,0,0,0,77,75,1,0,0,0,78,79,5,22,0,0,79,3,1,0,0,0,80,82,5,44,0,0,81,80,
-		1,0,0,0,81,82,1,0,0,0,82,5,1,0,0,0,83,86,3,22,11,0,84,86,5,14,0,0,85,83,
-		1,0,0,0,85,84,1,0,0,0,86,87,1,0,0,0,87,88,5,45,0,0,88,89,3,8,4,0,89,90,
-		3,14,7,0,90,7,1,0,0,0,91,93,5,19,0,0,92,94,3,10,5,0,93,92,1,0,0,0,93,94,
-		1,0,0,0,94,95,1,0,0,0,95,96,5,20,0,0,96,9,1,0,0,0,97,102,3,12,6,0,98,99,
-		5,26,0,0,99,101,3,12,6,0,100,98,1,0,0,0,101,104,1,0,0,0,102,100,1,0,0,
-		0,102,103,1,0,0,0,103,11,1,0,0,0,104,102,1,0,0,0,105,106,3,22,11,0,106,
-		107,5,45,0,0,107,114,1,0,0,0,108,109,3,22,11,0,109,110,5,45,0,0,110,111,
-		5,23,0,0,111,112,5,24,0,0,112,114,1,0,0,0,113,105,1,0,0,0,113,108,1,0,
-		0,0,114,13,1,0,0,0,115,122,3,22,11,0,116,123,5,45,0,0,117,118,5,45,0,0,
-		118,119,5,23,0,0,119,120,3,4,2,0,120,121,5,24,0,0,121,123,1,0,0,0,122,
-		116,1,0,0,0,122,117,1,0,0,0,123,124,1,0,0,0,124,122,1,0,0,0,124,125,1,
-		0,0,0,125,15,1,0,0,0,126,127,3,22,11,0,127,128,3,18,9,0,128,129,5,25,0,
-		0,129,17,1,0,0,0,130,135,3,20,10,0,131,132,5,26,0,0,132,134,3,20,10,0,
-		133,131,1,0,0,0,134,137,1,0,0,0,135,133,1,0,0,0,135,136,1,0,0,0,136,19,
-		1,0,0,0,137,135,1,0,0,0,138,145,5,45,0,0,139,140,5,45,0,0,140,141,5,23,
-		0,0,141,142,3,4,2,0,142,143,5,24,0,0,143,145,1,0,0,0,144,138,1,0,0,0,144,
-		139,1,0,0,0,145,21,1,0,0,0,146,147,7,0,0,0,147,23,1,0,0,0,148,149,3,38,
-		19,0,149,150,5,41,0,0,150,151,3,34,17,0,151,152,5,25,0,0,152,178,1,0,0,
-		0,153,154,3,26,13,0,154,155,5,25,0,0,155,178,1,0,0,0,156,157,5,7,0,0,157,
-		158,5,19,0,0,158,159,3,34,17,0,159,160,5,20,0,0,160,163,3,14,7,0,161,162,
-		5,4,0,0,162,164,3,14,7,0,163,161,1,0,0,0,163,164,1,0,0,0,164,178,1,0,0,
-		0,165,166,5,15,0,0,166,167,5,19,0,0,167,168,3,34,17,0,168,169,5,20,0,0,
-		169,170,3,14,7,0,170,178,1,0,0,0,171,173,5,11,0,0,172,174,3,34,17,0,173,
-		172,1,0,0,0,173,174,1,0,0,0,174,175,1,0,0,0,175,178,5,25,0,0,176,178,3,
-		14,7,0,177,148,1,0,0,0,177,153,1,0,0,0,177,156,1,0,0,0,177,165,1,0,0,0,
-		177,171,1,0,0,0,177,176,1,0,0,0,178,25,1,0,0,0,179,180,3,32,16,0,180,182,
-		5,19,0,0,181,183,3,28,14,0,182,181,1,0,0,0,182,183,1,0,0,0,183,184,1,0,
-		0,0,184,185,5,20,0,0,185,198,1,0,0,0,186,187,5,2,0,0,187,188,5,19,0,0,
-		188,193,5,42,0,0,189,190,5,26,0,0,190,192,3,30,15,0,191,189,1,0,0,0,192,
-		195,1,0,0,0,193,191,1,0,0,0,193,194,1,0,0,0,194,196,1,0,0,0,195,193,1,
-		0,0,0,196,198,5,20,0,0,197,179,1,0,0,0,197,186,1,0,0,0,198,27,1,0,0,0,
-		199,204,3,34,17,0,200,201,5,26,0,0,201,203,3,34,17,0,202,200,1,0,0,0,203,
-		206,1,0,0,0,204,202,1,0,0,0,204,205,1,0,0,0,205,29,1,0,0,0,206,204,1,0,
-		0,0,207,210,3,34,17,0,208,210,5,42,0,0,209,207,1,0,0,0,209,208,1,0,0,0,
-		210,31,1,0,0,0,211,212,5,45,0,0,212,33,1,0,0,0,213,214,6,17,-1,0,214,232,
-		3,36,18,0,215,216,5,9,0,0,216,217,5,45,0,0,217,218,5,19,0,0,218,232,5,
-		20,0,0,219,220,5,9,0,0,220,222,3,22,11,0,221,223,3,34,17,0,222,221,1,0,
-		0,0,222,223,1,0,0,0,223,232,1,0,0,0,224,232,3,50,25,0,225,226,5,28,0,0,
-		226,232,3,34,17,2,227,228,5,19,0,0,228,229,3,34,17,0,229,230,5,20,0,0,
-		230,232,1,0,0,0,231,213,1,0,0,0,231,215,1,0,0,0,231,219,1,0,0,0,231,224,
-		1,0,0,0,231,225,1,0,0,0,231,227,1,0,0,0,232,239,1,0,0,0,233,234,10,3,0,
-		0,234,235,3,40,20,0,235,236,3,34,17,4,236,238,1,0,0,0,237,233,1,0,0,0,
-		238,241,1,0,0,0,239,237,1,0,0,0,239,240,1,0,0,0,240,35,1,0,0,0,241,239,
-		1,0,0,0,242,246,1,0,0,0,243,246,5,12,0,0,244,246,3,26,13,0,245,242,1,0,
-		0,0,245,243,1,0,0,0,245,244,1,0,0,0,246,37,1,0,0,0,247,258,5,45,0,0,248,
-		249,3,36,18,0,249,250,5,23,0,0,250,251,3,34,17,0,251,252,5,24,0,0,252,
-		258,1,0,0,0,253,254,3,36,18,0,254,255,5,27,0,0,255,256,5,45,0,0,256,258,
-		1,0,0,0,257,247,1,0,0,0,257,248,1,0,0,0,257,253,1,0,0,0,258,39,1,0,0,0,
-		259,264,3,42,21,0,260,264,3,44,22,0,261,264,3,46,23,0,262,264,3,48,24,
-		0,263,259,1,0,0,0,263,260,1,0,0,0,263,261,1,0,0,0,263,262,1,0,0,0,264,
-		41,1,0,0,0,265,266,7,1,0,0,266,43,1,0,0,0,267,268,7,2,0,0,268,45,1,0,0,
-		0,269,270,7,3,0,0,270,47,1,0,0,0,271,272,7,4,0,0,272,49,1,0,0,0,273,278,
-		5,44,0,0,274,278,5,43,0,0,275,278,3,52,26,0,276,278,5,10,0,0,277,273,1,
-		0,0,0,277,274,1,0,0,0,277,275,1,0,0,0,277,276,1,0,0,0,278,51,1,0,0,0,279,
-		280,7,5,0,0,280,53,1,0,0,0,28,57,63,69,75,81,85,93,102,113,122,124,135,
-		144,163,173,177,182,193,197,204,209,222,231,239,245,257,263,277
+		2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,2,27,7,27,2,28,7,28,
+		2,29,7,29,2,30,7,30,2,31,7,31,1,0,4,0,66,8,0,11,0,12,0,67,1,1,1,1,1,1,
+		1,1,3,1,74,8,1,1,1,1,1,5,1,78,8,1,10,1,12,1,81,9,1,1,1,5,1,84,8,1,10,1,
+		12,1,87,9,1,1,1,1,1,1,2,1,2,1,2,1,2,1,2,1,3,1,3,3,3,98,8,3,1,4,1,4,3,4,
+		102,8,4,1,4,1,4,1,5,1,5,1,5,5,5,109,8,5,10,5,12,5,112,9,5,1,6,1,6,1,6,
+		1,6,3,6,118,8,6,1,7,1,7,5,7,122,8,7,10,7,12,7,125,9,7,1,7,5,7,128,8,7,
+		10,7,12,7,131,9,7,1,7,1,7,1,8,1,8,1,8,1,8,1,9,1,9,1,9,5,9,142,8,9,10,9,
+		12,9,145,9,9,1,10,1,10,1,10,1,10,1,10,3,10,152,8,10,1,11,1,11,1,11,3,11,
+		157,8,11,1,12,1,12,1,12,1,12,1,12,1,12,1,12,1,12,3,12,167,8,12,1,13,1,
+		13,1,13,1,13,1,13,1,14,1,14,1,14,1,14,1,14,1,14,1,14,3,14,181,8,14,1,15,
+		1,15,1,15,1,15,1,15,1,15,1,16,1,16,3,16,191,8,16,1,16,1,16,1,17,1,17,3,
+		17,197,8,17,1,17,3,17,200,8,17,1,18,1,18,1,18,1,18,5,18,206,8,18,10,18,
+		12,18,209,9,18,1,18,1,18,1,19,1,19,1,19,1,20,1,20,1,20,1,20,1,20,3,20,
+		221,8,20,5,20,223,8,20,10,20,12,20,226,9,20,1,20,1,20,1,21,1,21,1,21,1,
+		21,1,21,1,21,1,21,1,21,1,21,3,21,239,8,21,1,21,1,21,1,21,1,21,1,21,1,21,
+		1,21,3,21,248,8,21,1,21,1,21,1,21,1,21,5,21,254,8,21,10,21,12,21,257,9,
+		21,1,22,1,22,1,22,3,22,262,8,22,1,23,1,23,1,23,1,23,1,23,1,23,1,23,3,23,
+		271,8,23,1,24,1,24,1,24,1,24,3,24,277,8,24,1,25,1,25,1,26,1,26,1,27,1,
+		27,1,28,1,28,1,29,1,29,1,29,1,29,3,29,291,8,29,1,30,1,30,1,31,3,31,296,
+		8,31,1,31,0,1,42,32,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,
+		38,40,42,44,46,48,50,52,54,56,58,60,62,0,5,1,0,29,32,1,0,33,36,1,0,37,
+		38,1,0,39,40,2,0,6,6,13,13,309,0,65,1,0,0,0,2,69,1,0,0,0,4,90,1,0,0,0,
+		6,97,1,0,0,0,8,99,1,0,0,0,10,105,1,0,0,0,12,113,1,0,0,0,14,119,1,0,0,0,
+		16,134,1,0,0,0,18,138,1,0,0,0,20,146,1,0,0,0,22,156,1,0,0,0,24,166,1,0,
+		0,0,26,168,1,0,0,0,28,173,1,0,0,0,30,182,1,0,0,0,32,188,1,0,0,0,34,199,
+		1,0,0,0,36,201,1,0,0,0,38,212,1,0,0,0,40,215,1,0,0,0,42,247,1,0,0,0,44,
+		261,1,0,0,0,46,263,1,0,0,0,48,276,1,0,0,0,50,278,1,0,0,0,52,280,1,0,0,
+		0,54,282,1,0,0,0,56,284,1,0,0,0,58,290,1,0,0,0,60,292,1,0,0,0,62,295,1,
+		0,0,0,64,66,3,2,1,0,65,64,1,0,0,0,66,67,1,0,0,0,67,65,1,0,0,0,67,68,1,
+		0,0,0,68,1,1,0,0,0,69,70,5,3,0,0,70,73,5,45,0,0,71,72,5,5,0,0,72,74,5,
+		45,0,0,73,71,1,0,0,0,73,74,1,0,0,0,74,75,1,0,0,0,75,79,5,21,0,0,76,78,
+		3,16,8,0,77,76,1,0,0,0,78,81,1,0,0,0,79,77,1,0,0,0,79,80,1,0,0,0,80,85,
+		1,0,0,0,81,79,1,0,0,0,82,84,3,4,2,0,83,82,1,0,0,0,84,87,1,0,0,0,85,83,
+		1,0,0,0,85,86,1,0,0,0,86,88,1,0,0,0,87,85,1,0,0,0,88,89,5,22,0,0,89,3,
+		1,0,0,0,90,91,3,6,3,0,91,92,5,45,0,0,92,93,3,8,4,0,93,94,3,14,7,0,94,5,
+		1,0,0,0,95,98,3,22,11,0,96,98,5,14,0,0,97,95,1,0,0,0,97,96,1,0,0,0,98,
+		7,1,0,0,0,99,101,5,19,0,0,100,102,3,10,5,0,101,100,1,0,0,0,101,102,1,0,
+		0,0,102,103,1,0,0,0,103,104,5,20,0,0,104,9,1,0,0,0,105,110,3,12,6,0,106,
+		107,5,26,0,0,107,109,3,12,6,0,108,106,1,0,0,0,109,112,1,0,0,0,110,108,
+		1,0,0,0,110,111,1,0,0,0,111,11,1,0,0,0,112,110,1,0,0,0,113,114,3,22,11,
+		0,114,117,5,45,0,0,115,116,5,23,0,0,116,118,5,24,0,0,117,115,1,0,0,0,117,
+		118,1,0,0,0,118,13,1,0,0,0,119,123,5,21,0,0,120,122,3,16,8,0,121,120,1,
+		0,0,0,122,125,1,0,0,0,123,121,1,0,0,0,123,124,1,0,0,0,124,129,1,0,0,0,
+		125,123,1,0,0,0,126,128,3,24,12,0,127,126,1,0,0,0,128,131,1,0,0,0,129,
+		127,1,0,0,0,129,130,1,0,0,0,130,132,1,0,0,0,131,129,1,0,0,0,132,133,5,
+		22,0,0,133,15,1,0,0,0,134,135,3,22,11,0,135,136,3,18,9,0,136,137,5,25,
+		0,0,137,17,1,0,0,0,138,143,3,20,10,0,139,140,5,26,0,0,140,142,3,20,10,
+		0,141,139,1,0,0,0,142,145,1,0,0,0,143,141,1,0,0,0,143,144,1,0,0,0,144,
+		19,1,0,0,0,145,143,1,0,0,0,146,151,5,45,0,0,147,148,5,23,0,0,148,149,3,
+		62,31,0,149,150,5,24,0,0,150,152,1,0,0,0,151,147,1,0,0,0,151,152,1,0,0,
+		0,152,21,1,0,0,0,153,157,5,8,0,0,154,157,5,1,0,0,155,157,5,45,0,0,156,
+		153,1,0,0,0,156,154,1,0,0,0,156,155,1,0,0,0,157,23,1,0,0,0,158,167,3,26,
+		13,0,159,160,3,34,17,0,160,161,5,25,0,0,161,167,1,0,0,0,162,167,3,28,14,
+		0,163,167,3,30,15,0,164,167,3,32,16,0,165,167,3,14,7,0,166,158,1,0,0,0,
+		166,159,1,0,0,0,166,162,1,0,0,0,166,163,1,0,0,0,166,164,1,0,0,0,166,165,
+		1,0,0,0,167,25,1,0,0,0,168,169,3,46,23,0,169,170,5,41,0,0,170,171,3,42,
+		21,0,171,172,5,25,0,0,172,27,1,0,0,0,173,174,5,7,0,0,174,175,5,19,0,0,
+		175,176,3,42,21,0,176,177,5,20,0,0,177,180,3,14,7,0,178,179,5,4,0,0,179,
+		181,3,14,7,0,180,178,1,0,0,0,180,181,1,0,0,0,181,29,1,0,0,0,182,183,5,
+		15,0,0,183,184,5,19,0,0,184,185,3,42,21,0,185,186,5,20,0,0,186,187,3,14,
+		7,0,187,31,1,0,0,0,188,190,5,11,0,0,189,191,3,42,21,0,190,189,1,0,0,0,
+		190,191,1,0,0,0,191,192,1,0,0,0,192,193,5,25,0,0,193,33,1,0,0,0,194,196,
+		3,46,23,0,195,197,3,36,18,0,196,195,1,0,0,0,196,197,1,0,0,0,197,200,1,
+		0,0,0,198,200,3,38,19,0,199,194,1,0,0,0,199,198,1,0,0,0,200,35,1,0,0,0,
+		201,202,5,19,0,0,202,207,3,42,21,0,203,204,5,26,0,0,204,206,3,42,21,0,
+		205,203,1,0,0,0,206,209,1,0,0,0,207,205,1,0,0,0,207,208,1,0,0,0,208,210,
+		1,0,0,0,209,207,1,0,0,0,210,211,5,20,0,0,211,37,1,0,0,0,212,213,5,2,0,
+		0,213,214,3,40,20,0,214,39,1,0,0,0,215,216,5,19,0,0,216,224,5,42,0,0,217,
+		220,5,26,0,0,218,221,3,42,21,0,219,221,5,42,0,0,220,218,1,0,0,0,220,219,
+		1,0,0,0,221,223,1,0,0,0,222,217,1,0,0,0,223,226,1,0,0,0,224,222,1,0,0,
+		0,224,225,1,0,0,0,225,227,1,0,0,0,226,224,1,0,0,0,227,228,5,20,0,0,228,
+		41,1,0,0,0,229,230,6,21,-1,0,230,248,3,44,22,0,231,232,5,9,0,0,232,233,
+		5,45,0,0,233,234,5,19,0,0,234,248,5,20,0,0,235,236,5,9,0,0,236,238,3,22,
+		11,0,237,239,3,42,21,0,238,237,1,0,0,0,238,239,1,0,0,0,239,248,1,0,0,0,
+		240,248,3,58,29,0,241,242,5,28,0,0,242,248,3,42,21,2,243,244,5,19,0,0,
+		244,245,3,42,21,0,245,246,5,20,0,0,246,248,1,0,0,0,247,229,1,0,0,0,247,
+		231,1,0,0,0,247,235,1,0,0,0,247,240,1,0,0,0,247,241,1,0,0,0,247,243,1,
+		0,0,0,248,255,1,0,0,0,249,250,10,3,0,0,250,251,3,48,24,0,251,252,3,42,
+		21,4,252,254,1,0,0,0,253,249,1,0,0,0,254,257,1,0,0,0,255,253,1,0,0,0,255,
+		256,1,0,0,0,256,43,1,0,0,0,257,255,1,0,0,0,258,262,3,46,23,0,259,262,5,
+		12,0,0,260,262,3,34,17,0,261,258,1,0,0,0,261,259,1,0,0,0,261,260,1,0,0,
+		0,262,45,1,0,0,0,263,270,5,45,0,0,264,265,5,27,0,0,265,271,5,45,0,0,266,
+		267,5,23,0,0,267,268,3,42,21,0,268,269,5,24,0,0,269,271,1,0,0,0,270,264,
+		1,0,0,0,270,266,1,0,0,0,270,271,1,0,0,0,271,47,1,0,0,0,272,277,3,50,25,
+		0,273,277,3,52,26,0,274,277,3,54,27,0,275,277,3,56,28,0,276,272,1,0,0,
+		0,276,273,1,0,0,0,276,274,1,0,0,0,276,275,1,0,0,0,277,49,1,0,0,0,278,279,
+		7,0,0,0,279,51,1,0,0,0,280,281,7,1,0,0,281,53,1,0,0,0,282,283,7,2,0,0,
+		283,55,1,0,0,0,284,285,7,3,0,0,285,57,1,0,0,0,286,291,5,44,0,0,287,291,
+		5,43,0,0,288,291,3,60,30,0,289,291,5,10,0,0,290,286,1,0,0,0,290,287,1,
+		0,0,0,290,288,1,0,0,0,290,289,1,0,0,0,291,59,1,0,0,0,292,293,7,4,0,0,293,
+		61,1,0,0,0,294,296,5,44,0,0,295,294,1,0,0,0,295,296,1,0,0,0,296,63,1,0,
+		0,0,29,67,73,79,85,97,101,110,117,123,129,143,151,156,166,180,190,196,
+		199,207,220,224,238,247,255,261,270,276,290,295
 	};
 
 	public static readonly ATN _ATN =

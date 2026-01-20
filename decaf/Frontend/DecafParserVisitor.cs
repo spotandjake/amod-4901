@@ -44,17 +44,17 @@ public interface IDecafParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitClass_decl([NotNull] DecafParser.Class_declContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.optional_int_size"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitOptional_int_size([NotNull] DecafParser.Optional_int_sizeContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecafParser.method_decl"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitMethod_decl([NotNull] DecafParser.Method_declContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.method_return_type"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMethod_return_type([NotNull] DecafParser.Method_return_typeContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecafParser.method_decl_param"/>.
 	/// </summary>
@@ -98,17 +98,92 @@ public interface IDecafParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitVar_bind([NotNull] DecafParser.Var_bindContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.type"/>.
+	/// Visit a parse tree produced by the <c>IntType</c>
+	/// labeled alternative in <see cref="DecafParser.type"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitType([NotNull] DecafParser.TypeContext context);
+	Result VisitIntType([NotNull] DecafParser.IntTypeContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.statement"/>.
+	/// Visit a parse tree produced by the <c>BooleanType</c>
+	/// labeled alternative in <see cref="DecafParser.type"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitStatement([NotNull] DecafParser.StatementContext context);
+	Result VisitBooleanType([NotNull] DecafParser.BooleanTypeContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>CustomType</c>
+	/// labeled alternative in <see cref="DecafParser.type"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCustomType([NotNull] DecafParser.CustomTypeContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>AssignStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAssignStatement([NotNull] DecafParser.AssignStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>MethodCallStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMethodCallStatement([NotNull] DecafParser.MethodCallStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>IfStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIfStatement([NotNull] DecafParser.IfStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>WhileStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitWhileStatement([NotNull] DecafParser.WhileStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>ReturnStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitReturnStatement([NotNull] DecafParser.ReturnStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>BlockStatement</c>
+	/// labeled alternative in <see cref="DecafParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBlockStatement([NotNull] DecafParser.BlockStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.assign_stmt"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAssign_stmt([NotNull] DecafParser.Assign_stmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.if_stmt"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIf_stmt([NotNull] DecafParser.If_stmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.while_stmt"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitWhile_stmt([NotNull] DecafParser.While_stmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.return_stmt"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitReturn_stmt([NotNull] DecafParser.Return_stmtContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecafParser.method_call"/>.
 	/// </summary>
@@ -116,29 +191,72 @@ public interface IDecafParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitMethod_call([NotNull] DecafParser.Method_callContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.method_call_param_list"/>.
+	/// Visit a parse tree produced by <see cref="DecafParser.method_call_args"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitMethod_call_param_list([NotNull] DecafParser.Method_call_param_listContext context);
+	Result VisitMethod_call_args([NotNull] DecafParser.Method_call_argsContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.callout_arg"/>.
+	/// Visit a parse tree produced by <see cref="DecafParser.callout"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitCallout_arg([NotNull] DecafParser.Callout_argContext context);
+	Result VisitCallout([NotNull] DecafParser.CalloutContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.method_name"/>.
+	/// Visit a parse tree produced by <see cref="DecafParser.callout_args"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitMethod_name([NotNull] DecafParser.Method_nameContext context);
+	Result VisitCallout_args([NotNull] DecafParser.Callout_argsContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.expr"/>.
+	/// Visit a parse tree produced by the <c>SimpleExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitExpr([NotNull] DecafParser.ExprContext context);
+	Result VisitSimpleExpr([NotNull] DecafParser.SimpleExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>NewArrayExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNewArrayExpr([NotNull] DecafParser.NewArrayExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>NewObjectExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNewObjectExpr([NotNull] DecafParser.NewObjectExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>LiteralExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitLiteralExpr([NotNull] DecafParser.LiteralExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>NotExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNotExpr([NotNull] DecafParser.NotExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>ParenExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitParenExpr([NotNull] DecafParser.ParenExprContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>BinaryOpExpr</c>
+	/// labeled alternative in <see cref="DecafParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBinaryOpExpr([NotNull] DecafParser.BinaryOpExprContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecafParser.simple_expr"/>.
 	/// </summary>
@@ -182,15 +300,43 @@ public interface IDecafParserVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitCond_op([NotNull] DecafParser.Cond_opContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="DecafParser.literal"/>.
+	/// Visit a parse tree produced by the <c>IntLit</c>
+	/// labeled alternative in <see cref="DecafParser.literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitLiteral([NotNull] DecafParser.LiteralContext context);
+	Result VisitIntLit([NotNull] DecafParser.IntLitContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>CharLit</c>
+	/// labeled alternative in <see cref="DecafParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCharLit([NotNull] DecafParser.CharLitContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>BoolLit</c>
+	/// labeled alternative in <see cref="DecafParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBoolLit([NotNull] DecafParser.BoolLitContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>NullLit</c>
+	/// labeled alternative in <see cref="DecafParser.literal"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNullLit([NotNull] DecafParser.NullLitContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="DecafParser.bool_literal"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitBool_literal([NotNull] DecafParser.Bool_literalContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="DecafParser.optional_int_size"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitOptional_int_size([NotNull] DecafParser.Optional_int_sizeContext context);
 }

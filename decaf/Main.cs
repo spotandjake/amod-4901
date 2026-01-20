@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Antlr4.Runtime;
 using CommandLine;
+using System.Text.Json;
 
 namespace Compiler {
   public class Compiler {
@@ -17,15 +18,21 @@ namespace Compiler {
     public static void CompileString(string source, string? inputFileName) {
       // Lexing
       DecafLexer lexer = LexString(source, inputFileName);
-      // TODO: Parsing
-      while (true) {
-        IToken token = lexer.NextToken();
-        if (token.Type == TokenConstants.EOF)
-          break;
-        Console.WriteLine(
-          $"Token Type: {DecafLexer.ruleNames[token.Type - 1]}, Text: '{token.Text}'"
-        );
-      }
+      // while (true) {
+      //   IToken token = lexer.NextToken();
+      //   if (token.Type == TokenConstants.EOF)
+      //     break;
+      //   Console.WriteLine(
+      //     $"Token Type: {DecafLexer.ruleNames[token.Type - 1]}, Text: '{token.Text}'"
+      //   );
+      // }
+      // Parsing
+      CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+      DecafParser parser = new DecafParser(tokenStream);
+      ParseTree.ProgramNode program = new ParseTree.ProgramNode(parser.program());
+      string json = JsonSerializer.Serialize(program, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+      Console.WriteLine(json);
+      // TODO: Figure out ast error checking
       // TODO: Semantic Analysis
       // TODO: TypeChecking
       // TODO: Code Generation

@@ -60,9 +60,9 @@ ASSIGN      : '=' ;
 // Literals
 STRINGLIT   : '"' CHAR* '"';
 CHARLIT     : '\'' CHAR '\'';
-INTLIT      : DECLIT | HEXLIT; // TODO: Implement Ints -> DECLIT
+INTLIT      : DECLIT | HEXLIT;
 
-ID          : ALPHA (ALPHA | DIGIT)*; // TODO: Implement Identifiers
+ID          : ALPHA (ALPHA | DIGIT)*;
 
 // Helpers
 
