@@ -1,0 +1,10 @@
+class Main extends Base {
+  int x, y;
+  boolean flag;
+
+  int add(int a, int b)
+    int result;
+
+  void noop()
+    int temp;
+}

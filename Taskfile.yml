@@ -21,6 +21,10 @@ tasks:
       - antlr -Dlanguage=CSharp ./decaf/Lexing/DecafLexer.g4
       # Build the compiler
       - dotnet build
+  format:
+    cmds:
+      # Csharp Formatter
+      - dotnet format
   clean:
     cmds:
       # Clean Lexer
