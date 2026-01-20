@@ -60,8 +60,7 @@ ASSIGN      : '=' ;
 // Literals
 STRINGLIT   : '"' CHAR* '"';
 CHARLIT     : '\'' CHAR '\'';
-INTLIT      : [0-9]+; // TODO: Implement Ints
-
+INTLIT      : DECLIT | HEXLIT; // TODO: Implement Ints -> DECLIT
 
 ID          : ALPHA (ALPHA | DIGIT)*; // TODO: Implement Identifiers
 
@@ -69,5 +68,8 @@ ID          : ALPHA (ALPHA | DIGIT)*; // TODO: Implement Identifiers
 
 fragment ALPHA : [a-zA-Z_]; // "a".."z" | "A".."Z" | "_"
 fragment DIGIT : [0-9];
+fragment HEXDIGIT : DIGIT | [a-f];
+fragment HEXLIT : '0x' HEXDIGIT HEXDIGIT*;
+fragment  DECLIT : '-'? DIGIT DIGIT*;
 // Character: (\u0x20 to \u0x7E except for ' and ") | doublequote | singlequote | backslash | tab | newline
 fragment CHAR  : [\u0020-\u0021]|[\u0023-\u0026]|[\u0028-\u007E]|'\\"'|'\\\''|'\\\\'|'\\t'|'\\n';
