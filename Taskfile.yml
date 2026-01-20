@@ -21,7 +21,7 @@ tasks:
       # Generate Lexer
       - antlr -Dlanguage=CSharp ./decaf/Frontend/DecafLexer.g4
       # Generate Parser
-      - antlr -Dlanguage=CSharp ./decaf/Frontend/DecafParser.g4
+      - antlr -Dlanguage=CSharp -no-listener ./decaf/Frontend/DecafParser.g4
       # Build the compiler
       - dotnet build
   format:
@@ -35,4 +35,6 @@ tasks:
       - rm -rf ./decaf/Frontend/DecafLexer.tokens
       - rm -rf ./decaf/Frontend/DecafLexer.interp
       # Clean Parser
+      - rm -rf ./decaf/Frontend/DecafParser.cs
+      - rm -rf ./decaf/Frontend/DecafParser.tokens
       - rm -rf ./decaf/Frontend/DecafParser.interp

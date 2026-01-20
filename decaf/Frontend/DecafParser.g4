@@ -1,8 +1,10 @@
-grammar DecafParser;
+parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
 @parser::header {#pragma warning disable 3021}
-options { tokenVocab=DecafLexer; }
+options {
+  tokenVocab=DecafLexer;
+}
 
 program: class_decl+;
 
@@ -36,6 +38,7 @@ method_call:
   method_name LPAREN method_call_param_list? RPAREN
   | CALLOUT LPAREN STRINGLIT (COMMA callout_arg)* RPAREN;
 method_call_param_list: expr (COMMA expr)*;
+callout_arg: expr | STRINGLIT;
 
 // method_name: ((simple_expr | ID) DOT)? ID;
 method_name: ID; // TODO: Refactor out left recursion from method calls
@@ -58,10 +61,6 @@ location:
   ID
   | simple_expr LBRACK expr RBRACK
   | simple_expr DOT ID;
-
-callout_arg:
-  expr
-  | STRINGLIT;
 
 bin_op:
   arith_op | rel_op | eq_op | cond_op;
