@@ -16,15 +16,15 @@ var_decl = type comma_separated_lst((id | (id "[" optional_int_size "]"))) ";";
 type = "int" | "boolean" | id;
 
 statement =
-  location "=" expression ";"
+  location "=" expr ";"
   | method_call ";"
   | "if" "(" expr ")" block ("else" block)?
   | "while" "(" expr ")" block
-  | "return" expression? ";"
+  | "return" expr? ";"
   | block;
 
 method_call =
-  ((simple_expr | id) ".")? method_name "(" (comma_separated_lst(expression)?) ")"
+  ((simple_expr | id) ".")? method_name "(" (comma_separated_lst(expr)?) ")"
   | "callout" "(" string_literal ("," comma_separated_lst(callout_arg))? ")";
 
 method_name = id;
@@ -49,7 +49,7 @@ simple_expr =
   | method_call;
 
 callout_arg =
-  expression
+  expr
   | string_literal;
 
 bin_op =
