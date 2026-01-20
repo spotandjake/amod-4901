@@ -2,11 +2,8 @@
 .direnv/
 
 # cSharp
-decaf/obj/
-decaf/bin/
-
-decafTests/bin/
-decafTests/obj/
+bin/
+obj/
 
 # Antlr
 .antlr/

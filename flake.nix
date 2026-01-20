@@ -7,6 +7,7 @@
       systems = lib.systems.flakeExposed;
       devShell = {
         packages = pkgs: [
+          pkgs.dotnetPackages.Nuget # Nuget package manager
           pkgs.dotnet-sdk # .NET SDK
           pkgs.jdk25 # Java 25
           pkgs.antlr # ANTLR4 tool

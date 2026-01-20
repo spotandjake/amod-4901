@@ -8,13 +8,14 @@ tasks:
       # Build
       - task: build
       # Run The Compiler
-      - dotnet run --project decaf
+      - cd decaf/
+      - dotnet run --project=decaf -- ./test.decaf
   test:
     cmds:
       # build
       - task: build
       # Run Test
-      - task: dotnet test
+      - dotnet test
   build:
     cmds:
       # Generate Lexer

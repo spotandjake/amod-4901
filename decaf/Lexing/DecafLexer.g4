@@ -43,8 +43,8 @@ MINUS       : '-' ;
 MULT        : '*' ;
 DIV         : '/' ;
 // Relational Operators
-LE          : '<=' ;
-GE          : '>=' ;
+LEQ          : '<=' ;
+GEQ          : '>=' ;
 GT          : '>' ;
 LT          : '<' ;
 // Equality Operators
@@ -64,7 +64,6 @@ INTLIT      : [0-9]+; // TODO: Implement Ints
 
 
 ID          : ALPHA (ALPHA | DIGIT)*; // TODO: Implement Identifiers
-
 
 // Helpers
 
