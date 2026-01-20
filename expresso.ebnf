@@ -1,0 +1,92 @@
+program = class_decl+;
+
+class_decl = "class" id ("extends" id)? "{" var_decl* method_decl* "}";
+
+optional_int_size = int_literal?;
+
+method_decl = (type | "void") id method_decl_param block;
+
+method_decl_param = "(" comma_separated_lst(method_decl_param_typ)? ")";
+method_decl_param_typ = (type id) | (type id "[" "]");
+
+block = type (id | (id "[" optional_int_size "]"))+;
+
+var_decl = type comma_separated_lst((id | (id "[" optional_int_size "]"))) ";";
+
+type = "int" | "boolean" | id;
+
+statement =
+  location "=" expression ";"
+  | method_call ";"
+  | "if" "(" expr ")" block ("else" block)?
+  | "while" "(" expr ")" block
+  | "return" expression? ";"
+  | block;
+
+method_call =
+  ((simple_expr | id) ".")? method_name "(" (comma_separated_lst(expression)?) ")"
+  | "callout" "(" string_literal ("," comma_separated_lst(callout_arg))? ")";
+
+method_name = id;
+
+location =
+  id
+  | simple_expr "[" expr "]"
+  | simple_expr "." id;
+
+expr =
+  simple_expr
+  | "new" id "(" ")"
+  | "new" type (expr)?
+  | literal
+  | expr bin_op expr
+  | "!" expr
+  | "(" expr ")";
+
+simple_expr = 
+  location
+  | "this"
+  | method_call;
+
+callout_arg =
+  expression
+  | string_literal;
+
+bin_op =
+  arith_op | rel_op | eq_op | cond_op;
+
+arith_op = "+" | "-" | "*" | "/";
+
+rel_op = "<" | ">" | "<=" | ">=";
+
+eq_op = "==" | "!=";
+
+cond_op = "&&" | "||";
+
+literal = int_literal | char_literal | bool_literal | "null";
+
+id = alpha alpha_num*;
+
+alpha_num = alpha | digit;
+
+alpha = "a".."z" | "A".."Z" | "_";
+
+digit = "0".."9";
+
+hex_digit = digit | "a".."f";
+
+int_literal = decimal_literal | hex_literal;
+
+decimal_literal = "-"? digit digit*;
+
+hex_literal = "0x" hex_digit hex_digit*;
+
+bool_literal = "true" | "false";
+
+char_literal = "'" CHAR "'";
+string_literal = '"' CHAR* '"';
+
+
+
+
+comma_separated_lst(rule) = (((rule ",")* rule) | rule);

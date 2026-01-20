@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "decaf", "decaf\decaf.csproj", "{3982AAC2-4B6E-4EF9-9273-2645765FE828}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "decafTests", "decafTests\decafTests.csproj", "{71ACD84F-DCA7-4724-B470-02258819F792}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3982AAC2-4B6E-4EF9-9273-2645765FE828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3982AAC2-4B6E-4EF9-9273-2645765FE828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3982AAC2-4B6E-4EF9-9273-2645765FE828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3982AAC2-4B6E-4EF9-9273-2645765FE828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71ACD84F-DCA7-4724-B470-02258819F792}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71ACD84F-DCA7-4724-B470-02258819F792}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71ACD84F-DCA7-4724-B470-02258819F792}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71ACD84F-DCA7-4724-B470-02258819F792}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

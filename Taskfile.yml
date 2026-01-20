@@ -1,0 +1,29 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      # Build
+      - task: build
+      # Run The Compiler
+      - dotnet run --project decaf
+  test:
+    cmds:
+      # build
+      - task: build
+      # Run Test
+      - task: dotnet test
+  build:
+    cmds:
+      # Generate Lexer
+      - antlr -Dlanguage=CSharp ./decaf/Lexing/DecafLexer.g4
+      # Build the compiler
+      - dotnet build
+  clean:
+    cmds:
+      # Clean Lexer
+      - rm -rf ./decaf/Lexing/DecafLexer.cs
+      - rm -rf ./decaf/Lexing/DecafLexer.tokens
+      - rm -rf ./decaf/Lexing/DecafLexer.interp

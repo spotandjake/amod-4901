@@ -1,0 +1,12 @@
+# Nix
+.direnv/
+
+# cSharp
+decaf/obj/
+decaf/bin/
+
+decafTests/bin/
+decafTests/obj/
+
+# Antlr
+.antlr/

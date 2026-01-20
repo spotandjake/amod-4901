@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "mike-lischke.vscode-antlr4",
+    "task.vscode-task",
+    "bbenoist.nix",
+    "ms-dotnettools.csharp"
+  ]
+}
