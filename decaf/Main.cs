@@ -60,7 +60,7 @@ namespace CLI {
     static void Main(string[] args) {
       CommandLine.Parser.Default.ParseArguments<Options>(args)
         .WithParsed(RunOptions)
-        .WithNotParsed(HandleParseError);
+        .WithNotParsed(HandleCommandLineErrors);
     }
     static void RunOptions(Options opts) {
       // Get file absolute
@@ -80,8 +80,8 @@ namespace CLI {
         Console.WriteLine($"Compilation failed: {e.Message}");
       }
     }
-    static void HandleParseError(IEnumerable<Error> errs) {
-      //handle errors
+    static void HandleCommandLineErrors(IEnumerable<Error> errs) {
+      // TODO: Handle Command Line Errors
     }
   }
 }

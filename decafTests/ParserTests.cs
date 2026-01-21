@@ -10,7 +10,7 @@ public class DecafParserTests :
     settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
     return settings;
   }
-  #nullable enable
+#nullable enable
   private ParseTree.ProgramNode? Parse(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);

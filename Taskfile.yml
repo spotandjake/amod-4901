@@ -3,33 +3,36 @@
 version: '3'
 
 tasks:
+  # Useful Commands
   default:
-    cmds:
-      # Build
-      - task: build
-      # Run The Compiler
-      - cd decaf/
-      - dotnet run --project=decaf -- ./test.decaf
+    desc:
+      Builds the compiler and runs the cli,
+      Options can be passed through `task test -- <opts>`.
+    deps:
+      - build
+    cmd: dotnet run --project=decaf -- {{.CLI_ARGS}}
+  experiment:
+    desc: Builds the compiler and runs a local ./test.decaf file.
+    deps:
+      - build
+    cmd: dotnet run --project=decaf -- ./example.decaf
+  # Library Commands
   test:
-    cmds:
-      # build
-      - task: build
-      # Run Test
-      - dotnet test {{.CLI_ARGS}}
+    desc: Runs the compiler test suite, options can be passed through `task test -- <opts>`
+    deps:
+      - build
+    cmd: dotnet test {{.CLI_ARGS}}
   build:
-    cmds:
-      # TODO: Only run antlr if the files are missing and the tooling is available
-      # Generate Lexer
-      - antlr -Dlanguage=CSharp ./decaf/Frontend/DecafLexer.g4
-      # Generate Parser
-      - antlr -Dlanguage=CSharp -no-listener -no-visitor ./decaf/Frontend/DecafParser.g4
-      # Build the compiler
-      - dotnet build
+    desc: Builds the compiler from source.
+    deps:
+      - build_antlr
+    cmd: dotnet build
+  # Utility Commands
   format:
-    cmds:
-      # Csharp Formatter
-      - dotnet format
+    desc: Formats the entire compiler and test suites.
+    cmd: dotnet format {{.CLI_ARGS}}
   clean:
+    desc: Cleans any build artifacts.
     cmds:
       # Clean Lexer
       - rm -rf ./decaf/Frontend/DecafLexer.cs
@@ -41,3 +44,23 @@ tasks:
       - rm -rf ./decaf/Frontend/DecafParser.interp
       # Clean Snapshots
       - rm -rf **/*.received.*
+  # Internal
+  build_antlr:
+    internal: true
+    desc: Builds the Parser and Lexer if antlr is available or warns.
+    cmds:
+      - |
+        if command -v antlr >/dev/null 2>&1; then
+          echo "Generating Lexer"
+          antlr -Dlanguage=CSharp ./decaf/Frontend/DecafLexer.g4
+          echo "Generating Parser"
+          antlr -Dlanguage=CSharp -no-listener -no-visitor ./decaf/Frontend/DecafParser.g4
+        elif [[ -e ./decaf/Frontend/DecafLexer.cs && -e ./decaf/Frontend/DecafParser.cs ]] then
+          printf "\x1b[93mWarning: ANTLR toolkit is not installed, using possibly outdated generated Parser & Lexer\x1b[0m\n"
+        else
+          printf "\x1b[91mERROR: ANTLR toolkit is not installed, failed to Generate Lexer & Parser\x1b[0m\n"
+          exit 1
+        fi
+    silent: true
+
+

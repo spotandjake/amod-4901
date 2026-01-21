@@ -1,4 +1,4 @@
-# amod-4901
+# Trent Decaf Compiler AMOD-4901
 
 This repo contains a simple programming language for Trent's AMOD-4901 course. The compiler is based off the expresso language from MIT's 2002 version of [SMA-5502](https://dspace.mit.edu/bitstream/handle/1721.1/35804/6-035Fall-2002/OcwWeb/Electrical-Engineering-and-Computer-Science/6-035Computer-Language-EngineeringFall2002/CourseHome/index.htm).
 
@@ -22,9 +22,11 @@ Below is a list of required software dependencies that must be installed on your
   * This library is used for snapshot testing.
 
 ### Building
-The compiler can be built using the command `task build`, alternatively it can be built and run using `task` which both builds and runs the program.
+The compiler can be built using the command `task build`.
 
-#### TODO: Usage
+#### Usage
+
+By default the compiler can be used by running `task -- <opts>`, you can run `task experiment` which will run the compiler with whatever is in `./example.decaf`
 
 ### Testing
 
@@ -66,7 +68,3 @@ This section contains a list of general TODO's left on the project:
     * Operator Precedence
     * Kitchen Soup
     * Targeted Tests
-* Admin
-  * Simple bash scripts for the most basic tasks.
-  * Github Actions
-    * It would be nice if we ran both a formatting check and our test suite in github actions on commit.
