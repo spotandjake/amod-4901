@@ -9,8 +9,9 @@ namespace Compiler {
 #nullable enable
     public static DecafLexer LexString(string source, string? inputFileName) {
       // Create Input Stream
-      AntlrInputStream inputStream = new AntlrInputStream(source);
-      inputStream.name = inputFileName ?? "<unknown file>";
+      AntlrInputStream inputStream = new AntlrInputStream(source) {
+        name = inputFileName ?? "<unknown file>"
+      };
       // Create Lexer Instance
       DecafLexer lexer = new DecafLexer(inputStream);
       return lexer;

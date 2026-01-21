@@ -12,11 +12,11 @@ class_decl: CLASS name=ID (EXTENDS superClassName=ID)? LBRACE var_decl* method_d
 
 var_decl: typ=type binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
-var_bind: name=ID (LBRACK optional_int_size RBRACK)?;
+var_bind: name=ID (LBRACK INTLIT? RBRACK)?;
 
 method_decl: returnType=type name=ID LPAREN parameters=method_decl_param_list? RPAREN body=block;
-method_decl_param_list: method_decl_param_typ (COMMA method_decl_param_typ)*;
-method_decl_param_typ: type ID (LBRACK RBRACK)?; // TODO: Consider simplifying the array part into type itself
+method_decl_param_list: method_decl_param (COMMA method_decl_param)*;
+method_decl_param: typ=type name=ID (LBRACK RBRACK)?; // TODO: Consider simplifying the array part into type itself
 
 block: LBRACE var_decl* statement* RBRACE;
 
@@ -40,6 +40,7 @@ statement:
   ;
 
 assign_stmt: location ASSIGN expr SEMI;
+// TODO: Figure out how to handle the hierarchy of expressions here (Maybe consider an expression statement?)
 call_stmt: call_expr SEMI;
 if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
 while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
@@ -52,6 +53,7 @@ call_expr:
   ;
 method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
 method_call_args: expr (COMMA expr)*;
+// TODO: Consider removing callout and having `@<id>` represent a special kind of internal id.
 prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
 prim_callout_args: (COMMA (expr | STRINGLIT))*;
 
@@ -62,15 +64,22 @@ expr:
   // TODO: What is the purpose of this????
   | NEW type (expr)? # NewArrayExpr // TODO: Develop a better name
   | literal # LiteralExpr
-  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr // TODO: Generalize this into a binop expression
   | op=NOT operand=expr # NotExpr // TODO: Generalize this to a prefix expr
+  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr // TODO: Generalize this into a binop expression
   | LPAREN expr RPAREN # ParenExpr
   ;
 
-simple_expr: location | THIS | call_expr;
+simple_expr:
+  location # LocationExpr
+  | THIS # ThisExpr // TODO: Consider handling this as a regular ID
+  | call_expr # CallExpr
+  ;
 
-location: ID ((DOT ID) | (LBRACK expr RBRACK))?;
+location: root=ID (path=location_path | indexExpr=location_array_index)?;
+location_path: DOT ID; // TODO: Allow paths like root.path1.path2 -- Restrict Semantically
+location_array_index: LBRACK expr RBRACK; // TODO: Allow nested array paths -- Restrict Semantically
 
+// TODO: Handle Precedence fully
 bin_op:
   arith_op | rel_op | eq_op | cond_op;
 
@@ -92,6 +101,3 @@ literal:
   ;
 
 bool_literal: TRUE | FALSE;
-
-// Helpers
-optional_int_size: INTLIT?;

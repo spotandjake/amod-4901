@@ -11,7 +11,11 @@
             Type: int
           },
           VarBinds: [
-            x
+            {
+              Kind: VarBindNode,
+              Name: x,
+              IsArray: false
+            }
           ]
         },
         {
@@ -21,7 +25,11 @@
             Type: int
           },
           VarBinds: [
-            y
+            {
+              Kind: VarBindNode,
+              Name: y,
+              IsArray: false
+            }
           ]
         }
       ]

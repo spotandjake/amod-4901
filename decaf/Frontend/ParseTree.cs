@@ -10,6 +10,10 @@ public class ParseTree {
     BlockNode,
     VariableDeclarationNode,
     TypeNode,
+    // General
+    VarBindNode,
+    ParameterNode,
+    LocationNode,
     // Statements
     AssignmentNode,
     CallNode,
@@ -88,10 +92,25 @@ public class ParseTree {
     }
   }
   public class VariableDeclarationNode : Node {
+    public class VarBindNode : Node {
+      public override NodeKind Kind => NodeKind.VarBindNode;
+      public string Name { get; }
+      public bool IsArray { get; }
+      public VarBindNode(Position position, string name, bool isArray) : base(position) {
+        this.Name = name;
+        this.IsArray = isArray;
+      }
+      public static VarBindNode FromContext(DecafParser.Var_bindContext context) {
+        var position = Position.FromContext(context);
+        var name = context.name.Text;
+        var isArray = context.LBRACK() != null && context.RBRACK() != null;
+        return new VarBindNode(position, name, isArray);
+      }
+    }
     public override NodeKind Kind => NodeKind.VariableDeclarationNode;
     public TypeNode VarType { get; }
-    public string[] VarBinds { get; }
-    public VariableDeclarationNode(Position position, TypeNode varType, string[] varBinds) : base(position) {
+    public VarBindNode[] VarBinds { get; }
+    public VariableDeclarationNode(Position position, TypeNode varType, VarBindNode[] varBinds) : base(position) {
       this.VarType = varType;
       this.VarBinds = varBinds;
     }
@@ -99,31 +118,50 @@ public class ParseTree {
       var position = Position.FromContext(context);
       var varType = TypeNode.FromContext(context.typ);
       var varBinds = context.binds.var_bind().Select(
-        // TODO: Handle Array Variables
-        varBindCtx => varBindCtx.name.Text
+        varBindCtx => VarBindNode.FromContext(varBindCtx)
       ).ToArray();
       return new VariableDeclarationNode(position, varType, varBinds);
     }
   }
   public class MethodDeclarationNode : Node {
+    public class ParameterNode : Node {
+      public override NodeKind Kind => NodeKind.ParameterNode;
+      public TypeNode ParamType { get; }
+      public string Name { get; }
+      public bool IsArray { get; }
+      public ParameterNode(Position position, TypeNode paramType, string name, bool isArray) : base(position) {
+        this.ParamType = paramType;
+        this.Name = name;
+        this.IsArray = isArray;
+      }
+      public static ParameterNode FromContext(DecafParser.Method_decl_paramContext context) {
+        var position = Position.FromContext(context);
+        var paramType = TypeNode.FromContext(context.typ);
+        var name = context.name.Text;
+        var isArray = context.LBRACK() != null && context.RBRACK() != null;
+        return new ParameterNode(position, paramType, name, isArray);
+      }
+    }
     public override NodeKind Kind => NodeKind.MethodDeclNode;
     public TypeNode ReturnType { get; }
     public string Name { get; }
-    // public ParameterNode[] Parameters { get; }
+    public ParameterNode[] Parameters { get; }
     public BlockNode Body { get; }
-    public MethodDeclarationNode(Position position, TypeNode returnType, string name, BlockNode body) : base(position) {
+    public MethodDeclarationNode(Position position, TypeNode returnType, string name, ParameterNode[] parameters, BlockNode body) : base(position) {
       this.ReturnType = returnType;
       this.Name = name;
+      this.Parameters = parameters;
       this.Body = body;
     }
     public static MethodDeclarationNode FromContext(DecafParser.Method_declContext context) {
       var position = Position.FromContext(context);
       var returnType = TypeNode.FromContext(context.returnType);
       var name = context.name.Text;
-      // TODO: Handle Parameters
-      // var parameters = context.parameters
+      var parameters = context.parameters != null ? context.parameters.method_decl_param().Select(
+        paramCtx => ParameterNode.FromContext(paramCtx)
+      ).ToArray() : [];
       var body = BlockNode.FromContext(context.body);
-      return new MethodDeclarationNode(position, returnType, name, body);
+      return new MethodDeclarationNode(position, returnType, name, parameters, body);
     }
   }
   public class BlockNode : Node {
@@ -190,32 +228,30 @@ public class ParseTree {
   };
   public class AssignmentNode : StatementNode {
     public override NodeKind Kind => NodeKind.AssignmentNode;
-    public string Location { get; }
+    public LocationNode Location { get; }
     public ExpressionNode Expression { get; }
-    public AssignmentNode(Position position, string location, ExpressionNode expression) : base(position) {
+    public AssignmentNode(Position position, LocationNode location, ExpressionNode expression) : base(position) {
       this.Location = location;
       this.Expression = expression;
     }
     public static AssignmentNode FromContext(DecafParser.Assign_stmtContext context) {
       var position = Position.FromContext(context);
-      // TODO: Implement proper Location
-      var location = context.location().GetText();
+      var location = LocationNode.FromContext(context.location());
       var expression = ExpressionNode.FromContext(context.expr());
       return new AssignmentNode(position, location, expression);
     }
   };
   public class CallNode : StatementNode {
     public override NodeKind Kind => NodeKind.CallNode;
-    public string MethodPath { get; }
+    public LocationNode MethodPath { get; }
     public ExpressionNode[] Arguments { get; }
-    public CallNode(Position position, string methodPath, ExpressionNode[] args) : base(position) {
+    public CallNode(Position position, LocationNode methodPath, ExpressionNode[] args) : base(position) {
       this.MethodPath = methodPath;
       this.Arguments = args;
     }
     public static CallNode FromContext(DecafParser.Method_callContext context) {
       var position = Position.FromContext(context);
-      // TODO: Implement proper Location
-      var methodPath = context.methodPath.GetText();
+      var methodPath = LocationNode.FromContext(context.methodPath);
       var args = context.args.expr().Select(
         exprCtx => ExpressionNode.FromContext(exprCtx)
       ).ToArray();
@@ -230,14 +266,14 @@ public class ParseTree {
       this.PrimitiveId = primId;
       this.Arguments = args;
     }
-    public static CallNode FromContext(DecafParser.Prim_calloutContext context) {
+    public static PrimitiveCallNode FromContext(DecafParser.Prim_calloutContext context) {
       var position = Position.FromContext(context);
       var primId = context.primId.Text;
       // TODO: Handle mixed expression and stringlit args
       // var args = context.args.expr().Select(
       //   exprCtx => ExpressionNode.FromContext(exprCtx)
       // ).ToArray();
-      return new CallNode(position, primId, []);
+      return new PrimitiveCallNode(position, primId, []);
     }
   };
   public class IfNode : StatementNode {
@@ -284,7 +320,6 @@ public class ParseTree {
       return new ReturnNode(position, value);
     }
   };
-  // TODO: Figure out a cleaner way of handling the ast subtypes
   [JsonDerivedType(typeof(SimpleExpressionNode), "SimpleExpression")]
   // [JsonDerivedType(typeof(MethodCallNode), "MethodCallStatement")]
   // [JsonDerivedType(typeof(IfNode), "IfStatement")]
@@ -363,7 +398,25 @@ public class ParseTree {
       return new PrefixExpressionNode(position, op, operand);
     }
   };
-  // TODO: Consider a cleaner way of handling literal subtypes
+  public class LocationNode : Node {
+    public override NodeKind Kind => NodeKind.LocationNode;
+    public string Root { get; }
+    // NOTE: Parsing restricts so we can't have nested arrays.
+    public string? Path { get; }
+    public ExpressionNode? IndexExpr { get; }
+    public LocationNode(Position position, string root, string? path, ExpressionNode? indexExpr) : base(position) {
+      this.Root = root;
+      this.Path = path;
+      this.IndexExpr = indexExpr;
+    }
+    public static LocationNode FromContext(DecafParser.LocationContext context) {
+      var position = Position.FromContext(context);
+      var root = context.root.Text;
+      var path = context.path?.ID().GetText();
+      var indexExpr = context.indexExpr != null ? ExpressionNode.FromContext(context.indexExpr.expr()) : null;
+      return new LocationNode(position, root, path, indexExpr);
+    }
+  };
   [JsonDerivedType(typeof(IntegerLiteralNode), "IntegerLiteral")]
   [JsonDerivedType(typeof(CharLiteralNode), "CharLiteral")]
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
