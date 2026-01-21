@@ -21,52 +21,51 @@ public class DecafParserTests :
   // Empty Program
   [TestMethod]
   public void TestEmpty() {
-    // Assert.
     Assert.Throws<Antlr4.Runtime.Misc.ParseCanceledException>(() => Parse(""));
   }
   // Classes
   [TestMethod]
   public Task TestEmptyBaseClass() {
     var result = Parse("class Main {}");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestEmptyClass() {
     var result = Parse("class Main extends Base {}");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestEmptyMultiClass() {
     var result = Parse("class Main {} class Main2 {}");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   // Class Variable Declarations
   [TestMethod]
   public Task TestSingleVariableDeclaration() {
     var result = Parse("class Main { int x; }");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiVariableDeclaration() {
     var result = Parse("class Main { int x; int y; }");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiBindsDeclaration() {
     var result = Parse("class Main { int x, y, z; }");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   // TODO: Array Variable
   // Class Method Declarations
   [TestMethod]
   public Task TestSingleBasicMethodDeclaration() {
     var result = Parse("class Main { void foo() {} }");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiBasicMethodDeclaration() {
     var result = Parse("class Main { void foo() {} void bar() {} }");
-    return Verify(result, CreateSettings());
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   // TODO: Method Parameters
   // [TestMethod]

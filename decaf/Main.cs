@@ -10,6 +10,7 @@ namespace Compiler {
     public static DecafLexer LexString(string source, string? inputFileName) {
       // Create Input Stream
       AntlrInputStream inputStream = new AntlrInputStream(source);
+      inputStream.name = inputFileName ?? "<unknown file>";
       // Create Lexer Instance
       DecafLexer lexer = new DecafLexer(inputStream);
       return lexer;
@@ -38,7 +39,6 @@ namespace Compiler {
       ParseTree.ProgramNode program = ParseTokenStream(tokenStream, inputFileName);
       string json = JsonSerializer.Serialize(program, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
       Console.WriteLine(json);
-      // TODO: Figure out ast error checking
       // TODO: Semantic Analysis
       // TODO: TypeChecking
       // TODO: Code Generation
@@ -65,6 +65,7 @@ namespace CLI {
     static void RunOptions(Options opts) {
       // Get file absolute
       string absPath = System.IO.Path.GetFullPath(opts.FileName);
+      string relPath = System.IO.Path.GetRelativePath(System.IO.Directory.GetCurrentDirectory(), absPath);
       if (!System.IO.File.Exists(absPath)) {
         Console.WriteLine($"File not found: {absPath}");
         return;
@@ -74,7 +75,7 @@ namespace CLI {
       // Compile
       try {
         // TODO: Write output to opts.output if specified
-        Compiler.Compiler.CompileString(source, absPath);
+        Compiler.Compiler.CompileString(source, relPath);
       }
       catch (Exception e) {
         Console.WriteLine($"Compilation failed: {e.Message}");

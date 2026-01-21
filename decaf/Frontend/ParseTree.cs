@@ -27,19 +27,38 @@ public class ParseTree {
     BoolLiteralNode,
     NullLiteralNode
   }
-  // TODO: Add Positions
+  public struct Position {
+#nullable enable
+    public required string? fileName;
+    public required int line;
+    public required int column;
+    public required int offset;
+    public static Position FromContext(Antlr4.Runtime.ParserRuleContext context) {
+      return new Position {
+        fileName = context.Start.InputStream.SourceName,
+        line = context.Start.Line,
+        column = context.Start.Column,
+        offset = context.Start.StartIndex
+      };
+    }
+  }
   public abstract class Node {
     public abstract NodeKind Kind { get; }
+    public Position Position { get; }
+    protected Node(Position position) { this.Position = position; }
   };
   public class ProgramNode : Node {
     public override NodeKind Kind => NodeKind.ProgramNode;
     public ClassNode[] Classes { get; }
-    public ProgramNode(ClassNode[] classes) { this.Classes = classes; }
+    public ProgramNode(Position position, ClassNode[] classes) : base(position) {
+      this.Classes = classes;
+    }
     public static ProgramNode FromContext(DecafParser.ProgramContext context) {
+      var position = Position.FromContext(context);
       var classes = context.class_decl().Select(
         classCtx => ClassNode.FromContext(classCtx)
       ).ToArray();
-      return new ProgramNode(classes);
+      return new ProgramNode(position, classes);
     }
   };
   public class ClassNode : Node {
@@ -49,13 +68,14 @@ public class ParseTree {
     public string? SuperClassName { get; }
     public VariableDeclarationNode[] VariableDeclarations { get; }
     public MethodDeclarationNode[] MethodDeclarations { get; }
-    public ClassNode(string name, string? superClassName, VariableDeclarationNode[] varDecls, MethodDeclarationNode[] methodDecls) {
+    public ClassNode(Position position, string name, string? superClassName, VariableDeclarationNode[] varDecls, MethodDeclarationNode[] methodDecls) : base(position) {
       this.Name = name;
       this.SuperClassName = superClassName;
       this.VariableDeclarations = varDecls;
       this.MethodDeclarations = methodDecls;
     }
     public static ClassNode FromContext(DecafParser.Class_declContext context) {
+      var position = Position.FromContext(context);
       var name = context.name.Text;
       var superClassName = context.superClassName?.Text;
       var varDecls = context.var_decl().Select(
@@ -64,24 +84,25 @@ public class ParseTree {
       var methodDecls = context.method_decl().Select(
         methodDeclCtx => MethodDeclarationNode.FromContext(methodDeclCtx)
       ).ToArray();
-      return new ClassNode(name, superClassName, varDecls, methodDecls);
+      return new ClassNode(position, name, superClassName, varDecls, methodDecls);
     }
   }
   public class VariableDeclarationNode : Node {
     public override NodeKind Kind => NodeKind.VariableDeclarationNode;
     public TypeNode VarType { get; }
     public string[] VarBinds { get; }
-    public VariableDeclarationNode(TypeNode varType, string[] varBinds) {
+    public VariableDeclarationNode(Position position, TypeNode varType, string[] varBinds) : base(position) {
       this.VarType = varType;
       this.VarBinds = varBinds;
     }
     public static VariableDeclarationNode FromContext(DecafParser.Var_declContext context) {
+      var position = Position.FromContext(context);
       var varType = TypeNode.FromContext(context.typ);
       var varBinds = context.binds.var_bind().Select(
         // TODO: Handle Array Variables
         varBindCtx => varBindCtx.name.Text
       ).ToArray();
-      return new VariableDeclarationNode(varType, varBinds);
+      return new VariableDeclarationNode(position, varType, varBinds);
     }
   }
   public class MethodDeclarationNode : Node {
@@ -90,45 +111,48 @@ public class ParseTree {
     public string Name { get; }
     // public ParameterNode[] Parameters { get; }
     public BlockNode Body { get; }
-    public MethodDeclarationNode(TypeNode returnType, string name, BlockNode body) {
+    public MethodDeclarationNode(Position position, TypeNode returnType, string name, BlockNode body) : base(position) {
       this.ReturnType = returnType;
       this.Name = name;
       this.Body = body;
     }
     public static MethodDeclarationNode FromContext(DecafParser.Method_declContext context) {
+      var position = Position.FromContext(context);
       var returnType = TypeNode.FromContext(context.returnType);
       var name = context.name.Text;
       // TODO: Handle Parameters
       // var parameters = context.parameters
       var body = BlockNode.FromContext(context.body);
-      return new MethodDeclarationNode(returnType, name, body);
+      return new MethodDeclarationNode(position, returnType, name, body);
     }
   }
   public class BlockNode : Node {
     public override NodeKind Kind => NodeKind.BlockNode;
     public VariableDeclarationNode[] VariableDeclarations { get; }
     public StatementNode[] Statements { get; }
-    public BlockNode(VariableDeclarationNode[] varDecls, StatementNode[] statements) {
+    public BlockNode(Position position, VariableDeclarationNode[] varDecls, StatementNode[] statements) : base(position) {
       this.VariableDeclarations = varDecls;
       this.Statements = statements;
     }
     public static BlockNode FromContext(DecafParser.BlockContext context) {
+      var position = Position.FromContext(context);
       var varDecls = context.var_decl().Select(
         varDeclCtx => VariableDeclarationNode.FromContext(varDeclCtx)
       ).ToArray();
       var statements = context.statement().Select(
         stmtCtx => StatementNode.FromContext(stmtCtx)
       ).ToArray();
-      return new BlockNode(varDecls, statements);
+      return new BlockNode(position, varDecls, statements);
     }
   }
   public class TypeNode : Node {
     public override NodeKind Kind => NodeKind.TypeNode;
     public string Type { get; }
-    public TypeNode(string type) { this.Type = type; }
+    public TypeNode(Position position, string type) : base(position) { this.Type = type; }
     public static TypeNode FromContext(DecafParser.TypeContext context) {
+      var position = Position.FromContext(context);
       var type = context.GetText();
-      return new TypeNode(type);
+      return new TypeNode(position, type);
     }
   }
   [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
@@ -138,6 +162,7 @@ public class ParseTree {
   [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
   [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
   public abstract class StatementNode : Node {
+    protected StatementNode(Position position) : base(position) { }
     public static StatementNode FromContext(DecafParser.StatementContext context) {
       switch (context) {
         case DecafParser.AssignStatementContext assignCtx:
@@ -167,49 +192,52 @@ public class ParseTree {
     public override NodeKind Kind => NodeKind.AssignmentNode;
     public string Location { get; }
     public ExpressionNode Expression { get; }
-    public AssignmentNode(string location, ExpressionNode expression) {
+    public AssignmentNode(Position position, string location, ExpressionNode expression) : base(position) {
       this.Location = location;
       this.Expression = expression;
     }
     public static AssignmentNode FromContext(DecafParser.Assign_stmtContext context) {
+      var position = Position.FromContext(context);
       // TODO: Implement proper Location
       var location = context.location().GetText();
       var expression = ExpressionNode.FromContext(context.expr());
-      return new AssignmentNode(location, expression);
+      return new AssignmentNode(position, location, expression);
     }
   };
   public class CallNode : StatementNode {
     public override NodeKind Kind => NodeKind.CallNode;
     public string MethodPath { get; }
     public ExpressionNode[] Arguments { get; }
-    public CallNode(string methodPath, ExpressionNode[] args) {
+    public CallNode(Position position, string methodPath, ExpressionNode[] args) : base(position) {
       this.MethodPath = methodPath;
       this.Arguments = args;
     }
     public static CallNode FromContext(DecafParser.Method_callContext context) {
+      var position = Position.FromContext(context);
       // TODO: Implement proper Location
       var methodPath = context.methodPath.GetText();
       var args = context.args.expr().Select(
         exprCtx => ExpressionNode.FromContext(exprCtx)
       ).ToArray();
-      return new CallNode(methodPath, args);
+      return new CallNode(position, methodPath, args);
     }
   };
   public class PrimitiveCallNode : StatementNode {
     public override NodeKind Kind => NodeKind.PrimitiveCallNode;
     public string PrimitiveId { get; }
     public ExpressionNode[] Arguments { get; }
-    public PrimitiveCallNode(string primId, ExpressionNode[] args) {
+    public PrimitiveCallNode(Position position, string primId, ExpressionNode[] args) : base(position) {
       this.PrimitiveId = primId;
       this.Arguments = args;
     }
     public static CallNode FromContext(DecafParser.Prim_calloutContext context) {
+      var position = Position.FromContext(context);
       var primId = context.primId.Text;
       // TODO: Handle mixed expression and stringlit args
       // var args = context.args.expr().Select(
       //   exprCtx => ExpressionNode.FromContext(exprCtx)
       // ).ToArray();
-      return new CallNode(primId, []);
+      return new CallNode(position, primId, []);
     }
   };
   public class IfNode : StatementNode {
@@ -218,39 +246,42 @@ public class ParseTree {
     public BlockNode TrueBranch { get; }
 #nullable enable
     public BlockNode? FalseBranch { get; }
-    public IfNode(ExpressionNode condition, BlockNode trueBranch, BlockNode? falseBranch) {
+    public IfNode(Position position, ExpressionNode condition, BlockNode trueBranch, BlockNode? falseBranch) : base(position) {
       this.Condition = condition;
       this.TrueBranch = trueBranch;
       this.FalseBranch = falseBranch;
     }
     public static IfNode FromContext(DecafParser.If_stmtContext context) {
+      var position = Position.FromContext(context);
       var condition = ExpressionNode.FromContext(context.condition);
       var trueBranch = BlockNode.FromContext(context.trueBranch);
       var falseBranch = context.falseBranch != null ? BlockNode.FromContext(context.falseBranch) : null;
-      return new IfNode(condition, trueBranch, falseBranch);
+      return new IfNode(position, condition, trueBranch, falseBranch);
     }
   };
   public class WhileNode : StatementNode {
     public override NodeKind Kind => NodeKind.WhileNode;
     public ExpressionNode Condition { get; }
     public BlockNode Body { get; }
-    public WhileNode(ExpressionNode condition, BlockNode body) {
+    public WhileNode(Position position, ExpressionNode condition, BlockNode body) : base(position) {
       this.Condition = condition;
       this.Body = body;
     }
     public static WhileNode FromContext(DecafParser.While_stmtContext context) {
+      var position = Position.FromContext(context);
       var condition = ExpressionNode.FromContext(context.condition);
       var body = BlockNode.FromContext(context.body);
-      return new WhileNode(condition, body);
+      return new WhileNode(position, condition, body);
     }
   };
   public class ReturnNode : StatementNode {
     public override NodeKind Kind => NodeKind.ReturnNode;
     public ExpressionNode? Value { get; }
-    public ReturnNode(ExpressionNode? value) { this.Value = value; }
+    public ReturnNode(Position position, ExpressionNode? value) : base(position) { this.Value = value; }
     public static ReturnNode FromContext(DecafParser.Return_stmtContext context) {
+      var position = Position.FromContext(context);
       var value = context.value != null ? ExpressionNode.FromContext(context.value) : null;
-      return new ReturnNode(value);
+      return new ReturnNode(position, value);
     }
   };
   // TODO: Figure out a cleaner way of handling the ast subtypes
@@ -265,6 +296,7 @@ public class ParseTree {
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
   [JsonDerivedType(typeof(NullLiteralNode), "NullLiteral")]
   public abstract class ExpressionNode : Node {
+    protected ExpressionNode(Position position) : base(position) { }
     public static ExpressionNode FromContext(DecafParser.ExprContext context) {
       switch (context) {
         case DecafParser.SimpleExprContext simpleExprCtx:
@@ -292,9 +324,10 @@ public class ParseTree {
   // TODO: Implement SimpleExpressionNode
   public class SimpleExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.SimpleExpressionNode;
-    public SimpleExpressionNode() { }
+    public SimpleExpressionNode(Position position) : base(position) { }
     public static SimpleExpressionNode FromContext(DecafParser.Simple_exprContext context) {
-      return new SimpleExpressionNode();
+      var position = Position.FromContext(context);
+      return new SimpleExpressionNode(position);
     }
   };
   public class BinopExpressionNode : ExpressionNode {
@@ -302,30 +335,32 @@ public class ParseTree {
     public ExpressionNode Lhs { get; }
     public string Operator { get; }
     public ExpressionNode Rhs { get; }
-    public BinopExpressionNode(ExpressionNode lhs, string op, ExpressionNode rhs) {
+    public BinopExpressionNode(Position position, ExpressionNode lhs, string op, ExpressionNode rhs) : base(position) {
       this.Lhs = lhs;
       this.Operator = op;
       this.Rhs = rhs;
     }
     public static BinopExpressionNode FromContext(DecafParser.BinaryOpExprContext context) {
+      var position = Position.FromContext(context);
       var lhs = ExpressionNode.FromContext(context.lhs);
       var op = context.op.GetText();
       var rhs = ExpressionNode.FromContext(context.rhs);
-      return new BinopExpressionNode(lhs, op, rhs);
+      return new BinopExpressionNode(position, lhs, op, rhs);
     }
   };
   public class PrefixExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.PrefixExpressionNode;
     public string Operator { get; }
     public ExpressionNode Operand { get; }
-    public PrefixExpressionNode(string op, ExpressionNode operand) {
+    public PrefixExpressionNode(Position position, string op, ExpressionNode operand) : base(position) {
       this.Operator = op;
       this.Operand = operand;
     }
     public static PrefixExpressionNode FromContext(DecafParser.NotExprContext context) {
+      var position = Position.FromContext(context);
       var op = context.op.Text;
       var operand = ExpressionNode.FromContext(context.operand);
-      return new PrefixExpressionNode(op, operand);
+      return new PrefixExpressionNode(position, op, operand);
     }
   };
   // TODO: Consider a cleaner way of handling literal subtypes
@@ -334,6 +369,7 @@ public class ParseTree {
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
   [JsonDerivedType(typeof(NullLiteralNode), "NullLiteral")]
   public abstract class LiteralNode : ExpressionNode {
+    protected LiteralNode(Position position) : base(position) { }
     public static LiteralNode FromContext(DecafParser.LiteralContext context) {
       switch (context) {
         case DecafParser.IntLitContext intLitCtx:
@@ -353,41 +389,47 @@ public class ParseTree {
   public class IntegerLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.IntegerLiteralNode;
     public int Value { get; }
-    public IntegerLiteralNode(int value) {
+    public IntegerLiteralNode(Position position, int value) : base(position) {
       this.Value = value;
     }
     public static IntegerLiteralNode FromContext(DecafParser.IntLitContext context) {
+      var position = Position.FromContext(context);
       // TODO: Handle Proper Integer Conversion
       var value = int.Parse(context.INTLIT().GetText());
-      return new IntegerLiteralNode(value);
+      return new IntegerLiteralNode(position, value);
     }
   };
   public class CharLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.CharLiteralNode;
     public char Value { get; }
-    public CharLiteralNode(char value) {
+    public CharLiteralNode(Position position, char value) : base(position) {
       this.Value = value;
     }
     public static CharLiteralNode FromContext(DecafParser.CharLitContext context) {
+      var position = Position.FromContext(context);
       // TODO: Handle Proper Char Parsing
       var value = context.CHARLIT().GetText()[1]; // Skip the quotes
-      return new CharLiteralNode(value);
+      return new CharLiteralNode(position, value);
     }
   };
   public class BoolLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.BoolLiteralNode;
     public bool Value { get; }
-    public BoolLiteralNode(bool value) { this.Value = value; }
+    public BoolLiteralNode(Position position, bool value) : base(position) {
+      this.Value = value;
+    }
     public static BoolLiteralNode FromContext(DecafParser.Bool_literalContext context) {
+      var position = Position.FromContext(context);
       var value = context.TRUE() != null;
-      return new BoolLiteralNode(value);
+      return new BoolLiteralNode(position, value);
     }
   };
   public class NullLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.NullLiteralNode;
-    public NullLiteralNode() { }
+    public NullLiteralNode(Position position) : base(position) { }
     public static NullLiteralNode FromContext(DecafParser.NullLitContext context) {
-      return new NullLiteralNode();
+      var position = Position.FromContext(context);
+      return new NullLiteralNode(position);
     }
   };
 }
