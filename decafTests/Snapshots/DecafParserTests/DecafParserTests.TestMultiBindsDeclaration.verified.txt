@@ -1,0 +1,22 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      VariableDeclarations: [
+        {
+          Kind: VariableDeclarationNode,
+          VarType: {
+            Kind: TypeNode,
+            Type: int
+          },
+          VarBinds: [
+            x,
+            y,
+            z
+          ]
+        }
+      ]
+    }
+  ]
+}

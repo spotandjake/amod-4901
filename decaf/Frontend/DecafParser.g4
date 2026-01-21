@@ -46,11 +46,14 @@ while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
 return_stmt: RETURN value=expr? SEMI;
 
 // TODO: Disallow ID[expr] in semantic analysis
-call_expr: method_call | callout;
-method_call: location method_call_args?;
-method_call_args: LPAREN expr (COMMA expr)* RPAREN;
-callout: CALLOUT LPAREN callout_args RPAREN;
-callout_args: STRINGLIT (COMMA (expr | STRINGLIT))*;
+call_expr: 
+  method_call # MethodCallExpr
+  | prim_callout # PrimCalloutExpr
+  ;
+method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
+method_call_args: expr (COMMA expr)*;
+prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
+prim_callout_args: (COMMA (expr | STRINGLIT))*;
 
 // TODO: I don't love how this is structured at the moment
 expr:

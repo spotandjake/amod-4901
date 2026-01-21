@@ -17,6 +17,7 @@ namespace Compiler {
 #nullable enable
     public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream, string? inputFileName) {
       DecafParser parser = new DecafParser(tokenStream);
+      parser.ErrorHandler = new BailErrorStrategy();
       ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
       return program;
     }
@@ -71,8 +72,13 @@ namespace CLI {
       // Read file content
       string source = System.IO.File.ReadAllText(absPath);
       // Compile
-      Compiler.Compiler.CompileString(source, absPath);
-      // TODO: Write output to opts.output if specified
+      try {
+        // TODO: Write output to opts.output if specified
+        Compiler.Compiler.CompileString(source, absPath);
+      }
+      catch (Exception e) {
+        Console.WriteLine($"Compilation failed: {e.Message}");
+      }
     }
     static void HandleParseError(IEnumerable<Error> errs) {
       //handle errors

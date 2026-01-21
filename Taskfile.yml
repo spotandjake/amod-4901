@@ -39,3 +39,5 @@ tasks:
       - rm -rf ./decaf/Frontend/DecafParser.cs
       - rm -rf ./decaf/Frontend/DecafParser.tokens
       - rm -rf ./decaf/Frontend/DecafParser.interp
+      # Clean Snapshots
+      - rm -rf **/*.received.*

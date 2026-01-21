@@ -13,6 +13,7 @@ public class ParseTree {
     // Statements
     AssignmentNode,
     CallNode,
+    PrimitiveCallNode,
     IfNode,
     WhileNode,
     ReturnNode,
@@ -124,10 +125,7 @@ public class ParseTree {
   public class TypeNode : Node {
     public override NodeKind Kind => NodeKind.TypeNode;
     public string Type { get; }
-    public TypeNode(string type) {
-      // TODO: It would be nice if we had baseTypes and regular types
-      this.Type = type;
-    }
+    public TypeNode(string type) { this.Type = type; }
     public static TypeNode FromContext(DecafParser.TypeContext context) {
       var type = context.GetText();
       return new TypeNode(type);
@@ -135,6 +133,7 @@ public class ParseTree {
   }
   [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
   [JsonDerivedType(typeof(CallNode), "CallStatement")]
+  [JsonDerivedType(typeof(PrimitiveCallNode), "PrimitiveCallStatement")]
   [JsonDerivedType(typeof(IfNode), "IfStatement")]
   [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
   [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
@@ -144,7 +143,14 @@ public class ParseTree {
         case DecafParser.AssignStatementContext assignCtx:
           return AssignmentNode.FromContext(assignCtx.assign_stmt());
         case DecafParser.CallStatementContext callCtx:
-          return CallNode.FromContext(callCtx.call_stmt().call_expr());
+          switch (callCtx.call_stmt().call_expr()) {
+            case DecafParser.MethodCallExprContext methodCallCtx:
+              return CallNode.FromContext(methodCallCtx.method_call());
+            case DecafParser.PrimCalloutExprContext primCalloutCtx:
+              return PrimitiveCallNode.FromContext(primCalloutCtx.prim_callout());
+            default:
+              throw new InvalidProgramException("Impossible call expression at StatementNode.FromContext");
+          }
         case DecafParser.IfStatementContext ifCtx:
           return IfNode.FromContext(ifCtx.if_stmt());
         case DecafParser.WhileStatementContext whileCtx:
@@ -172,12 +178,38 @@ public class ParseTree {
       return new AssignmentNode(location, expression);
     }
   };
-  // TODO: Implement CallNode
   public class CallNode : StatementNode {
     public override NodeKind Kind => NodeKind.CallNode;
-    public CallNode() { }
-    public static CallNode FromContext(DecafParser.Call_exprContext context) {
-      throw new NotImplementedException();
+    public string MethodPath { get; }
+    public ExpressionNode[] Arguments { get; }
+    public CallNode(string methodPath, ExpressionNode[] args) {
+      this.MethodPath = methodPath;
+      this.Arguments = args;
+    }
+    public static CallNode FromContext(DecafParser.Method_callContext context) {
+      // TODO: Implement proper Location
+      var methodPath = context.methodPath.GetText();
+      var args = context.args.expr().Select(
+        exprCtx => ExpressionNode.FromContext(exprCtx)
+      ).ToArray();
+      return new CallNode(methodPath, args);
+    }
+  };
+  public class PrimitiveCallNode : StatementNode {
+    public override NodeKind Kind => NodeKind.PrimitiveCallNode;
+    public string PrimitiveId { get; }
+    public ExpressionNode[] Arguments { get; }
+    public PrimitiveCallNode(string primId, ExpressionNode[] args) {
+      this.PrimitiveId = primId;
+      this.Arguments = args;
+    }
+    public static CallNode FromContext(DecafParser.Prim_calloutContext context) {
+      var primId = context.primId.Text;
+      // TODO: Handle mixed expression and stringlit args
+      // var args = context.args.expr().Select(
+      //   exprCtx => ExpressionNode.FromContext(exprCtx)
+      // ).ToArray();
+      return new CallNode(primId, []);
     }
   };
   public class IfNode : StatementNode {

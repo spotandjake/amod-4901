@@ -1,0 +1,32 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      MethodDeclarations: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: void
+          },
+          Name: foo,
+          Body: {
+            Kind: BlockNode
+          }
+        },
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: void
+          },
+          Name: bar,
+          Body: {
+            Kind: BlockNode
+          }
+        }
+      ]
+    }
+  ]
+}
