@@ -1,0 +1,12 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main
+    },
+    {
+      Kind: ClassDeclNode,
+      Name: Main2
+    }
+  ]
+}

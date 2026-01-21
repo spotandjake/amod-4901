@@ -5,5 +5,12 @@
 bin/
 obj/
 
+# Testing
+decafTests/TestResults/
+*.received.*
+
 # Antlr
 .antlr/
+
+# Mac os
+.DS_Store

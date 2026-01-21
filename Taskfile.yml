@@ -15,13 +15,13 @@ tasks:
       # build
       - task: build
       # Run Test
-      - dotnet test
+      - dotnet test {{.CLI_ARGS}}
   build:
     cmds:
       # Generate Lexer
       - antlr -Dlanguage=CSharp ./decaf/Frontend/DecafLexer.g4
       # Generate Parser
-      - antlr -Dlanguage=CSharp -no-listener ./decaf/Frontend/DecafParser.g4
+      - antlr -Dlanguage=CSharp -no-listener -no-visitor ./decaf/Frontend/DecafParser.g4
       # Build the compiler
       - dotnet build
   format:

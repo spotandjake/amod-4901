@@ -14,10 +14,17 @@ namespace Compiler {
       DecafLexer lexer = new DecafLexer(inputStream);
       return lexer;
     }
+    #nullable enable
+    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream, string? inputFileName) {
+      DecafParser parser = new DecafParser(tokenStream);
+      ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
+      return program;
+    }
 #nullable enable
     public static void CompileString(string source, string? inputFileName) {
       // Lexing
       DecafLexer lexer = LexString(source, inputFileName);
+      CommonTokenStream tokenStream = new CommonTokenStream(lexer);
       // while (true) {
       //   IToken token = lexer.NextToken();
       //   if (token.Type == TokenConstants.EOF)
@@ -27,9 +34,7 @@ namespace Compiler {
       //   );
       // }
       // Parsing
-      CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-      DecafParser parser = new DecafParser(tokenStream);
-      ParseTree.ProgramNode program = new ParseTree.ProgramNode(parser.program());
+      ParseTree.ProgramNode program = ParseTokenStream(tokenStream, inputFileName);
       string json = JsonSerializer.Serialize(program, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
       Console.WriteLine(json);
       // TODO: Figure out ast error checking

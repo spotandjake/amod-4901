@@ -1,8 +1,23 @@
 {
   "antlr4.generation": {
-    "mode": "external",
+    "mode": "internal",
     "language": "CSharp",
     "listeners": false,
-    "visitors": true
+    "visitors": false
+  },
+  "antlr4.format": {
+    "alignTrailingComments": true,
+    "allowShortBlocksOnASingleLine": true,
+    "continuationIndentWidth": 4,
+    "indentWidth": 2,
+    "tabWidth": 2,
+    "useTab": false,
+    "alignColons": "hanging",
+    "singleLineOverrulesHangingColon": true,
+    "allowShortRulesOnASingleLine": true,
+    "alignSemicolons": "ownLine",
+    "groupedAlignments": true,
+    "alignFirstTokens": true,
+    "alignLabels": true
   }
 }

@@ -1,0 +1,9 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      SuperClassName: Base
+    }
+  ]
+}

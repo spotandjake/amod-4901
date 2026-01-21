@@ -1,9 +1,6 @@
-using Antlr4.Runtime;
-using Compiler;
-
 [TestClass]
-public class DecafTests {
-  private DecafLexer Setup(string text) {
+public class DecafLexerTests {
+  private DecafLexer Lex(string text) {
     return Compiler.Compiler.LexString(text, null); ;
   }
   // NOTE: There isn't a ton of testing on the lexer as it is rather basic in operation.
@@ -13,7 +10,7 @@ public class DecafTests {
   // Unit Testing
   [TestMethod]
   public void TestKeywords() {
-    DecafLexer lexer = Setup("boolean callout class else extends false if int new null return this true void while");
+    DecafLexer lexer = Lex("boolean callout class else extends false if int new null return this true void while");
     Assert.AreEqual(DecafLexer.BOOLEAN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CALLOUT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CLASS, lexer.NextToken().Type);
@@ -34,7 +31,7 @@ public class DecafTests {
   [TestMethod]
   public void TestOperators() {
     string testString = "() {} [] ; , . ! + - * / <= >= < > == != && || =";
-    DecafLexer lexer = Setup(testString);
+    DecafLexer lexer = Lex(testString);
     Assert.AreEqual(DecafLexer.LPAREN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.RPAREN, lexer.NextToken().Type);
 

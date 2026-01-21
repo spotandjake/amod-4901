@@ -1,0 +1,8 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main
+    }
+  ]
+}
