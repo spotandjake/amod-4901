@@ -12,5 +12,8 @@ decafTests/TestResults/
 # Antlr
 .antlr/
 
+# Language
+*.decaf
+
 # Mac os
 .DS_Store

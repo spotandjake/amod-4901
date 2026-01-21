@@ -3,14 +3,13 @@ using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 [TestClass]
-public class DecafParserTests:
+public class DecafParserTests :
     VerifyBase {
-  private VerifySettings CreateSettings()
-    {
-        var settings = new VerifySettings();
-        settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
-        return settings;
-    }
+  private VerifySettings CreateSettings() {
+    var settings = new VerifySettings();
+    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    return settings;
+  }
   private ParseTree.ProgramNode Parse(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);

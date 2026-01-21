@@ -14,7 +14,7 @@ namespace Compiler {
       DecafLexer lexer = new DecafLexer(inputStream);
       return lexer;
     }
-    #nullable enable
+#nullable enable
     public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream, string? inputFileName) {
       DecafParser parser = new DecafParser(tokenStream);
       ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
