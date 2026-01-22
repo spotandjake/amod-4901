@@ -76,3 +76,5 @@ This section contains a list of general TODO's left on the project:
     * Operator Precedence
     * Kitchen Soup
     * Targeted Tests
+
+Copyright ©️ 2025 Jake Follest, Tony Tran
