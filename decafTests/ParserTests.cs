@@ -3,8 +3,7 @@ using VerifyMSTest;
 using VerifyTests;
 
 [TestClass]
-public class DecafParserTests :
-    VerifyBase {
+public class DecafParserTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
     settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));

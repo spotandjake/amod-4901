@@ -1,7 +1,19 @@
+using System.Threading.Tasks;
+using Antlr4.Runtime;
+using VerifyMSTest;
+using VerifyTests;
+using System.Collections.Generic;
+using System.Linq;
+
 [TestClass]
-public class DecafLexerTests {
+public class DecafLexerTests : VerifyBase {
   private DecafLexer Lex(string text) {
     return Compiler.Compiler.LexString(text, null); ;
+  }
+  private VerifySettings CreateSettings() {
+    var settings = new VerifySettings();
+    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    return settings;
   }
   // NOTE: There isn't a ton of testing on the lexer as it is rather basic in operation.
   //   Most of the stress testing of the lexer will happen during parser testing, as it 
@@ -64,12 +76,49 @@ public class DecafLexerTests {
     Assert.AreEqual(DecafLexer.ASSIGN, lexer.NextToken().Type);
   }
   [TestMethod]
-  public void TestLiterals() { }
+  public void TestLiterals() {
+    // TODO: Test Literal lexing
+  }
   [TestMethod]
-  public void TestIdentifiers() { }
+  public void TestIdentifiers() {
+    // TODO: Test Identifier lexing
+  }
   [TestMethod]
-  public void TestAttributes() { }
+  public void TestAttributes() {
+    // TODO: Test Attribute lexing, Comments, Whitespace, Newlines (\n, \r\n)
+  }
   // Snapshot Testing
   [TestMethod]
-  public void TestProgram() { }
+  public Task TestProgram() {
+    // The purpose of this test is to lex a full program and verify the token stream.
+    // A snapshot test is used here as we don't care to much about individual tokens but we would like to know
+    // if something changes in the token stream as a whole or if something breaks.
+    var lexer = Lex(@"
+      class Main extends Base {
+        int x, y, z[];
+
+        void foo(int a, boolean b, int c[]) {
+          if (a < 10 && b) {
+            x = x + 1;
+          } else {
+            x = x - 1;
+          }
+        }
+
+        int bar() {
+          return x;
+        }
+      }
+
+      class Base {
+        void calloutMethod() {
+          // Callout to external function
+          callout printInt(int x);
+        }
+      }");
+    // Collect tokens
+    IList<IToken> tokens = lexer.GetAllTokens();
+    return Verify(tokens.Select(token => DecafLexer.ruleNames[token.Type - 1]).ToArray(), CreateSettings());
+  }
+  // TODO: Implement a few Failing Tests (invalid operators, invalid comment types)
 }
