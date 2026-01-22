@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text.Json.Serialization;
 
+// TODO: Consider if there is a cleaner way to structure this file.
 public class ParseTree {
   public enum NodeKind {
     ProgramNode,

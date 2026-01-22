@@ -63,7 +63,15 @@ This section contains a list of general TODO's left on the project:
 * Lexing
   * More Unit Tests
 * Parsing
-  * Figure out error handling
+  * Discuss grammar changes
+    * There are a number of changes I think we should consider making to the grammar.
+    * Some of them would allow us to parse more programs with the tradeoff that it's really easy to restrict things semantically later, parsing more stuff then less can greatly simplify our grammar while allowing for future generalization.
+  * Consider if there is a simpler way of representing the ast.
+    * It would be nice if there was a simpler way of representing our ast, adt's are great for this but c# doesn't have them i've used classes that inherit at the moment however this posses an issue in a case like `CallExpr` which can also be a statement we want to restrict the types for exhaustiveness however we may need a stop gap like an `ExpressionStatement` node which could could contain an expression and just rely on the parser never generating anything else.
+  * Create a ParseTreeVisitor file.
+    * An abstract class where we can implement enter, and exit for each node and collect information, or return a value.
+    * This will be useful for mapping the parseTree to a TypedTree.
+    * This will be useful for semantic analysis.
   * Testing
     * Operator Precedence
     * Kitchen Soup
