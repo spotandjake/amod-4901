@@ -82,7 +82,27 @@ public class DecafLexerTests : VerifyBase {
   }
   [TestMethod]
   public void TestLiterals() {
-    // TODO: Test Literal lexing
+    // INTLIT testing
+    // Note(Tony): Are there any other missing cases? Falsity checks?? (1_000 or +1 or something like that maybe??)
+    string decTestString = "0 -1 10 -56 256 -100";
+    DecafLexer lexer = Lex(decTestString);
+
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+
+    string hexTestString = "0x0 0x1 0xa 0x1a2b 0xbob 0x1z";
+    lexer = Lex(hexTestString);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreNotEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+
   }
   [TestMethod]
   public void TestIdentifiers() {
