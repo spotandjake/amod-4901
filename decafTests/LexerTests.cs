@@ -103,6 +103,26 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
     Assert.AreNotEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
 
+    string charTestString = "'\\n' '\\t' '\\' '\\\\' '\\'' '\\\"' 'a' 'Z' ' ' '!' '#' '$' '%' '&' '(' ')' '~'";    
+    lexer = Lex(charTestString);
+
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
   }
   [TestMethod]
   public void TestIdentifiers() {
