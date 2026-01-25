@@ -81,7 +81,7 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.ASSIGN, lexer.NextToken().Type);
   }
   [TestMethod]
-  public void TestLiterals() {
+  public void TestInt() {
     // INTLIT testing
     // Note(Tony): Are there any other missing cases? Falsity checks?? (1_000 or +1 or something like that maybe??)
     string decTestString = "0 -1 10 -56 256 -100";
@@ -103,8 +103,12 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
     Assert.AreNotEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
 
-    string charTestString = "'\\n' '\\t' '\\' '\\\\' '\\'' '\\\"' 'a' 'Z' ' ' '!' '#' '$' '%' '&' '(' ')' '~'";    
-    lexer = Lex(charTestString);
+  }
+
+  [TestMethod]
+  public void TestChar() {
+    string charTestString = "'\\n' '\\t' '\\' '\\\\' '\\'' '\\\"' 'a' 'Z' ' ' '!' '#' '$' '%' '&' '(' ')' '~'";
+    DecafLexer lexer = Lex(charTestString);
 
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
@@ -123,17 +127,29 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+  }
 
+  [TestMethod]
+  public void TestString() {
     string strlitTestString = "\"$tRinG liter@l\" \"\\n\"";
-    lexer = Lex(strlitTestString);
+    DecafLexer lexer = Lex(strlitTestString);
 
     Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
   }
+
   [TestMethod]
   public void TestIdentifiers() {
-    // TODO: Test Identifier lexing
+    string idTestString = "a A _FoO bAr__ ab12cd";
+    DecafLexer lexer = Lex(idTestString);
+
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
   }
+
   [TestMethod]
   public void TestAttributes() {
     // Test Attributes, Comments, Whitespace, Newlines (\n, \r\n)
