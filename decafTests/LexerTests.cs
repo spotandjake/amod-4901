@@ -123,6 +123,12 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+
+    string strlitTestString = "\"$tRinG liter@l\" \"\\n\"";
+    lexer = Lex(strlitTestString);
+
+    Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
   }
   [TestMethod]
   public void TestIdentifiers() {
