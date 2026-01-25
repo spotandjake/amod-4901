@@ -154,14 +154,14 @@ public class DecafLexerTests : VerifyBase {
 
   [TestMethod]
   public void TestIdentifiers() {
-    string idTestString = "a A _FoO bAr__ ab12cd";
+    string idTestString = "a A _foo_bar_ ab12cd 1a";
     DecafLexer lexer = Lex(idTestString);
 
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreNotEqual(DecafLexer.ID, lexer.NextToken().Type);
   }
 
   [TestMethod]
