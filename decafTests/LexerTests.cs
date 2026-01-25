@@ -131,7 +131,7 @@ public class DecafLexerTests : VerifyBase {
 
   [TestMethod]
   public void TestString() {
-    string strlitTestString = "\"$tRinG liter@l\" \"\\n\"";
+    string strlitTestString = "\"~($tRinG liter@l!)#%& \" \"\\n \\t \\ \\\\ \\' \\\" \"";
     DecafLexer lexer = Lex(strlitTestString);
 
     Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
