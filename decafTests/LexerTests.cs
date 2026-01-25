@@ -4,6 +4,7 @@ using VerifyMSTest;
 using VerifyTests;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using System.Data;
 
 [TestClass]
@@ -136,6 +137,19 @@ public class DecafLexerTests : VerifyBase {
 
     Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
+  }
+
+  [TestMethod]
+  public void TestInvalidMultiChar() {
+    string testString = "'aa'";
+    DecafLexer lexer = Lex(testString);
+    try {
+      IToken token = lexer.NextToken();
+      Assert.Fail("Expected a SyntaxErrorException to be thrown.");
+    }
+    catch (SyntaxErrorException e) {
+      Assert.Contains("'aa'", e.Message);
+    }
   }
 
   [TestMethod]
