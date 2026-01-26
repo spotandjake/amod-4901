@@ -146,5 +146,4 @@ public class DecafLexerTests : VerifyBase {
     IList<IToken> tokens = lexer.GetAllTokens();
     return Verify(tokens.Select(token => DecafLexer.ruleNames[token.Type - 1]).ToArray(), CreateSettings());
   }
-  // TODO: Implement a few Failing Tests (invalid operators, invalid comment types)
 }
