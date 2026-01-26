@@ -4,6 +4,7 @@ using VerifyMSTest;
 using VerifyTests;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 using System.Data;
 
 [TestClass]
@@ -81,13 +82,95 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.ASSIGN, lexer.NextToken().Type);
   }
   [TestMethod]
-  public void TestLiterals() {
-    // TODO: Test Literal lexing
+  public void TestInt() {
+    // INTLIT testing
+    string decTestString = "0 -1 10 -56 256 -100";
+    DecafLexer lexer = Lex(decTestString);
+
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+
+    string hexTestString = "0x0 0x1 0xa 0x1a2b 0xbob 0x1z";
+    lexer = Lex(hexTestString);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+    Assert.AreNotEqual(DecafLexer.INTLIT, lexer.NextToken().Type);
+
   }
+
+  [TestMethod]
+  public void TestChar() {
+    string charTestString = "'\\n' '\\t' '\\' '\\\\' '\\'' '\\\"' 'a' 'Z' ' ' '!' '#' '$' '%' '&' '(' ')' '~'";
+    DecafLexer lexer = Lex(charTestString);
+
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CHARLIT, lexer.NextToken().Type);
+  }
+
+  [TestMethod]
+  public void TestString() {
+    string strlitTestString = "\"~($tRinG liter@l!)#%& \" \"\\n \\t \\ \\\\ \\' \\\" \"";
+    DecafLexer lexer = Lex(strlitTestString);
+
+    Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.STRINGLIT, lexer.NextToken().Type);
+  }
+
+  [TestMethod]
+  public void TestInvalidMultiChar() {
+    string testString = "'aa'";
+    DecafLexer lexer = Lex(testString);
+    try {
+      IToken token = lexer.NextToken();
+      Assert.Fail("Expected a SyntaxErrorException to be thrown.");
+    }
+    catch (SyntaxErrorException e) {
+      Assert.Contains("'aa", e.Message);
+    }
+  }
+
   [TestMethod]
   public void TestIdentifiers() {
-    // TODO: Test Identifier lexing
+    string idTestString = "a A _foo_bar_ ab12cd 1a";
+    DecafLexer lexer = Lex(idTestString);
+
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+    Assert.AreNotEqual(DecafLexer.ID, lexer.NextToken().Type);
   }
+
+  [TestMethod]
+  public void TestKeywordIdentifier() {
+    string TestString = "thiswhiletrue";
+    DecafLexer lexer = Lex(TestString);
+
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
+  }
+
   [TestMethod]
   public void TestAttributes() {
     // Test Attributes, Comments, Whitespace, Newlines (\n, \r\n)
