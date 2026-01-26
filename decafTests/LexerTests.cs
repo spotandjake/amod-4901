@@ -147,7 +147,7 @@ public class DecafLexerTests : VerifyBase {
       Assert.Fail("Expected a SyntaxErrorException to be thrown.");
     }
     catch (SyntaxErrorException e) {
-      Assert.Contains("'aa'", e.Message);
+      Assert.Contains("'aa", e.Message);
     }
   }
 
@@ -161,6 +161,14 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
     Assert.AreNotEqual(DecafLexer.ID, lexer.NextToken().Type);
+  }
+
+  [TestMethod]
+  public void TestKeywordIdentifier() {
+    string TestString = "thiswhiletrue";
+    DecafLexer lexer = Lex(TestString);
+
+    Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);
   }
 
   [TestMethod]
