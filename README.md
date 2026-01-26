@@ -47,7 +47,72 @@ TODO: Write documentation
 
 ### Lexing
 
-TODO: Write documentation
+Our language uses [antlr](https://www.antlr.org/) for lexing, we implement the lexing rules according to the `expresso_spec`. The grammar exists in [`./decaf/Frontend/DecafLexer.g4`](./decaf/Frontend/DecafLexer.g4).
+
+The following tokens are implemented:
+
+* Keywords (Meaningful words within the language)
+  * boolean
+  * callout
+  * class
+  * else
+  * extends
+  * false
+  * if
+  * int
+  * new
+  * null
+  * return
+  * this
+  * true
+  * void
+  * while
+* Attributes (Text items we skip over)
+  * Whitespace/WSS (`space`,`\t`,`newline`)
+  * Comments (start with `//` and end at end of line)
+  * newline (`\n`,`\r\n`)
+* Operators
+  * General
+    * LPAREN (`(`)
+    * RPAREN (`)`)
+    * LBRACE (`{`)
+    * RBRACE (`}`)
+    * LBRACK (`[`)
+    * RBRACK (`]`)
+    * SEMI (`;`)
+    * COMMA (`,`)
+    * DOT (`.`)
+  * Prefix
+    * NOT (`!`)
+  * Arithmetic
+    * PLUS (`+`)
+    * MINUS (`-`)
+    * MULT (`*`)
+    * DIV (`/`)
+  * Relational
+    * LEQ (`<=`)
+    * GEQ (`>=`)
+    * GT (`>`)
+    * LT (`<`)
+  * Equality
+    * EQ (`==`)
+    * NEQ (`!=`)
+  * Conditional
+    * AND (`&&`)
+    * OR (`||`)
+  * Assignment
+    * ASSIGN (`=`)
+* Literals
+  * INTLIT (e.g. `1234`)
+  * BOOLLIT (`true`,`false`)
+  * NULLLIT (`null`)
+* Identifiers
+  * ID (e.g. `myVariable123`)
+
+The lexer will read the source file and convert the characters in the file into a stream of tokens that can be interpreted by the parser. This is referred to as a scanner based parser compared to a scannerless parser which would read characters directly from the source file. The advantage of using a scanner when combined with lalr parsing used by antlr is that the number of parser states is much lower you don't need one for every valid character instead you need one for every valid token in every valid state. We made the decision to handle literal values such as integers and booleans in the lexer rather than the parser as this also reduces the number of tokens and simplifies the parser at the small cost of slightly less contextual error messages.
+
+Tests for the lexer can be found in [`./decafTests/LexerTests.cs`](./decafTests/LexerTests.cs).
+
 
 ### WIP: Parsing
 
@@ -60,8 +125,6 @@ TODO: Write documentation
 
 ## TODO:
 This section contains a list of general TODO's left on the project:
-* Lexing
-  * More Unit Tests
 * Parsing
   * Discuss grammar changes
     * There are a number of changes I think we should consider making to the grammar.
