@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Antlr4.Runtime;
 using CommandLine;
 using System.Text.Json;
+using System.Data;
 
 namespace Compiler {
   public class Compiler {
@@ -14,6 +15,8 @@ namespace Compiler {
       };
       // Create Lexer Instance
       DecafLexer lexer = new DecafLexer(inputStream);
+      lexer.RemoveErrorListeners();
+      lexer.AddErrorListener(ErrorListener.Instance);
       return lexer;
     }
 #nullable enable
@@ -28,6 +31,7 @@ namespace Compiler {
       // Lexing
       DecafLexer lexer = LexString(source, inputFileName);
       CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+      // NOTE: For debugging lexer token stream
       // while (true) {
       //   IToken token = lexer.NextToken();
       //   if (token.Type == TokenConstants.EOF)
@@ -77,6 +81,9 @@ namespace CLI {
       try {
         // TODO: Write output to opts.output if specified
         Compiler.Compiler.CompileString(source, relPath);
+      }
+      catch (SyntaxErrorException e) {
+        Console.WriteLine(e.Message);
       }
       catch (Exception e) {
         Console.WriteLine($"Compilation failed: {e.Message}");

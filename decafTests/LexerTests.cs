@@ -4,6 +4,7 @@ using VerifyMSTest;
 using VerifyTests;
 using System.Collections.Generic;
 using System.Linq;
+using System.Data;
 
 [TestClass]
 public class DecafLexerTests : VerifyBase {
@@ -18,6 +19,10 @@ public class DecafLexerTests : VerifyBase {
   // NOTE: There isn't a ton of testing on the lexer as it is rather basic in operation.
   //   Most of the stress testing of the lexer will happen during parser testing, as it 
   //   will handle larger programs.
+  //   As part of this we only really do a single test of an invalid token as it's
+  //   easier for us to test in the parser. Tokens you may think are invalid such as `+1000`
+  //   actually validly lex as a `PLUS INT_LIT` so we can't really test a failing case.
+  //   The only case that would be invalid is an actually unused character such as `$` or `?`.
 
   // Unit Testing
   [TestMethod]
@@ -85,7 +90,28 @@ public class DecafLexerTests : VerifyBase {
   }
   [TestMethod]
   public void TestAttributes() {
-    // TODO: Test Attribute lexing, Comments, Whitespace, Newlines (\n, \r\n)
+    // Test Attributes, Comments, Whitespace, Newlines (\n, \r\n)
+    // NOTE: These are all skipped by the lexer so we just need to 
+    //       ensure they don't interfere with tokenization.
+    string testString = "// this is a comment\n  \n\n\r\n";
+    DecafLexer lexer = Lex(testString);
+    Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
+  }
+  [TestMethod]
+  public void TestInvalidToken() {
+    // NOTE: We only have a single test for invalid tokens as the 
+    //       parser will catch more cases, it's easier to test there. 
+    //       We just intend to test the error handling works.
+    string testString = "$";
+    DecafLexer lexer = Lex(testString);
+    try {
+      IToken token = lexer.NextToken();
+      Assert.Fail("Expected a SyntaxErrorException to be thrown.");
+    }
+    catch (SyntaxErrorException e) {
+      // NOTE: We don't care about the exact message, just that it includes the invalid token.
+      Assert.Contains("$", e.Message);
+    }
   }
   // Snapshot Testing
   [TestMethod]
@@ -120,5 +146,4 @@ public class DecafLexerTests : VerifyBase {
     IList<IToken> tokens = lexer.GetAllTokens();
     return Verify(tokens.Select(token => DecafLexer.ruleNames[token.Type - 1]).ToArray(), CreateSettings());
   }
-  // TODO: Implement a few Failing Tests (invalid operators, invalid comment types)
 }
