@@ -278,9 +278,9 @@ namespace ParseTree {
     public static CallNode FromContext(DecafParser.Method_callContext context) {
       var position = Position.FromContext(context);
       var methodPath = LocationNode.FromContext(context.methodPath);
-      var args = context.args.expr().Select(
+      var args = context.args != null ? context.args.expr().Select(
         exprCtx => ExpressionNode.FromContext(exprCtx)
-      ).ToArray();
+      ).ToArray() : [];
       return new CallNode(position, methodPath, args);
     }
   };
@@ -350,6 +350,10 @@ namespace ParseTree {
   [JsonDerivedType(typeof(SimpleExpressionNode), "SimpleExpression")]
   [JsonDerivedType(typeof(BinopExpressionNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixExpressionNode), "PrefixExpression")]
+  [JsonDerivedType(typeof(CallNode), "CallExpression")]
+  [JsonDerivedType(typeof(PrimitiveCallNode), "PrimitiveCallExpression")]
+  [JsonDerivedType(typeof(LocationNode), "LocationExpression")]
+  [JsonDerivedType(typeof(ThisNode), "ThisExpression")]
   // Literal SubTypes
   [JsonDerivedType(typeof(IntegerLiteralNode), "IntegerLiteral")]
   [JsonDerivedType(typeof(CharLiteralNode), "CharLiteral")]
@@ -443,7 +447,7 @@ namespace ParseTree {
       return new PrefixExpressionNode(position, op, operand);
     }
   };
-  public record LocationNode : Node {
+  public record LocationNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.LocationNode;
     public string Root { get; }
     // NOTE: Parsing restricts so we can't have nested arrays.
@@ -462,7 +466,7 @@ namespace ParseTree {
       return new LocationNode(position, root, path, indexExpr);
     }
   };
-  public record ThisNode : Node {
+  public record ThisNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.ThisNode;
     public ThisNode(Position position) : base(position) { }
     public static ThisNode FromContext(DecafParser.ThisExprContext context) {

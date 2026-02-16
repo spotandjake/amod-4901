@@ -16,13 +16,14 @@ namespace Compiler {
       // Create Lexer Instance
       DecafLexer lexer = new DecafLexer(inputStream);
       lexer.RemoveErrorListeners();
-      lexer.AddErrorListener(ErrorListener.Instance);
+      lexer.AddErrorListener(LexerErrorListener.Instance);
       return lexer;
     }
 #nullable enable
     public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream, string? inputFileName) {
       DecafParser parser = new DecafParser(tokenStream);
-      parser.ErrorHandler = new BailErrorStrategy();
+      parser.RemoveErrorListeners();
+      parser.AddErrorListener(ParserErrorListener.Instance);
       ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
       return program;
     }
@@ -84,6 +85,9 @@ namespace CLI {
       }
       catch (SyntaxErrorException e) {
         Console.WriteLine(e.Message);
+      }
+      catch (Antlr4.Runtime.Misc.ParseCanceledException e) {
+        Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
       }
       catch (Exception e) {
         Console.WriteLine($"Compilation failed: {e.Message}");

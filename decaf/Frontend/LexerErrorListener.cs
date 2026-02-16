@@ -3,9 +3,9 @@ using Antlr4.Runtime.Misc;
 using System;
 using System.Data;
 
-public sealed class ErrorListener : IAntlrErrorListener<int> {
-  public static readonly ErrorListener Instance = new();
-  private ErrorListener() { }
+public sealed class LexerErrorListener : IAntlrErrorListener<int> {
+  public static readonly LexerErrorListener Instance = new();
+  private LexerErrorListener() { }
 
   private string buildErrorSourceMessage(string fileName, int line, int column) {
     return $"\u001b[1mFile \"{fileName}\":{line}:{column}\u001b[0m:";

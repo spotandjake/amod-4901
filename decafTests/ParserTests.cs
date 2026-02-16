@@ -20,7 +20,7 @@ public class DecafParserTests : VerifyBase {
   // Empty Program
   [TestMethod]
   public void TestEmpty() {
-    Assert.Throws<Antlr4.Runtime.Misc.ParseCanceledException>(() => Parse(""));
+    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(""));
   }
   // Classes
   [TestMethod]
@@ -122,25 +122,177 @@ public class DecafParserTests : VerifyBase {
     ");
     return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
-  // TODO: Statements
-  // TODO: Assignment Statement (Simple something like x = 1)
-  // TODO: Assignment Statement (Complex something  an x.y = 1)
-  // TODO: Assignment Statement (Complex something  an x.y = 1)
-  // TODO: Call Statement (Simple: foo())
-  // TODO: Call Statement (Complex: x.foo())
-  // TODO: Call Statement (Single Arg: foo(1))
-  // TODO: Call Statement (Multi Arg: foo(1, 2))
-  // TODO: Call Statement (Nested Expr Arg: foo(1 + 1))
-  // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
-  // TODO: Call Statement (Callout callout("Test", 1, 2))
-  // TODO: If Statement (Simple: if (true) { })
-  // TODO: If Statement (Complex: if (true) { } else { })
-  // TODO: While Statement (while (true) { })
-  // TODO: Return Statement (Simple: return)
-  // TODO: Return Statement (Simple: return 1)
-  // TODO: Add a failing statement test (where you test something like return with no semi, to the invalid tests area)
-  // TODO: Expressions
-  // TODO: Add similar tests for expressions as I listed for statements above
+  #region Statements
+  [TestMethod]
+  public Task TestSimpleAssignmentStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        int x;
+        x = 1;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestComplexAssignmentStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        Base.x = 1;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestSimpleCallStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        foo();
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestComplexCallStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        Base.foo();
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestSingleArgCallStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        foo(1);
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestMultiArgCallStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        foo(1, 2);
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestNestedArgCallStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        foo(foo());
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCalloutStatement() {
+    // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
+    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2); } }");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestSimpleIfStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        if (true) {
+          x = 1;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestComplexIfStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        int x;
+        if (true) {
+          x = 1;
+        } else {
+          x = 2;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestWhileStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        int x;
+        while (true) {
+          x = 1;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestSimpleReturnStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        return;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestComplexReturnStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        return 1;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  // TODO: Expressions (Test these with something like x = <expr>)
+  // TODO: Location Expression (Simple: x = y)
+  // TODO: Location Expression (Simple: x = Base.y)
+  // TODO: Location Expression (Simple: x = this)
+  // TODO: Call Expression (x = foo())
+  // TODO: Call Expression (x = foo(1))
+  // TODO: Call Expression (x = foo(1, 2))
+  // TODO: Callout Expression (x = callout("test", 1, 2))
+  // NOTE: We don't test `new test()` as our parseTree won't handle this
+  // NOTE: We don't test `new int 1` as our parseTree won't handle this
+  // TODO: Int Expression (x = 1)
+  // TODO: char Expression (x = 'a')
+  // TODO: bool Expression (x = true)
+  // TODO: bool Expression (x = false)
+  // TODO: null Expression (x = null)
+  // TODO: Prefix Expression (!true)
+  // TODO: Binop Expression (Simple: x = 1 + 1) (Feel free to add more binop tests)
+  // TODO: Binop Expression (Chained: x = 1 + 1 + 1)
+  // TODO: Paren Expression (x = (1 + 1))
+  // TODO: Add an invalid paren Expression `x = ()` to the invalid section (this is just empty)
+  #endregion
   #region Precedence
   // TODO: Validate Precedence (I don't think it's currently correct)
   [TestMethod]
@@ -248,12 +400,32 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public void TestInvalidBlock() {
     // NOTE: This test is invalid because you can only define variables at the top of a block 
-    Assert.Throws<Antlr4.Runtime.Misc.ParseCanceledException>(() => Parse(@"
+    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
     class Main {
       void testMethod() {
         int x;
         x = 1 + 1;
         int y;
+      }
+    }
+    "));
+  }
+  [TestMethod]
+  public void TestInvalidWhileSemi() {
+    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
+    class Main {
+      void testMethod() {
+        while (true) {};
+      }
+    }
+    "));
+  }
+  [TestMethod]
+  public void TestInvalidStmtNoSemi() {
+    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
+    class Main {
+      void testMethod() {
+        x = 1
       }
     }
     "));
