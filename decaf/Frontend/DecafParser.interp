@@ -107,7 +107,7 @@ block
 type
 statement
 assign_stmt
-call_stmt
+expression_stmt
 if_stmt
 while_stmt
 return_stmt

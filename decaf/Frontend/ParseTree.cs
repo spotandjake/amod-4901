@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 
-// TODO: Consider if there is a cleaner way to structure this file.
-public class ParseTree {
+namespace ParseTree {
   public enum NodeKind {
     ProgramNode,
     ClassDeclNode,
@@ -15,8 +15,10 @@ public class ParseTree {
     VarBindNode,
     ParameterNode,
     LocationNode,
+    ThisNode,
     // Statements
     AssignmentNode,
+    ExpressionStatementNode,
     CallNode,
     PrimitiveCallNode,
     IfNode,
@@ -47,12 +49,12 @@ public class ParseTree {
       };
     }
   }
-  public abstract class Node {
+  public abstract record Node {
     public abstract NodeKind Kind { get; }
     public Position Position { get; }
     protected Node(Position position) { this.Position = position; }
   };
-  public class ProgramNode : Node {
+  public record ProgramNode : Node {
     public override NodeKind Kind => NodeKind.ProgramNode;
     public ClassNode[] Classes { get; }
     public ProgramNode(Position position, ClassNode[] classes) : base(position) {
@@ -66,7 +68,7 @@ public class ParseTree {
       return new ProgramNode(position, classes);
     }
   };
-  public class ClassNode : Node {
+  public record ClassNode : Node {
     public override NodeKind Kind => NodeKind.ClassDeclNode;
     public string Name { get; }
 #nullable enable
@@ -92,8 +94,8 @@ public class ParseTree {
       return new ClassNode(position, name, superClassName, varDecls, methodDecls);
     }
   }
-  public class VariableDeclarationNode : Node {
-    public class VarBindNode : Node {
+  public record VariableDeclarationNode : Node {
+    public record VarBindNode : Node {
       public override NodeKind Kind => NodeKind.VarBindNode;
       public string Name { get; }
       public bool IsArray { get; }
@@ -124,8 +126,8 @@ public class ParseTree {
       return new VariableDeclarationNode(position, varType, varBinds);
     }
   }
-  public class MethodDeclarationNode : Node {
-    public class ParameterNode : Node {
+  public record MethodDeclarationNode : Node {
+    public record ParameterNode : Node {
       public override NodeKind Kind => NodeKind.ParameterNode;
       public TypeNode ParamType { get; }
       public string Name { get; }
@@ -165,7 +167,7 @@ public class ParseTree {
       return new MethodDeclarationNode(position, returnType, name, parameters, body);
     }
   }
-  public class BlockNode : Node {
+  public record BlockNode : Node {
     public override NodeKind Kind => NodeKind.BlockNode;
     public VariableDeclarationNode[] VariableDeclarations { get; }
     public StatementNode[] Statements { get; }
@@ -184,7 +186,7 @@ public class ParseTree {
       return new BlockNode(position, varDecls, statements);
     }
   }
-  public class TypeNode : Node {
+  public record TypeNode : Node {
     public override NodeKind Kind => NodeKind.TypeNode;
     public string Type { get; }
     public TypeNode(Position position, string type) : base(position) { this.Type = type; }
@@ -195,26 +197,18 @@ public class ParseTree {
     }
   }
   [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
-  [JsonDerivedType(typeof(CallNode), "CallStatement")]
-  [JsonDerivedType(typeof(PrimitiveCallNode), "PrimitiveCallStatement")]
+  [JsonDerivedType(typeof(ExpressionStatementNode), "ExpressionStatement")] // New generic JSON type
   [JsonDerivedType(typeof(IfNode), "IfStatement")]
   [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
   [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
-  public abstract class StatementNode : Node {
+  public abstract record StatementNode : Node {
     protected StatementNode(Position position) : base(position) { }
     public static StatementNode FromContext(DecafParser.StatementContext context) {
       switch (context) {
         case DecafParser.AssignStatementContext assignCtx:
           return AssignmentNode.FromContext(assignCtx.assign_stmt());
-        case DecafParser.CallStatementContext callCtx:
-          switch (callCtx.call_stmt().call_expr()) {
-            case DecafParser.MethodCallExprContext methodCallCtx:
-              return CallNode.FromContext(methodCallCtx.method_call());
-            case DecafParser.PrimCalloutExprContext primCalloutCtx:
-              return PrimitiveCallNode.FromContext(primCalloutCtx.prim_callout());
-            default:
-              throw new InvalidProgramException("Impossible call expression at StatementNode.FromContext");
-          }
+        case DecafParser.ExpressionStatementContext exprStmtCtx:
+          return ExpressionStatementNode.FromContext(exprStmtCtx.expression_stmt());
         case DecafParser.IfStatementContext ifCtx:
           return IfNode.FromContext(ifCtx.if_stmt());
         case DecafParser.WhileStatementContext whileCtx:
@@ -227,7 +221,7 @@ public class ParseTree {
       }
     }
   };
-  public class AssignmentNode : StatementNode {
+  public record AssignmentNode : StatementNode {
     public override NodeKind Kind => NodeKind.AssignmentNode;
     public LocationNode Location { get; }
     public ExpressionNode Expression { get; }
@@ -242,7 +236,38 @@ public class ParseTree {
       return new AssignmentNode(position, location, expression);
     }
   };
-  public class CallNode : StatementNode {
+
+  public record ExpressionStatementNode : StatementNode {
+    public override NodeKind Kind => NodeKind.ExpressionStatementNode;
+    public ExpressionNode Content { get; }
+    public ExpressionStatementNode(Position position, ExpressionNode content) : base(position) {
+      this.Content = content;
+    }
+
+    public static ExpressionStatementNode FromContext(DecafParser.Expression_stmtContext context) {
+      var position = Position.FromContext(context);
+      switch (context) {
+        case DecafParser.CallExpressionStatementContext callExprStmtCtx:
+          var callCtx = callExprStmtCtx.call_expr();
+          ExpressionNode content;
+          if (callCtx is DecafParser.MethodCallExprContext m) {
+            content = CallNode.FromContext(m.method_call());
+          }
+          else if (callCtx is DecafParser.PrimCalloutExprContext p) {
+            content = PrimitiveCallNode.FromContext(p.prim_callout());
+          }
+          else {
+            throw new InvalidProgramException("Impossible statement at ExpressionStatementNode.FromContext");
+          }
+          return new ExpressionStatementNode(position, content);
+        default:
+          // NOTE: This should be impossible due to grammar restrictions
+          throw new InvalidProgramException("Impossible statement at ExpressionStatementNode.FromContext");
+      }
+    }
+  }
+
+  public record CallNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.CallNode;
     public LocationNode MethodPath { get; }
     public ExpressionNode[] Arguments { get; }
@@ -259,7 +284,7 @@ public class ParseTree {
       return new CallNode(position, methodPath, args);
     }
   };
-  public class PrimitiveCallNode : StatementNode {
+  public record PrimitiveCallNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.PrimitiveCallNode;
     public string PrimitiveId { get; }
     public ExpressionNode[] Arguments { get; }
@@ -270,14 +295,15 @@ public class ParseTree {
     public static PrimitiveCallNode FromContext(DecafParser.Prim_calloutContext context) {
       var position = Position.FromContext(context);
       var primId = context.primId.Text;
-      // TODO: Handle mixed expression and stringlit args
+      // TODO: Properly handle callout node arguments
       // var args = context.args.expr().Select(
       //   exprCtx => ExpressionNode.FromContext(exprCtx)
       // ).ToArray();
       return new PrimitiveCallNode(position, primId, []);
     }
   };
-  public class IfNode : StatementNode {
+
+  public record IfNode : StatementNode {
     public override NodeKind Kind => NodeKind.IfNode;
     public ExpressionNode Condition { get; }
     public BlockNode TrueBranch { get; }
@@ -296,7 +322,7 @@ public class ParseTree {
       return new IfNode(position, condition, trueBranch, falseBranch);
     }
   };
-  public class WhileNode : StatementNode {
+  public record WhileNode : StatementNode {
     public override NodeKind Kind => NodeKind.WhileNode;
     public ExpressionNode Condition { get; }
     public BlockNode Body { get; }
@@ -311,7 +337,7 @@ public class ParseTree {
       return new WhileNode(position, condition, body);
     }
   };
-  public class ReturnNode : StatementNode {
+  public record ReturnNode : StatementNode {
     public override NodeKind Kind => NodeKind.ReturnNode;
     public ExpressionNode? Value { get; }
     public ReturnNode(Position position, ExpressionNode? value) : base(position) { this.Value = value; }
@@ -322,8 +348,6 @@ public class ParseTree {
     }
   };
   [JsonDerivedType(typeof(SimpleExpressionNode), "SimpleExpression")]
-  // [JsonDerivedType(typeof(MethodCallNode), "MethodCallStatement")]
-  // [JsonDerivedType(typeof(IfNode), "IfStatement")]
   [JsonDerivedType(typeof(BinopExpressionNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixExpressionNode), "PrefixExpression")]
   // Literal SubTypes
@@ -331,17 +355,17 @@ public class ParseTree {
   [JsonDerivedType(typeof(CharLiteralNode), "CharLiteral")]
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
   [JsonDerivedType(typeof(NullLiteralNode), "NullLiteral")]
-  public abstract class ExpressionNode : Node {
+  public abstract record ExpressionNode : Node {
     protected ExpressionNode(Position position) : base(position) { }
     public static ExpressionNode FromContext(DecafParser.ExprContext context) {
       switch (context) {
         case DecafParser.SimpleExprContext simpleExprCtx:
           return SimpleExpressionNode.FromContext(simpleExprCtx.simple_expr());
         case DecafParser.NewObjectExprContext newObjExprCtx:
-          // TODO: Implement NewObjectExpressionNode
+          // NOTE: We don't implement nodes for these as we don't support them in the generated program
           throw new NotImplementedException();
         case DecafParser.NewArrayExprContext newArrExprCtx:
-          // TODO: Implement NewArrayExpressionNode
+          // NOTE: We don't implement nodes for these as we don't support them in the generated program
           throw new NotImplementedException();
         case DecafParser.LiteralExprContext literalExprCtx:
           return LiteralNode.FromContext(literalExprCtx.literal());
@@ -357,16 +381,36 @@ public class ParseTree {
       }
     }
   };
-  // TODO: Implement SimpleExpressionNode
-  public class SimpleExpressionNode : ExpressionNode {
+  public record SimpleExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.SimpleExpressionNode;
-    public SimpleExpressionNode(Position position) : base(position) { }
+    // TODO: It would be nice if this could be more typeSafe
+    public Node Content;
+    public SimpleExpressionNode(Position position, Node content) : base(position) {
+      this.Content = content;
+    }
     public static SimpleExpressionNode FromContext(DecafParser.Simple_exprContext context) {
       var position = Position.FromContext(context);
-      return new SimpleExpressionNode(position);
+      switch (context) {
+        case DecafParser.LocationExprContext locationCtx:
+          return new SimpleExpressionNode(position, LocationNode.FromContext(locationCtx.location()));
+        case DecafParser.ThisExprContext thisCtx:
+          return new SimpleExpressionNode(position, ThisNode.FromContext(thisCtx));
+        case DecafParser.CallExprContext callCtx:
+          switch (callCtx.call_expr()) {
+            case DecafParser.MethodCallExprContext methodCallCtx:
+              return new SimpleExpressionNode(position, CallNode.FromContext(methodCallCtx.method_call()));
+            case DecafParser.PrimCalloutExprContext primCalloutCtx:
+              return new SimpleExpressionNode(position, PrimitiveCallNode.FromContext(primCalloutCtx.prim_callout()));
+            default:
+              throw new InvalidProgramException("Impossible call expression at StatementNode.FromContext");
+          }
+        default:
+          // NOTE: This should be impossible due to grammar restrictions
+          throw new InvalidProgramException("Impossible expression at SimpleExpressionNode.FromContext");
+      }
     }
   };
-  public class BinopExpressionNode : ExpressionNode {
+  public record BinopExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.BinopExpressionNode;
     public ExpressionNode Lhs { get; }
     public string Operator { get; }
@@ -384,7 +428,7 @@ public class ParseTree {
       return new BinopExpressionNode(position, lhs, op, rhs);
     }
   };
-  public class PrefixExpressionNode : ExpressionNode {
+  public record PrefixExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.PrefixExpressionNode;
     public string Operator { get; }
     public ExpressionNode Operand { get; }
@@ -399,7 +443,7 @@ public class ParseTree {
       return new PrefixExpressionNode(position, op, operand);
     }
   };
-  public class LocationNode : Node {
+  public record LocationNode : Node {
     public override NodeKind Kind => NodeKind.LocationNode;
     public string Root { get; }
     // NOTE: Parsing restricts so we can't have nested arrays.
@@ -418,11 +462,19 @@ public class ParseTree {
       return new LocationNode(position, root, path, indexExpr);
     }
   };
+  public record ThisNode : Node {
+    public override NodeKind Kind => NodeKind.ThisNode;
+    public ThisNode(Position position) : base(position) { }
+    public static ThisNode FromContext(DecafParser.ThisExprContext context) {
+      var position = Position.FromContext(context);
+      return new ThisNode(position);
+    }
+  };
   [JsonDerivedType(typeof(IntegerLiteralNode), "IntegerLiteral")]
   [JsonDerivedType(typeof(CharLiteralNode), "CharLiteral")]
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
   [JsonDerivedType(typeof(NullLiteralNode), "NullLiteral")]
-  public abstract class LiteralNode : ExpressionNode {
+  public abstract record LiteralNode : ExpressionNode {
     protected LiteralNode(Position position) : base(position) { }
     public static LiteralNode FromContext(DecafParser.LiteralContext context) {
       switch (context) {
@@ -440,7 +492,7 @@ public class ParseTree {
       }
     }
   };
-  public class IntegerLiteralNode : LiteralNode {
+  public record IntegerLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.IntegerLiteralNode;
     public int Value { get; }
     public IntegerLiteralNode(Position position, int value) : base(position) {
@@ -448,12 +500,12 @@ public class ParseTree {
     }
     public static IntegerLiteralNode FromContext(DecafParser.IntLitContext context) {
       var position = Position.FromContext(context);
-      // TODO: Handle Proper Integer Conversion
+      // TODO: Validate c# ints are a subset of our language ints (Or custom parsing)
       var value = int.Parse(context.INTLIT().GetText());
       return new IntegerLiteralNode(position, value);
     }
   };
-  public class CharLiteralNode : LiteralNode {
+  public record CharLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.CharLiteralNode;
     public char Value { get; }
     public CharLiteralNode(Position position, char value) : base(position) {
@@ -461,12 +513,11 @@ public class ParseTree {
     }
     public static CharLiteralNode FromContext(DecafParser.CharLitContext context) {
       var position = Position.FromContext(context);
-      // TODO: Handle Proper Char Parsing
       var value = context.CHARLIT().GetText()[1]; // Skip the quotes
       return new CharLiteralNode(position, value);
     }
   };
-  public class BoolLiteralNode : LiteralNode {
+  public record BoolLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.BoolLiteralNode;
     public bool Value { get; }
     public BoolLiteralNode(Position position, bool value) : base(position) {
@@ -478,7 +529,7 @@ public class ParseTree {
       return new BoolLiteralNode(position, value);
     }
   };
-  public class NullLiteralNode : LiteralNode {
+  public record NullLiteralNode : LiteralNode {
     public override NodeKind Kind => NodeKind.NullLiteralNode;
     public NullLiteralNode(Position position) : base(position) { }
     public static NullLiteralNode FromContext(DecafParser.NullLitContext context) {

@@ -16,7 +16,7 @@ var_bind: name=ID (LBRACK INTLIT? RBRACK)?;
 
 method_decl: returnType=type name=ID LPAREN parameters=method_decl_param_list? RPAREN body=block;
 method_decl_param_list: method_decl_param (COMMA method_decl_param)*;
-method_decl_param: typ=type name=ID (LBRACK RBRACK)?; // TODO: Consider simplifying the array part into type itself
+method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
 
 block: LBRACE var_decl* statement* RBRACE;
 
@@ -32,7 +32,7 @@ type:
 
 statement:
   assign_stmt # AssignStatement
-  | call_stmt # CallStatement
+  | expression_stmt # ExpressionStatement
   | if_stmt # IfStatement
   | while_stmt # WhileStatement
   | return_stmt # ReturnStatement
@@ -40,8 +40,7 @@ statement:
   ;
 
 assign_stmt: location ASSIGN expr SEMI;
-// TODO: Figure out how to handle the hierarchy of expressions here (Maybe consider an expression statement?)
-call_stmt: call_expr SEMI;
+expression_stmt: call_expr SEMI # CallExpressionStatement;
 if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
 while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
 return_stmt: RETURN value=expr? SEMI;
@@ -53,16 +52,13 @@ call_expr:
   ;
 method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
 method_call_args: expr (COMMA expr)*;
-// TODO: Consider removing callout and having `@<id>` represent a special kind of internal id.
 prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
 prim_callout_args: (COMMA (expr | STRINGLIT))*;
 
-// TODO: I don't love how this is structured at the moment
 expr:
   simple_expr # SimpleExpr
-  | NEW ID LPAREN RPAREN # NewObjectExpr // TODO: Develop a better name
-  // TODO: What is the purpose of this????
-  | NEW type (expr)? # NewArrayExpr // TODO: Develop a better name
+  | NEW ID LPAREN RPAREN # NewObjectExpr
+  | NEW type (expr)? # NewArrayExpr
   | literal # LiteralExpr
   | op=NOT operand=expr # NotExpr // TODO: Generalize this to a prefix expr
   | lhs=expr op=bin_op rhs=expr # BinaryOpExpr // TODO: Generalize this into a binop expression
@@ -79,7 +75,6 @@ location: root=ID (path=location_path | indexExpr=location_array_index)?;
 location_path: DOT ID; // TODO: Allow paths like root.path1.path2 -- Restrict Semantically
 location_array_index: LBRACK expr RBRACK; // TODO: Allow nested array paths -- Restrict Semantically
 
-// TODO: Handle Precedence fully
 bin_op:
   arith_op | rel_op | eq_op | cond_op;
 

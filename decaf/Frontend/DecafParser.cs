@@ -47,7 +47,7 @@ public partial class DecafParser : Parser {
 		RULE_program = 0, RULE_class_decl = 1, RULE_var_decl = 2, RULE_var_bind_list = 3, 
 		RULE_var_bind = 4, RULE_method_decl = 5, RULE_method_decl_param_list = 6, 
 		RULE_method_decl_param = 7, RULE_block = 8, RULE_type = 9, RULE_statement = 10, 
-		RULE_assign_stmt = 11, RULE_call_stmt = 12, RULE_if_stmt = 13, RULE_while_stmt = 14, 
+		RULE_assign_stmt = 11, RULE_expression_stmt = 12, RULE_if_stmt = 13, RULE_while_stmt = 14, 
 		RULE_return_stmt = 15, RULE_call_expr = 16, RULE_method_call = 17, RULE_method_call_args = 18, 
 		RULE_prim_callout = 19, RULE_prim_callout_args = 20, RULE_expr = 21, RULE_simple_expr = 22, 
 		RULE_location = 23, RULE_location_path = 24, RULE_location_array_index = 25, 
@@ -56,8 +56,8 @@ public partial class DecafParser : Parser {
 	public static readonly string[] ruleNames = {
 		"program", "class_decl", "var_decl", "var_bind_list", "var_bind", "method_decl", 
 		"method_decl_param_list", "method_decl_param", "block", "type", "statement", 
-		"assign_stmt", "call_stmt", "if_stmt", "while_stmt", "return_stmt", "call_expr", 
-		"method_call", "method_call_args", "prim_callout", "prim_callout_args", 
+		"assign_stmt", "expression_stmt", "if_stmt", "while_stmt", "return_stmt", 
+		"call_expr", "method_call", "method_call_args", "prim_callout", "prim_callout_args", 
 		"expr", "simple_expr", "location", "location_path", "location_array_index", 
 		"bin_op", "arith_op", "rel_op", "eq_op", "cond_op", "literal", "bool_literal"
 	};
@@ -772,6 +772,12 @@ public partial class DecafParser : Parser {
 		}
 		public IfStatementContext(StatementContext context) { CopyFrom(context); }
 	}
+	public partial class ExpressionStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public Expression_stmtContext expression_stmt() {
+			return GetRuleContext<Expression_stmtContext>(0);
+		}
+		public ExpressionStatementContext(StatementContext context) { CopyFrom(context); }
+	}
 	public partial class ReturnStatementContext : StatementContext {
 		[System.Diagnostics.DebuggerNonUserCode] public Return_stmtContext return_stmt() {
 			return GetRuleContext<Return_stmtContext>(0);
@@ -783,12 +789,6 @@ public partial class DecafParser : Parser {
 			return GetRuleContext<BlockContext>(0);
 		}
 		public BlockStatementContext(StatementContext context) { CopyFrom(context); }
-	}
-	public partial class CallStatementContext : StatementContext {
-		[System.Diagnostics.DebuggerNonUserCode] public Call_stmtContext call_stmt() {
-			return GetRuleContext<Call_stmtContext>(0);
-		}
-		public CallStatementContext(StatementContext context) { CopyFrom(context); }
 	}
 	public partial class WhileStatementContext : StatementContext {
 		[System.Diagnostics.DebuggerNonUserCode] public While_stmtContext while_stmt() {
@@ -820,11 +820,11 @@ public partial class DecafParser : Parser {
 				}
 				break;
 			case 2:
-				_localctx = new CallStatementContext(_localctx);
+				_localctx = new ExpressionStatementContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
 				State = 157;
-				call_stmt();
+				expression_stmt();
 				}
 				break;
 			case 3:
@@ -916,23 +916,32 @@ public partial class DecafParser : Parser {
 		return _localctx;
 	}
 
-	public partial class Call_stmtContext : ParserRuleContext {
+	public partial class Expression_stmtContext : ParserRuleContext {
+		public Expression_stmtContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_expression_stmt; } }
+	 
+		public Expression_stmtContext() { }
+		public virtual void CopyFrom(Expression_stmtContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class CallExpressionStatementContext : Expression_stmtContext {
 		[System.Diagnostics.DebuggerNonUserCode] public Call_exprContext call_expr() {
 			return GetRuleContext<Call_exprContext>(0);
 		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(DecafParser.SEMI, 0); }
-		public Call_stmtContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_call_stmt; } }
+		public CallExpressionStatementContext(Expression_stmtContext context) { CopyFrom(context); }
 	}
 
 	[RuleVersion(0)]
-	public Call_stmtContext call_stmt() {
-		Call_stmtContext _localctx = new Call_stmtContext(Context, State);
-		EnterRule(_localctx, 24, RULE_call_stmt);
+	public Expression_stmtContext expression_stmt() {
+		Expression_stmtContext _localctx = new Expression_stmtContext(Context, State);
+		EnterRule(_localctx, 24, RULE_expression_stmt);
 		try {
+			_localctx = new CallExpressionStatementContext(_localctx);
 			EnterOuterAlt(_localctx, 1);
 			{
 			State = 169;

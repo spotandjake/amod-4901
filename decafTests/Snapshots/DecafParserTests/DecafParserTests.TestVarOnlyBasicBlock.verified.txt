@@ -1,0 +1,42 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      MethodDeclarations: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: void
+          },
+          Name: testMethod,
+          Body: {
+            Kind: BlockNode,
+            VariableDeclarations: [
+              {
+                Kind: VariableDeclarationNode,
+                VarType: {
+                  Kind: TypeNode,
+                  Type: int
+                },
+                VarBinds: [
+                  {
+                    Kind: VarBindNode,
+                    Name: x,
+                    IsArray: false
+                  },
+                  {
+                    Kind: VarBindNode,
+                    Name: y,
+                    IsArray: false
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

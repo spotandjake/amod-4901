@@ -1,0 +1,66 @@
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      VariableDeclarations: [
+        {
+          Kind: VariableDeclarationNode,
+          VarType: {
+            Kind: TypeNode,
+            Type: int
+          },
+          VarBinds: [
+            {
+              Kind: VarBindNode,
+              Name: x,
+              IsArray: false
+            }
+          ]
+        },
+        {
+          Kind: VariableDeclarationNode,
+          VarType: {
+            Kind: TypeNode,
+            Type: boolean
+          },
+          VarBinds: [
+            {
+              Kind: VarBindNode,
+              Name: y,
+              IsArray: false
+            }
+          ]
+        },
+        {
+          Kind: VariableDeclarationNode,
+          VarType: {
+            Kind: TypeNode,
+            Type: void
+          },
+          VarBinds: [
+            {
+              Kind: VarBindNode,
+              Name: z,
+              IsArray: false
+            }
+          ]
+        },
+        {
+          Kind: VariableDeclarationNode,
+          VarType: {
+            Kind: TypeNode,
+            Type: t
+          },
+          VarBinds: [
+            {
+              Kind: VarBindNode,
+              Name: y,
+              IsArray: false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

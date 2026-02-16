@@ -72,13 +72,6 @@
   LPAREN,
   RPAREN,
   LBRACE,
-  CALLOUT,
-  ID,
-  LPAREN,
-  INT,
-  ID,
-  RPAREN,
-  SEMI,
   RBRACE,
   RBRACE
 ]
