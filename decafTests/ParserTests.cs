@@ -273,7 +273,7 @@ public class DecafParserTests : VerifyBase {
     return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   // TODO: Expressions (Test these with something like x = <expr>)
-  [TestMethod] 
+  [TestMethod]
   public Task TestSimpleExpression() {
     var result = Parse(@"
     class main {
@@ -474,7 +474,7 @@ public class DecafParserTests : VerifyBase {
       x = (); 
       } 
     }
-    ")); 
+    "));
   }
   #endregion
   #region Precedence
