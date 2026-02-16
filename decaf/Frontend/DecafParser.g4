@@ -32,7 +32,7 @@ type:
 
 statement:
   assign_stmt # AssignStatement
-  | call_stmt # CallStatement
+  | expression_stmt # ExpressionStatement
   | if_stmt # IfStatement
   | while_stmt # WhileStatement
   | return_stmt # ReturnStatement
@@ -41,6 +41,7 @@ statement:
 
 assign_stmt: location ASSIGN expr SEMI;
 // TODO: Figure out how to handle the hierarchy of expressions here (Maybe consider an expression statement?)
+expression_stmt: call_stmt;
 call_stmt: call_expr SEMI;
 if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
 while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
