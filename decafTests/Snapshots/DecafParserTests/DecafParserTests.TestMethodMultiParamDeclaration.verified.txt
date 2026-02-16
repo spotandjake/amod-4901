@@ -1,1 +1,91 @@
-﻿
+﻿{
+  Classes: [
+    {
+      Kind: ClassDeclNode,
+      Name: Main,
+      MethodDeclarations: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: void,
+            Position: {
+              fileName: <unknown file>,
+              line: 1,
+              column: 13,
+              offset: 13
+            }
+          },
+          Name: foo,
+          Parameters: [
+            {
+              Kind: ParameterNode,
+              ParamType: {
+                Kind: TypeNode,
+                Type: int,
+                Position: {
+                  fileName: <unknown file>,
+                  line: 1,
+                  column: 22,
+                  offset: 22
+                }
+              },
+              Name: x,
+              IsArray: false,
+              Position: {
+                fileName: <unknown file>,
+                line: 1,
+                column: 22,
+                offset: 22
+              }
+            },
+            {
+              Kind: ParameterNode,
+              ParamType: {
+                Kind: TypeNode,
+                Type: int,
+                Position: {
+                  fileName: <unknown file>,
+                  line: 1,
+                  column: 29,
+                  offset: 29
+                }
+              },
+              Name: y,
+              IsArray: false,
+              Position: {
+                fileName: <unknown file>,
+                line: 1,
+                column: 29,
+                offset: 29
+              }
+            }
+          ],
+          Body: {
+            Kind: BlockNode,
+            Position: {
+              fileName: <unknown file>,
+              line: 1,
+              column: 36,
+              offset: 36
+            }
+          },
+          Position: {
+            fileName: <unknown file>,
+            line: 1,
+            column: 13,
+            offset: 13
+          }
+        }
+      ],
+      Position: {
+        fileName: <unknown file>,
+        line: 1
+      }
+    }
+  ],
+  Position: {
+    fileName: <unknown file>,
+    line: 1
+  }
+}

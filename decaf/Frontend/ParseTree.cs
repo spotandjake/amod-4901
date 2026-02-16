@@ -3,8 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 
-// TODO: Consider if there is a cleaner way to structure this file.
-public record ParseTree {
+namespace ParseTree {
   public enum NodeKind {
     ProgramNode,
     ClassDeclNode,
@@ -16,6 +15,7 @@ public record ParseTree {
     VarBindNode,
     ParameterNode,
     LocationNode,
+    ThisNode,
     // Statements
     AssignmentNode,
     ExpressionStatementNode,
@@ -209,7 +209,6 @@ public record ParseTree {
           return AssignmentNode.FromContext(assignCtx.assign_stmt());
         case DecafParser.ExpressionStatementContext exprStmtCtx:
           return ExpressionStatementNode.FromContext(exprStmtCtx.expression_stmt());
-
         case DecafParser.IfStatementContext ifCtx:
           return IfNode.FromContext(ifCtx.if_stmt());
         case DecafParser.WhileStatementContext whileCtx:
@@ -245,21 +244,26 @@ public record ParseTree {
       this.Content = content;
     }
 
-    public static ExpressionStatementNode FromContext(DecafParser.Expression_stmtContext context) { // I probably messed up the type here
+    public static ExpressionStatementNode FromContext(DecafParser.Expression_stmtContext context) {
       var position = Position.FromContext(context);
-      var callExpr = context.call_stmt().call_expr();
-
-      ExpressionNode content;
-      if (callExpr is DecafParser.MethodCallExprContext m) {
-        content = CallNode.FromContext(m.method_call());
+      switch (context) {
+        case DecafParser.CallExpressionStatementContext callExprStmtCtx:
+          var callCtx = callExprStmtCtx.call_expr();
+          ExpressionNode content;
+          if (callCtx is DecafParser.MethodCallExprContext m) {
+            content = CallNode.FromContext(m.method_call());
+          }
+          else if (callCtx is DecafParser.PrimCalloutExprContext p) {
+            content = PrimitiveCallNode.FromContext(p.prim_callout());
+          }
+          else {
+            throw new InvalidProgramException("Impossible statement at ExpressionStatementNode.FromContext");
+          }
+          return new ExpressionStatementNode(position, content);
+        default:
+          // NOTE: This should be impossible due to grammar restrictions
+          throw new InvalidProgramException("Impossible statement at ExpressionStatementNode.FromContext");
       }
-      else if (callExpr is DecafParser.PrimCalloutExprContext p) {
-        content = PrimitiveCallNode.FromContext(p.prim_callout());
-      }
-      else {
-        throw new InvalidProgramException("Unknown call expression type");
-      }
-      return new ExpressionStatementNode(position, content);
     }
   }
 
@@ -291,7 +295,7 @@ public record ParseTree {
     public static PrimitiveCallNode FromContext(DecafParser.Prim_calloutContext context) {
       var position = Position.FromContext(context);
       var primId = context.primId.Text;
-      // TODO: Handle mixed expression and stringlit args
+      // TODO: Properly handle callout node arguments
       // var args = context.args.expr().Select(
       //   exprCtx => ExpressionNode.FromContext(exprCtx)
       // ).ToArray();
@@ -344,8 +348,6 @@ public record ParseTree {
     }
   };
   [JsonDerivedType(typeof(SimpleExpressionNode), "SimpleExpression")]
-  // [JsonDerivedType(typeof(MethodCallNode), "MethodCallStatement")]
-  // [JsonDerivedType(typeof(IfNode), "IfStatement")]
   [JsonDerivedType(typeof(BinopExpressionNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixExpressionNode), "PrefixExpression")]
   // Literal SubTypes
@@ -360,10 +362,10 @@ public record ParseTree {
         case DecafParser.SimpleExprContext simpleExprCtx:
           return SimpleExpressionNode.FromContext(simpleExprCtx.simple_expr());
         case DecafParser.NewObjectExprContext newObjExprCtx:
-          // TODO: Implement NewObjectExpressionNode
+          // NOTE: We don't implement nodes for these as we don't support them in the generated program
           throw new NotImplementedException();
         case DecafParser.NewArrayExprContext newArrExprCtx:
-          // TODO: Implement NewArrayExpressionNode
+          // NOTE: We don't implement nodes for these as we don't support them in the generated program
           throw new NotImplementedException();
         case DecafParser.LiteralExprContext literalExprCtx:
           return LiteralNode.FromContext(literalExprCtx.literal());
@@ -379,13 +381,33 @@ public record ParseTree {
       }
     }
   };
-  // TODO: Implement SimpleExpressionNode
   public record SimpleExpressionNode : ExpressionNode {
     public override NodeKind Kind => NodeKind.SimpleExpressionNode;
-    public SimpleExpressionNode(Position position) : base(position) { }
+    // TODO: It would be nice if this could be more typeSafe
+    public Node Content;
+    public SimpleExpressionNode(Position position, Node content) : base(position) {
+      this.Content = content;
+    }
     public static SimpleExpressionNode FromContext(DecafParser.Simple_exprContext context) {
       var position = Position.FromContext(context);
-      return new SimpleExpressionNode(position);
+      switch (context) {
+        case DecafParser.LocationExprContext locationCtx:
+          return new SimpleExpressionNode(position, LocationNode.FromContext(locationCtx.location()));
+        case DecafParser.ThisExprContext thisCtx:
+          return new SimpleExpressionNode(position, ThisNode.FromContext(thisCtx));
+        case DecafParser.CallExprContext callCtx:
+          switch (callCtx.call_expr()) {
+            case DecafParser.MethodCallExprContext methodCallCtx:
+              return new SimpleExpressionNode(position, CallNode.FromContext(methodCallCtx.method_call()));
+            case DecafParser.PrimCalloutExprContext primCalloutCtx:
+              return new SimpleExpressionNode(position, PrimitiveCallNode.FromContext(primCalloutCtx.prim_callout()));
+            default:
+              throw new InvalidProgramException("Impossible call expression at StatementNode.FromContext");
+          }
+        default:
+          // NOTE: This should be impossible due to grammar restrictions
+          throw new InvalidProgramException("Impossible expression at SimpleExpressionNode.FromContext");
+      }
     }
   };
   public record BinopExpressionNode : ExpressionNode {
@@ -440,6 +462,14 @@ public record ParseTree {
       return new LocationNode(position, root, path, indexExpr);
     }
   };
+  public record ThisNode : Node {
+    public override NodeKind Kind => NodeKind.ThisNode;
+    public ThisNode(Position position) : base(position) { }
+    public static ThisNode FromContext(DecafParser.ThisExprContext context) {
+      var position = Position.FromContext(context);
+      return new ThisNode(position);
+    }
+  };
   [JsonDerivedType(typeof(IntegerLiteralNode), "IntegerLiteral")]
   [JsonDerivedType(typeof(CharLiteralNode), "CharLiteral")]
   [JsonDerivedType(typeof(BoolLiteralNode), "BoolLiteral")]
@@ -470,7 +500,7 @@ public record ParseTree {
     }
     public static IntegerLiteralNode FromContext(DecafParser.IntLitContext context) {
       var position = Position.FromContext(context);
-      // TODO: Handle Proper Integer Conversion
+      // TODO: Validate c# ints are a subset of our language ints (Or custom parsing)
       var value = int.Parse(context.INTLIT().GetText());
       return new IntegerLiteralNode(position, value);
     }
@@ -483,7 +513,6 @@ public record ParseTree {
     }
     public static CharLiteralNode FromContext(DecafParser.CharLitContext context) {
       var position = Position.FromContext(context);
-      // TODO: Handle Proper Char Parsing
       var value = context.CHARLIT().GetText()[1]; // Skip the quotes
       return new CharLiteralNode(position, value);
     }

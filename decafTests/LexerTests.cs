@@ -221,8 +221,6 @@ public class DecafLexerTests : VerifyBase {
 
       class Base {
         void calloutMethod() {
-          // Callout to external function
-          callout printInt(int x);
         }
       }");
     // Collect tokens

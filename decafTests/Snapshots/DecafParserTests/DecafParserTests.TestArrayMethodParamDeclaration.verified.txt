@@ -31,7 +31,7 @@
                 }
               },
               Name: x,
-              IsArray: false,
+              IsArray: true,
               Position: {
                 fileName: <unknown file>,
                 line: 1,
@@ -45,8 +45,8 @@
             Position: {
               fileName: <unknown file>,
               line: 1,
-              column: 29,
-              offset: 29
+              column: 31,
+              offset: 31
             }
           },
           Position: {
