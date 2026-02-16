@@ -1,6 +1,5 @@
-class Main extends Base {
-
-  void arrParam(int x) {
-    return 1;
+class Main {
+  void testMethod() {
+    x = !1 + 1;
   }
 }
