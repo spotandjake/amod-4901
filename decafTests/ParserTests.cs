@@ -272,26 +272,183 @@ public class DecafParserTests : VerifyBase {
     ");
     return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
-  // TODO: Expressions (Test these with something like x = <expr>)
-  // TODO: Location Expression (Simple: x = y)
-  // TODO: Location Expression (Simple: x = Base.y)
-  // TODO: Location Expression (Simple: x = this)
-  // TODO: Call Expression (x = foo())
-  // TODO: Call Expression (x = foo(1))
-  // TODO: Call Expression (x = foo(1, 2))
-  // TODO: Callout Expression (x = callout("test", 1, 2))
+  // Expressions
+  [TestMethod]
+  public Task TestSimpleLocationAssignment() {
+    // Testing the assignment of one variable to another (LocationExpr)
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        x = y;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDotExpression() {
+    return Verify(Parse(@"
+    class Main {
+      void testMethod() { 
+        x = Base.y; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestThisExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = this; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCallExpression1() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = foo(); 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCallExpression2() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = foo(1); 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCallExpression3() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = foo(1, 2); 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCalloutExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = callout(""test"", 1, 2); 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
   // NOTE: We don't test `new test()` as our parseTree won't handle this
   // NOTE: We don't test `new int 1` as our parseTree won't handle this
-  // TODO: Int Expression (x = 1)
-  // TODO: char Expression (x = 'a')
-  // TODO: bool Expression (x = true)
-  // TODO: bool Expression (x = false)
-  // TODO: null Expression (x = null)
-  // TODO: Prefix Expression (!true)
-  // TODO: Binop Expression (Simple: x = 1 + 1) (Feel free to add more binop tests)
-  // TODO: Binop Expression (Chained: x = 1 + 1 + 1)
-  // TODO: Paren Expression (x = (1 + 1))
-  // TODO: Add an invalid paren Expression `x = ()` to the invalid section (this is just empty)
+  [TestMethod]
+  public Task TestIntExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = 1; 
+      }
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestCharExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = 'a'; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBoolExpression1() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = true; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBoolExpression2() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = false; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestNullExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = null; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestPrefixExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        bool booly;
+        booly = !true; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBinopExpression1() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = 1 + 1; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBinopExpression2() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = 1 + 1 + 1; 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestParenExpression() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        x = (1 + 1); 
+      } 
+    }
+    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestSimpleExpression() {
+    var result = Parse(@"
+    class main {
+      void testMethod() {
+        x = 5 * (3 + 2);
+      }
+    } 
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+  }
   #endregion
   #region Precedence
   // TODO: Validate Precedence (I don't think it's currently correct)
@@ -427,6 +584,16 @@ public class DecafParserTests : VerifyBase {
       void testMethod() {
         x = 1
       }
+    }
+    "));
+  }
+  [TestMethod]
+  public void TestInvalidParenExpression() {
+    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
+    class Main { 
+    void testMethod() { 
+      x = (); 
+      } 
     }
     "));
   }
