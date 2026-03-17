@@ -15,7 +15,7 @@ tasks:
     desc: Builds the compiler and runs a local ./test.decaf file.
     deps:
       - build
-    cmd: dotnet run --project=decaf -- ./example.decaf
+    cmd: dotnet run --project=decaf -- ./example.decaf --debug
   # Library Commands
   test:
     desc: Runs the compiler test suite, options can be passed through `task test -- <opts>`

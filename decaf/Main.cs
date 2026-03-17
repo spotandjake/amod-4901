@@ -4,6 +4,8 @@ using Antlr4.Runtime;
 using CommandLine;
 using System.Text.Json;
 using System.Data;
+using ParseTree;
+using MiddleEnd;
 
 namespace Compiler {
   public class Compiler {
@@ -20,12 +22,17 @@ namespace Compiler {
       return lexer;
     }
 #nullable enable
-    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream, string? inputFileName) {
+    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
       DecafParser parser = new DecafParser(tokenStream);
       parser.RemoveErrorListeners();
       parser.AddErrorListener(ParserErrorListener.Instance);
       ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
       return program;
+    }
+    public static ProgramNode SemanticAnalysis(ProgramNode program) {
+      var scopedTree = ScopeMapper.MapProgramNode(program, new Scope<bool>(null));
+      SemanticChecker.CheckProgramNode(scopedTree);
+      return scopedTree;
     }
 #nullable enable
     public static void CompileString(string source, string? inputFileName) {
@@ -42,12 +49,13 @@ namespace Compiler {
       //   );
       // }
       // Parsing
-      ParseTree.ProgramNode program = ParseTokenStream(tokenStream, inputFileName);
-      string json = JsonSerializer.Serialize(program, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
-      Console.WriteLine(json);
-      // TODO: Semantic Analysis
+      ProgramNode program = ParseTokenStream(tokenStream);
+      // Semantic Analysis
+      ProgramNode scopedProgram = SemanticAnalysis(program);
       // TODO: TypeChecking
       // TODO: Code Generation
+      string json = JsonSerializer.Serialize(scopedProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+      Console.WriteLine(json);
     }
   }
 }
@@ -61,6 +69,8 @@ namespace CLI {
       public required string FileName { get; set; }
       [Option('o', "output", Required = false, HelpText = "Output filename.")]
       public string? output { get; set; }
+      [Option("debug", Required = false, HelpText = "Weather to run in debug mode or not.")]
+      public bool Debug { get; set; } = false;
     }
 
     static void Main(string[] args) {
@@ -89,8 +99,19 @@ namespace CLI {
       catch (Antlr4.Runtime.Misc.ParseCanceledException e) {
         Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
       }
+      catch (DeclarationNotDefinedException e) {
+        Console.WriteLine($"Semantic analysis failed: {e.Message}");
+      }
+      catch (DuplicateDeclarationException e) {
+        Console.WriteLine($"Semantic analysis failed: {e.Message}");
+      }
       catch (Exception e) {
-        Console.WriteLine($"Compilation failed: {e.Message}");
+        if (opts.Debug) {
+          throw;
+        }
+        else {
+          Console.WriteLine($"Compilation failed: {e.Message}");
+        }
       }
     }
     static void HandleCommandLineErrors(IEnumerable<Error> errs) {

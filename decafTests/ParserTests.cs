@@ -13,7 +13,7 @@ public class DecafParserTests : VerifyBase {
   private ParseTree.ProgramNode? Parse(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream, null);
+    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
     return program;
   }
   #region ValidTests
@@ -204,7 +204,7 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public Task TestCalloutStatement() {
     // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
-    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2); } }");
+    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2, \"y\"); } }");
     return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
   }
   [TestMethod]
@@ -340,7 +340,7 @@ public class DecafParserTests : VerifyBase {
     return Verify(Parse(@"
     class Main { 
       void testMethod() { 
-        x = callout(""test"", 1, 2); 
+        x = callout(""test"", 1, 2, ""y""); 
       } 
     }
     "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);

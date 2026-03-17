@@ -8,7 +8,9 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: int
+            Type: {
+              Content: int
+            }
           },
           VarBinds: [
             {
@@ -22,7 +24,10 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: boolean
+            Type: {
+              Type: Boolean,
+              Content: boolean
+            }
           },
           VarBinds: [
             {
@@ -36,7 +41,10 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           VarBinds: [
             {
@@ -50,7 +58,10 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: t
+            Type: {
+              Type: Custom,
+              Name: t
+            }
           },
           VarBinds: [
             {

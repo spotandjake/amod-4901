@@ -8,7 +8,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: testMethod,
           Body: {
@@ -18,7 +21,9 @@
                 Kind: VariableDeclarationNode,
                 VarType: {
                   Kind: TypeNode,
-                  Type: int
+                  Type: {
+                    Content: int
+                  }
                 },
                 VarBinds: [
                   {

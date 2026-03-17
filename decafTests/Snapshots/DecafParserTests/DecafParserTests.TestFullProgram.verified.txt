@@ -9,7 +9,9 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: int
+            Type: {
+              Content: int
+            }
           },
           VarBinds: [
             {
@@ -35,7 +37,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: foo,
           Parameters: [
@@ -43,7 +48,9 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int
+                Type: {
+                  Content: int
+                }
               },
               Name: a,
               IsArray: false
@@ -52,7 +59,10 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: boolean
+                Type: {
+                  Type: Boolean,
+                  Content: boolean
+                }
               },
               Name: b,
               IsArray: false
@@ -61,7 +71,9 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int
+                Type: {
+                  Content: int
+                }
               },
               Name: c,
               IsArray: true
@@ -160,7 +172,9 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: int
+            Type: {
+              Content: int
+            }
           },
           Name: bar,
           Body: {
@@ -189,7 +203,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: calloutMethod,
           Body: {

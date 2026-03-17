@@ -8,7 +8,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: testMethod,
           Body: {
@@ -18,7 +21,24 @@
                 Kind: ExpressionStatementNode,
                 Content: {
                   Kind: PrimitiveCallNode,
-                  PrimitiveId: "Test"
+                  PrimitiveId: "Test",
+                  Arguments: [
+                    {
+                      Content: {
+                        Kind: IntegerLiteralNode,
+                        Value: 1
+                      }
+                    },
+                    {
+                      Content: {
+                        Kind: IntegerLiteralNode,
+                        Value: 2
+                      }
+                    },
+                    {
+                      Content: y
+                    }
+                  ]
                 }
               }
             ]

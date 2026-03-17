@@ -8,7 +8,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: foo,
           Body: {
@@ -19,7 +22,10 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: {
+              Type: Void,
+              Content: void
+            }
           },
           Name: bar,
           Body: {

@@ -8,7 +8,9 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: int
+            Type: {
+              Content: int
+            }
           },
           VarBinds: [
             {
@@ -22,7 +24,9 @@
           Kind: VariableDeclarationNode,
           VarType: {
             Kind: TypeNode,
-            Type: int
+            Type: {
+              Content: int
+            }
           },
           VarBinds: [
             {
