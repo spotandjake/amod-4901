@@ -25,7 +25,10 @@
                   }
                 },
                 Expression: {
-                  Kind: NullLiteral
+                  Kind: LiteralExpression,
+                  Content: {
+                    Kind: NullLiteral
+                  }
                 }
               }
             ]

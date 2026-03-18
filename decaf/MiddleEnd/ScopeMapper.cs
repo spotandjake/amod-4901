@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using System;
 using System.Linq;
 using Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.ScopeErrors;
 
-namespace MiddleEnd {
+namespace Decaf.MiddleEnd {
   // Analyzes the parse tree and attaches scope tables to nodes
   /// <summary>
   /// The ScopeMapper traverses the parse tree starting from a program node and constructs scope tables for each class, method, and block.

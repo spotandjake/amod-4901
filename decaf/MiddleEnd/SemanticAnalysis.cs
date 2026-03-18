@@ -4,7 +4,7 @@ using System.Linq;
 using Decaf.IR.ParseTree;
 using Decaf.Utils.Errors.SemanticErrors;
 
-namespace MiddleEnd {
+namespace Decaf.MiddleEnd {
   // Performs semantic analysis on the parse tree, ensuring that the program is semantically valid
   public class SemanticChecker {
     private SemanticChecker() { }
@@ -32,7 +32,7 @@ namespace MiddleEnd {
         if (mainMethod.Parameters.Length != 0) {
           throw new SemanticException(mainMethod.Position, "`Program.Main()` should not accept any parameters");
         }
-        if (!(mainMethod.ReturnType.Type == TypeNode.PrimitiveType.Void)) {
+        if (!(mainMethod.ReturnType.Type == PrimitiveType.Void)) {
           throw new SemanticException(mainMethod.ReturnType.Position, "`Program.Main()` should not accept any parameters");
         }
       }

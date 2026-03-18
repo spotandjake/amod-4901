@@ -34,8 +34,11 @@
               {
                 Kind: WhileStatement,
                 Condition: {
-                  Kind: BooleanLiteral,
-                  Value: true
+                  Kind: LiteralExpression,
+                  Content: {
+                    Kind: BooleanLiteral,
+                    Value: true
+                  }
                 },
                 Body: {
                   Kind: BlockNode,
@@ -50,8 +53,11 @@
                         }
                       },
                       Expression: {
-                        Kind: IntegerLiteral,
-                        Value: 1
+                        Kind: LiteralExpression,
+                        Content: {
+                          Kind: IntegerLiteral,
+                          Value: 1
+                        }
                       }
                     }
                   ]

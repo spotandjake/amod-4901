@@ -29,16 +29,25 @@
                   },
                   Arguments: [
                     {
-                      Kind: IntegerLiteral,
-                      Value: 1
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 1
+                      }
                     },
                     {
-                      Kind: IntegerLiteral,
-                      Value: 2
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 2
+                      }
                     },
                     {
-                      Kind: StringLiteral,
-                      Value: y
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: StringLiteral,
+                        Value: y
+                      }
                     }
                   ]
                 }

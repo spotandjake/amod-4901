@@ -8,7 +8,7 @@ using System.Data;
 using Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Frontend;
-using MiddleEnd;
+using Decaf.MiddleEnd;
 
 namespace Compiler {
   public class Compiler {

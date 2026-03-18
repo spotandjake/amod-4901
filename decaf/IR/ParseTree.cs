@@ -2,6 +2,12 @@ using Decaf.Utils;
 using System.Text.Json.Serialization;
 
 namespace Decaf.IR.ParseTree {
+  public enum PrimitiveType {
+    Int,
+    Boolean,
+    Void,
+    Custom
+  }
   /// <summary>
   /// An enum to represent the different kinds of nodes in our parse tree. This is useful for pattern matching and type checking when we want to process the parse tree later on, it also allows us to easily tell the node type in serialized outputs.
   /// </summary>
@@ -70,12 +76,6 @@ namespace Decaf.IR.ParseTree {
   }
   public record TypeNode : Node {
     public override NodeKind Kind => NodeKind.TypeNode;
-    public enum PrimitiveType {
-      Int,
-      Boolean,
-      Void,
-      Custom
-    }
     public PrimitiveType Type { get; }
     public string Content { get; }
     public TypeNode(Position position, PrimitiveType type, string content) : base(position) {
@@ -92,7 +92,7 @@ namespace Decaf.IR.ParseTree {
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
     /// <summary>A class declaration.</summary>
-    public record ClassNode : Node {
+    public record ClassNode : DeclarationNode {
       public override NodeKind Kind => NodeKind.ClassDeclNode;
       public string Name { get; }
       public string? SuperClassName { get; }
@@ -115,7 +115,7 @@ namespace Decaf.IR.ParseTree {
       }
     }
     /// <summary>A variable declaration.</summary>
-    public record VariableNode : Node {
+    public record VariableNode : DeclarationNode {
       public record BindNode(Position Position, string Name, bool IsArray) : Node(Position) {
         public override NodeKind Kind => NodeKind.VarBindNode;
         public string Name { get; } = Name;
@@ -130,8 +130,8 @@ namespace Decaf.IR.ParseTree {
       }
     }
     /// <summary>A method declaration.</summary>
-    public record MethodNode : Node {
-      public record ParameterNode : Node {
+    public record MethodNode : DeclarationNode {
+      public record ParameterNode : DeclarationNode {
         public override NodeKind Kind => NodeKind.ParameterNode;
         public TypeNode ParamType { get; }
         public string Name { get; }
@@ -272,20 +272,23 @@ namespace Decaf.IR.ParseTree {
       public string Name { get; } = Name;
     };
     /// <summary>A literal expression.</summary>
-    public record LiteralNode(Position Position) : ExpressionNode(Position) {
+    public record LiteralNode(Position Position, ParseTree.LiteralNode Content) : ExpressionNode(Position) {
       public override NodeKind Kind => NodeKind.LiteralExpression;
+      public ParseTree.LiteralNode Content { get; } = Content;
     };
   }
   /// <summary>
   /// The supertype for all literal nodes, we use a supertype to ensure strict type checking.
   /// </summary>
-  [JsonDerivedType(typeof(IntegerNode), "IntegerLiteral")]
-  [JsonDerivedType(typeof(CharacterNode), "CharLiteral")]
-  [JsonDerivedType(typeof(StringNode), "StringLiteral")]
-  [JsonDerivedType(typeof(BooleanNode), "BoolLiteral")]
-  [JsonDerivedType(typeof(NullNode), "NullLiteral")]
-  public abstract record LiteralNode : ExpressionNode {
+  [JsonDerivedType(typeof(LiteralNodes.IntegerNode), "IntegerLiteral")]
+  [JsonDerivedType(typeof(LiteralNodes.CharacterNode), "CharLiteral")]
+  [JsonDerivedType(typeof(LiteralNodes.StringNode), "StringLiteral")]
+  [JsonDerivedType(typeof(LiteralNodes.BooleanNode), "BoolLiteral")]
+  [JsonDerivedType(typeof(LiteralNodes.NullNode), "NullLiteral")]
+  public abstract record LiteralNode : Node {
     protected LiteralNode(Position position) : base(position) { }
+  };
+  namespace LiteralNodes {
     /// <summary>An integer literal node.</summary>
     public record IntegerNode(Position Position, int Value) : LiteralNode(Position) {
       public override NodeKind Kind => NodeKind.IntegerLiteral;
@@ -310,5 +313,5 @@ namespace Decaf.IR.ParseTree {
     public record NullNode(Position Position) : LiteralNode(Position) {
       public override NodeKind Kind => NodeKind.NullLiteral;
     };
-  };
+  }
 }

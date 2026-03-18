@@ -43,13 +43,19 @@
                 Expression: {
                   Kind: BinopExpression,
                   Lhs: {
-                    Kind: IntegerLiteral,
-                    Value: 1
+                    Kind: LiteralExpression,
+                    Content: {
+                      Kind: IntegerLiteral,
+                      Value: 1
+                    }
                   },
                   Operator: +,
                   Rhs: {
-                    Kind: IntegerLiteral,
-                    Value: 1
+                    Kind: LiteralExpression,
+                    Content: {
+                      Kind: IntegerLiteral,
+                      Value: 1
+                    }
                   }
                 }
               }

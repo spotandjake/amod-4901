@@ -25,8 +25,11 @@
                   }
                 },
                 Expression: {
-                  Kind: IntegerLiteral,
-                  Value: 1
+                  Kind: LiteralExpression,
+                  Content: {
+                    Kind: IntegerLiteral,
+                    Value: 1
+                  }
                 }
               }
             ]

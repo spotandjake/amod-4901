@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Decaf.IR.ParseTree;
+using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 
 namespace Decaf.Frontend {
@@ -82,10 +84,10 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(context);
       var content = context.GetText();
       var type = context switch {
-        DecafParser.VoidTypeContext _ => TypeNode.PrimitiveType.Void,
-        DecafParser.IntTypeContext _ => TypeNode.PrimitiveType.Int,
-        DecafParser.BooleanTypeContext _ => TypeNode.PrimitiveType.Boolean,
-        DecafParser.CustomTypeContext _ => TypeNode.PrimitiveType.Custom,
+        DecafParser.VoidTypeContext _ => PrimitiveType.Void,
+        DecafParser.IntTypeContext _ => PrimitiveType.Int,
+        DecafParser.BooleanTypeContext _ => PrimitiveType.Boolean,
+        DecafParser.CustomTypeContext _ => PrimitiveType.Custom,
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible type at TypeNode.FromContext")
       };
@@ -198,7 +200,10 @@ namespace Decaf.Frontend {
             if (strLitCtx.Symbol.Type != DecafParser.STRINGLIT) continue;
             var txt = strLitCtx.GetText();
             // Remove the quotes from the string literal
-            args.Add(new LiteralNode.StringNode(position, txt[1..^1]));
+            args.Add(new ExpressionNode.LiteralNode(
+              position,
+              new ParseTree.LiteralNodes.StringNode(position, txt[1..^1])
+            ));
             break;
           default:
             throw new InvalidProgramException("Impossible argument at PrimitiveCallNode.FromContext");
@@ -232,13 +237,17 @@ namespace Decaf.Frontend {
     }
     private static ExpressionNode.LiteralNode MapLiteralExpressionContext(DecafParser.LiteralContext context) {
       var position = MapPositionContext(context);
-      return context switch {
-        DecafParser.IntLitContext intLitCtx => new LiteralNode.IntegerNode(position, int.Parse(intLitCtx.INTLIT().GetText())),
-        DecafParser.CharLitContext charLitCtx => new LiteralNode.CharacterNode(position, charLitCtx.CHARLIT().GetText()[1]),
-        DecafParser.BoolLitContext boolLitCtx => new LiteralNode.BooleanNode(position, boolLitCtx.bool_literal().TRUE() != null),
-        DecafParser.NullLitContext _ => new LiteralNode.NullNode(position),
+      LiteralNode literal = context switch {
+        DecafParser.IntLitContext intLitCtx =>
+          new ParseTree.LiteralNodes.IntegerNode(position, int.Parse(intLitCtx.INTLIT().GetText())),
+        DecafParser.CharLitContext charLitCtx =>
+          new ParseTree.LiteralNodes.CharacterNode(position, charLitCtx.CHARLIT().GetText()[1]),
+        DecafParser.BoolLitContext boolLitCtx =>
+          new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.bool_literal().TRUE() != null),
+        DecafParser.NullLitContext _ => new ParseTree.LiteralNodes.NullNode(position),
         _ => throw new InvalidProgramException("Impossible literal at LiteralNode.FromContext"),// NOTE: This should be impossible due to grammar restrictions
       };
+      return new ExpressionNode.LiteralNode(position, literal);
     }
   }
 }

@@ -25,8 +25,11 @@
                   }
                 },
                 Expression: {
-                  Kind: BooleanLiteral,
-                  Value: true
+                  Kind: LiteralExpression,
+                  Content: {
+                    Kind: BooleanLiteral,
+                    Value: true
+                  }
                 }
               }
             ]
