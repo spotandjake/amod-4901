@@ -20,7 +20,6 @@ namespace Decaf.Utils.Errors {
       string name
     ) : Exception(ErrorConstructor.CreateError(position, $"Duplicate declaration of '{name}' at {position}.")) {
       public Position Position { get; } = position;
-      // TODO: Make sure we provide the correct error message
     }
     /// <summary>
     /// An exception to be thrown when a declaration is not found in the current scope or any parent scope during scope lookup.
@@ -31,7 +30,6 @@ namespace Decaf.Utils.Errors {
       Position position,
       string message
     ) : Exception(ErrorConstructor.CreateError(position, message)) {
-      // TODO: Make sure we provide the correct error message
       public Position Position { get; } = position;
     }
   }
@@ -46,7 +44,6 @@ namespace Decaf.Utils.Errors {
       Position position,
       string message
     ) : Exception(ErrorConstructor.CreateError(position, message)) {
-      // TODO: Make sure we provide the correct error message
       public Position Position { get; } = position;
     }
   }

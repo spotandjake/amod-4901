@@ -102,6 +102,7 @@ namespace CLI {
         // TODO: Write output to opts.output if specified
         Compiler.Compiler.CompileString(source, relPath);
       }
+      // TODO: Improve error handling unify error handler
       catch (SyntaxErrorException e) {
         Console.WriteLine(e.Message);
       }

@@ -20,8 +20,6 @@ method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
 
 block: LBRACE var_decl* statement* RBRACE;
 
-// TODO: Later Restrict VOID to function returns semantically
-// TODO: Consider Allowing ArrayTypes - Restrict Semantically
 // NOTE: Because this takes id maybe we should just restrict semantically later
 type: 
   INT # IntType
@@ -45,7 +43,6 @@ if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=bloc
 while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
 return_stmt: RETURN value=expr? SEMI;
 
-// TODO: Disallow ID[expr] in semantic analysis
 call_expr: 
   method_call # MethodCallExpr
   | prim_callout # PrimCalloutExpr
@@ -60,21 +57,21 @@ expr:
   | NEW ID LPAREN RPAREN # NewObjectExpr
   | NEW type LBRACK expr RBRACK # NewArrayExpr
   | literal # LiteralExpr
-  | op=NOT operand=expr # NotExpr // TODO: Generalize this to a prefix expr
-  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr // TODO: Generalize this into a binop expression
+  | op=NOT operand=expr # NotExpr
+  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr
   | LPAREN expr RPAREN # ParenExpr
   ;
 
 simple_expr:
   location # LocationExpr
-  | THIS # ThisExpr // TODO: Consider handling this as a regular ID
+  | THIS # ThisExpr
   | call_expr # CallExpr
   ;
 
 // TODO: make root an expr
 location: root=ID (path=location_path | indexExpr=location_array_index)?;
-location_path: DOT ID; // TODO: Allow paths like root.path1.path2 -- Restrict Semantically
-location_array_index: LBRACK expr RBRACK; // TODO: Allow nested array paths -- Restrict Semantically
+location_path: DOT ID;
+location_array_index: LBRACK expr RBRACK;
 
 bin_op:
   arith_op | rel_op | eq_op | cond_op;
@@ -88,7 +85,6 @@ eq_op: EQ | NEQ;
 cond_op: AND | OR;
 
 // Literals
-// TODO: Consider Making String a generic literal value
 literal:
   INTLIT # IntLit
   | CHARLIT # CharLit

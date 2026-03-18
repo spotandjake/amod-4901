@@ -69,7 +69,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
       Signature.ClassSignature received,
       Scope<Signature> scope
     ) {
-      // TODO: Validate that we are following the correct compatibility rules
       // Check that we have the same number of members on both sides
       if (expected.Members.Count != received.Members.Count) {
         throw new LhsNotRhs(expected.Position, $"{expected.Members.Count} members", $"{received.Members.Count} members");
@@ -197,7 +196,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
       ParseTree.DeclarationNode.ClassNode node,
       TypeCheckContext parentContext
     ) {
-      // TODO: Handle validation of superClass
+      if (node.SuperClassName != null) {
+        // TODO: Handle validation of superClass
+        throw new NotImplementedException("Subtyping and inheritance are not implemented");
+      }
       // Create a base signature and register the class in the parent scope
       var classSignature = new Signature.ClassSignature(node.Position, []);
       parentContext.CurrentScope.AddDeclaration(node.Position, node.Name, classSignature);
