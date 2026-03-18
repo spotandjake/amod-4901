@@ -1,10 +1,11 @@
+class A {
+  int x;
+  void add() {}
+}
 class Program {
-  int y;
   void Main() {
     int x;
-    if (x) {
-      int z, z;
-      z = 1;
-    }
+    x = A.x;
+    A.add();
   }
 }

@@ -161,10 +161,8 @@ namespace Decaf.Frontend {
           // NOTE: This should be impossible due to grammar restrictions
           _ => throw new InvalidProgramException("Impossible expression at ExpressionNode.FromContext"),
         },
-        // NOTE: We don't implement nodes for these as we don't support them in the generated program
-        DecafParser.NewObjectExprContext newObjExprCtx => throw new NotImplementedException(),
-        // NOTE: We don't implement nodes for these as we don't support them in the generated program
-        DecafParser.NewArrayExprContext newArrExprCtx => throw new NotImplementedException(),
+        DecafParser.NewObjectExprContext newObjExprCtx => MapNewClassExpressionContext(newObjExprCtx),
+        DecafParser.NewArrayExprContext newArrExprCtx => MapNewArrayExpressionContext(newArrExprCtx),
         DecafParser.LiteralExprContext literalExprCtx => MapLiteralExpressionContext(literalExprCtx.literal()),
         DecafParser.BinaryOpExprContext binopExprCtx => MapBinopExpressionContext(binopExprCtx),
         DecafParser.NotExprContext prefixExprCtx => MapPrefixExpressionContext(prefixExprCtx),
@@ -234,6 +232,23 @@ namespace Decaf.Frontend {
     private static ExpressionNode.ThisNode MapThisExpressionContext(DecafParser.ThisExprContext context) {
       var position = MapPositionContext(context);
       return new ExpressionNode.ThisNode(position);
+    }
+    private static ExpressionNode.NewClassNode MapNewClassExpressionContext(DecafParser.NewObjectExprContext context) {
+      var position = MapPositionContext(context);
+      var className = context.ID().GetText();
+      var identifier = new ExpressionNode.LocationNode(
+        position,
+        new ExpressionNode.IdentifierNode(position, className),
+        null,
+        null
+      );
+      return new ExpressionNode.NewClassNode(position, identifier);
+    }
+    private static ExpressionNode.NewArrayNode MapNewArrayExpressionContext(DecafParser.NewArrayExprContext context) {
+      var position = MapPositionContext(context);
+      var identifier = MapTypeContext(context.type());
+      var sizeExpr = MapExpressionContext(context.expr());
+      return new ExpressionNode.NewArrayNode(position, identifier, sizeExpr);
     }
     private static ExpressionNode.LiteralNode MapLiteralExpressionContext(DecafParser.LiteralContext context) {
       var position = MapPositionContext(context);

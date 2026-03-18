@@ -58,7 +58,7 @@ prim_callout_args: (COMMA (expr | STRINGLIT))*;
 expr:
   simple_expr # SimpleExpr
   | NEW ID LPAREN RPAREN # NewObjectExpr
-  | NEW type (expr)? # NewArrayExpr
+  | NEW type LBRACK expr RBRACK # NewArrayExpr
   | literal # LiteralExpr
   | op=NOT operand=expr # NotExpr // TODO: Generalize this to a prefix expr
   | lhs=expr op=bin_op rhs=expr # BinaryOpExpr // TODO: Generalize this into a binop expression

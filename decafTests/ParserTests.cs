@@ -347,8 +347,28 @@ public class DecafParserTests : VerifyBase {
     }
     "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
-  // NOTE: We don't test `new test()` as our parseTree won't handle this
-  // NOTE: We don't test `new int 1` as our parseTree won't handle this
+  [TestMethod]
+  public Task TestClassDeclaration() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        T x;
+        x = new T();
+      }
+    }
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestArrayDeclaration() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        T x[];
+        x = new T[1];
+      }
+    }
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
   [TestMethod]
   public Task TestIntExpression() {
     return Verify(Parse(@"

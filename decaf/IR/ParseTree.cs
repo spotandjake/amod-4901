@@ -32,6 +32,8 @@ namespace Decaf.IR.ParseTree {
     CallExpression,
     BinopExpression,
     PrefixExpression,
+    NewClassExpression,
+    NewArrayExpression,
     LocationExpression,
     ThisExpression,
     IdentifierExpression,
@@ -249,6 +251,21 @@ namespace Decaf.IR.ParseTree {
       public override NodeKind Kind => NodeKind.PrefixExpression;
       public string Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
+    };
+    /// <summary>A new class expression.</summary>
+    public record NewClassNode(Position Position, LocationNode Path) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.NewClassExpression;
+      public LocationNode Path { get; } = Path;
+    };
+    /// <summary>A new array expression.</summary>
+    public record NewArrayNode(
+      Position Position,
+      TypeNode Type,
+      ExpressionNode SizeExpr
+    ) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.NewArrayExpression;
+      public TypeNode Type { get; } = Type;
+      public ExpressionNode SizeExpr { get; } = SizeExpr;
     };
     /// <summary>A location access expression.</summary>
     public record LocationNode(

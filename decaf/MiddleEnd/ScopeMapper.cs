@@ -50,12 +50,25 @@ namespace Decaf.MiddleEnd {
         classScope
       );
     }
+    private static TypeNode MapTypeNode(TypeNode typeNode, Scope<bool> parentScope) {
+      if (typeNode.Type == PrimitiveType.Custom) {
+        // For custom types, we need to check if the type exists in the scope
+        if (!parentScope.HasDeclaration(typeNode.Content)) {
+          throw new DeclarationNotDefinedException(typeNode.Position, typeNode.Content);
+        }
+        // Mark the type as used in the scope
+        parentScope.SetDeclaration(typeNode.Position, typeNode.Content, true);
+      }
+      return typeNode;
+    }
     private static DeclarationNode.VariableNode MapVariableDeclarationNode(DeclarationNode.VariableNode decl, Scope<bool> parentScope) {
+      // Map the type of the variable
+      var type = MapTypeNode(decl.Type, parentScope);
       // Add variables to scope
       foreach (var bind in decl.Binds) {
         parentScope.AddDeclaration(bind.Position, bind.Name, false);
       }
-      return decl;
+      return new DeclarationNode.VariableNode(decl.Position, type, decl.Binds);
     }
     private static DeclarationNode.MethodNode MapMethodDeclarationNode(DeclarationNode.MethodNode decl, Scope<bool> parentScope) {
       // Add the method to the parent scope
@@ -63,17 +76,24 @@ namespace Decaf.MiddleEnd {
       // Create a new scope for the method
       var scope = new Scope<bool>(parentScope);
       // Add parameters to scope
-      foreach (var param in decl.Parameters) {
+      var parameters = decl.Parameters.Select(param => {
+        // Map the parameter type
+        var type = MapTypeNode(param.ParamType, parentScope);
+        // Add the parameter to the method scope
         scope.AddDeclaration(param.Position, param.Name, false);
-      }
+        // Return a new parameter with the mapped type
+        return new DeclarationNode.MethodNode.ParameterNode(param.Position, type, param.Name, param.IsArray);
+      }).ToArray();
+      // Map the method return type
+      var returnType = MapTypeNode(decl.ReturnType, parentScope);
       // Map the method body
       var body = MapBlockNode(decl.Body, scope);
       // Return the mapped method declaration node
       return new DeclarationNode.MethodNode(
         decl.Position,
-        decl.ReturnType,
+        returnType,
         decl.Name,
-        decl.Parameters,
+        parameters,
         body,
         scope
       );
@@ -138,6 +158,17 @@ namespace Decaf.MiddleEnd {
             prefixExprNode.Position,
             prefixExprNode.Operator,
             MapExpressionNode(prefixExprNode.Operand, parentScope)
+          );
+        case ExpressionNode.NewClassNode newClassExprNode:
+          return new ExpressionNode.NewClassNode(
+            newClassExprNode.Position,
+            MapLocationNode(newClassExprNode.Path, parentScope)
+          );
+        case ExpressionNode.NewArrayNode newArrayExprNode:
+          return new ExpressionNode.NewArrayNode(
+            newArrayExprNode.Position,
+            MapTypeNode(newArrayExprNode.Type, parentScope),
+            MapExpressionNode(newArrayExprNode.SizeExpr, parentScope)
           );
         case ExpressionNode.LocationNode locationNode:
           return MapLocationNode(locationNode, parentScope);

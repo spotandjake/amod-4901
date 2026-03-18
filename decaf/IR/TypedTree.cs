@@ -1,3 +1,4 @@
+using Decaf.IR.ParseTree;
 using Decaf.Utils;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -16,14 +17,19 @@ namespace Decaf.IR.TypedTree {
     Null
   }
   // A signature represents the type information for a given declaration. This is used for type checking and method resolution.
+  [JsonDerivedType(typeof(ClassSignature), "ClassSignature")]
+  [JsonDerivedType(typeof(MethodSignature), "MethodSignature")]
+  [JsonDerivedType(typeof(ArraySignature), "ArraySignature")]
+  [JsonDerivedType(typeof(PrimitiveSignature), "PrimitiveSignature")]
+  [JsonDerivedType(typeof(CustomSignature), "CustomSignature")]
   public abstract record Signature {
     public Position Position { get; }
     private Signature(Position Position) { this.Position = Position; }
-    public record ClassSignature(Position Position, Dictionary<string, MethodSignature> Members) : Signature(Position);
+    public record ClassSignature(Position Position, Dictionary<string, Signature> Members) : Signature(Position);
     public record MethodSignature(Position Position, Signature ReturnType, Signature[] ParameterTypes) : Signature(Position);
     public record ArraySignature(Position Position, Signature Typ) : Signature(Position);
     public record PrimitiveSignature(Position Position, PrimitiveType Type) : Signature(Position);
-    public record CustomType(Position Position, string Name) : Signature(Position);
+    public record CustomSignature(Position Position, string Name) : Signature(Position);
   }
   /// <summary>
   /// A base typed tree node that all other typed tree nodes inherit from.
@@ -251,6 +257,24 @@ namespace Decaf.IR.TypedTree {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.PrefixExpression;
       public string Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
+    };
+    /// <summary>A new class expression.</summary>
+    public record NewClassNode(
+      Position Position,
+      LocationNode Path,
+      Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NewArrayExpression;
+      public LocationNode Path { get; } = Path;
+    };
+    /// <summary>A new array expression.</summary>
+    public record NewArrayNode(
+      Position Position,
+      ExpressionNode SizeExpr,
+      Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NewArrayExpression;
+      public ExpressionNode SizeExpr { get; } = SizeExpr;
     };
     /// <summary>A location access expression.</summary>
     public record LocationNode(

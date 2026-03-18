@@ -91,6 +91,14 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, $"The member `{memberName}` does not exist on the class being accessed.")) {
     }
     /// <summary>
+    /// An exception to be thrown when a member access is performed on a non-class type during type checking.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class InitializationOfNonClass(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "A member initialization can only be performed on a class type.")) {
+    }
+    /// <summary>
     /// An exception to be thrown when an array access is performed on a non-array type during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>

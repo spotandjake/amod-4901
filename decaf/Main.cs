@@ -5,10 +5,12 @@ using CommandLine;
 using System.Text.Json;
 using System.Data;
 
-using Decaf.IR.ParseTree;
+using ParseTree = Decaf.IR.ParseTree;
+using TypedTree = Decaf.IR.TypedTree;
 using Decaf.Utils;
 using Decaf.Frontend;
 using Decaf.MiddleEnd;
+using Decaf.MiddleEnd.TypeChecker;
 
 namespace Compiler {
   public class Compiler {
@@ -25,23 +27,26 @@ namespace Compiler {
       return lexer;
     }
 #nullable enable
-    public static ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
+    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
       DecafParser parser = new DecafParser(tokenStream);
       parser.RemoveErrorListeners();
       parser.AddErrorListener(ParserErrorListener.Instance);
-      ProgramNode program = ParseTreeMapper.MapProgramContext(parser.program());
+      ParseTree.ProgramNode program = ParseTreeMapper.MapProgramContext(parser.program());
       return program;
     }
-    public static ProgramNode SemanticAnalysis(ProgramNode program) {
+    public static ParseTree.ProgramNode SemanticAnalysis(ParseTree.ProgramNode program) {
       var scopedTree = ScopeMapper.MapProgramNode(program, new Scope<bool>(null));
       SemanticChecker.CheckProgramNode(scopedTree);
       return scopedTree;
     }
+    public static TypedTree.ProgramNode TypeChecking(ParseTree.ProgramNode program) {
+      return TypeChecker.TypeProgramNode(program);
+    }
 #nullable enable
     public static void CompileString(string source, string? inputFileName) {
       // Lexing
-      DecafLexer lexer = LexString(source, inputFileName);
-      CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+      var lexer = LexString(source, inputFileName);
+      var tokenStream = new CommonTokenStream(lexer);
       // NOTE: For debugging lexer token stream
       // while (true) {
       //   IToken token = lexer.NextToken();
@@ -52,12 +57,13 @@ namespace Compiler {
       //   );
       // }
       // Parsing
-      ProgramNode program = ParseTokenStream(tokenStream);
+      var program = ParseTokenStream(tokenStream);
       // Semantic Analysis
-      ProgramNode scopedProgram = SemanticAnalysis(program);
-      // TODO: TypeChecking
+      var scopedProgram = SemanticAnalysis(program);
+      // TypeChecking
+      var TypeCheckingProgram = TypeChecking(scopedProgram);
       // TODO: Code Generation
-      string json = JsonSerializer.Serialize(scopedProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+      string json = JsonSerializer.Serialize(TypeCheckingProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
       Console.WriteLine(json);
     }
   }
@@ -103,9 +109,7 @@ namespace CLI {
         Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
       }
       catch (Exception e) {
-        if (opts.Debug) {
-          throw;
-        }
+        if (opts.Debug) throw;
         else {
           Console.WriteLine($"Compilation failed: {e.Message}");
         }
