@@ -4,7 +4,10 @@ using Antlr4.Runtime;
 using CommandLine;
 using System.Text.Json;
 using System.Data;
-using ParseTree;
+
+using Decaf.IR.ParseTree;
+using Decaf.Utils;
+using Decaf.Frontend;
 using MiddleEnd;
 
 namespace Compiler {
@@ -22,11 +25,11 @@ namespace Compiler {
       return lexer;
     }
 #nullable enable
-    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
+    public static ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
       DecafParser parser = new DecafParser(tokenStream);
       parser.RemoveErrorListeners();
       parser.AddErrorListener(ParserErrorListener.Instance);
-      ParseTree.ProgramNode program = ParseTree.ProgramNode.FromContext(parser.program());
+      ProgramNode program = ParseTreeMapper.MapProgramContext(parser.program());
       return program;
     }
     public static ProgramNode SemanticAnalysis(ProgramNode program) {
@@ -98,12 +101,6 @@ namespace CLI {
       }
       catch (Antlr4.Runtime.Misc.ParseCanceledException e) {
         Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
-      }
-      catch (DeclarationNotDefinedException e) {
-        Console.WriteLine($"Semantic analysis failed: {e.Message}");
-      }
-      catch (DuplicateDeclarationException e) {
-        Console.WriteLine($"Semantic analysis failed: {e.Message}");
       }
       catch (Exception e) {
         if (opts.Debug) {

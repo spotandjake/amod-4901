@@ -3,24 +3,22 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: ReturnNode,
+                Kind: ReturnStatement,
                 Value: {
-                  Kind: IntegerLiteralNode,
+                  Kind: IntegerLiteral,
                   Value: 1
                 }
               }

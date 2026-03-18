@@ -3,35 +3,36 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: AssignmentNode,
+                Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationNode,
-                  Root: x
+                  Kind: LocationExpression,
+                  Root: {
+                    Kind: IdentifierExpression,
+                    Name: x
+                  }
                 },
                 Expression: {
-                  Kind: BinopExpressionNode,
+                  Kind: BinopExpression,
                   Lhs: {
-                    Kind: IntegerLiteralNode,
+                    Kind: IntegerLiteral,
                     Value: 1
                   },
                   Operator: +,
                   Rhs: {
-                    Kind: IntegerLiteralNode,
+                    Kind: IntegerLiteral,
                     Value: 1
                   }
                 }

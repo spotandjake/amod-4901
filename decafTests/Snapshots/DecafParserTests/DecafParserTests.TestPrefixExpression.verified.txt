@@ -3,30 +3,26 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
-            VariableDeclarations: [
+            Declarations: [
               {
-                Kind: VariableDeclarationNode,
-                VarType: {
+                Kind: VariableDeclNode,
+                Type: {
                   Kind: TypeNode,
-                  Type: {
-                    Type: Custom,
-                    Name: bool
-                  }
+                  Type: Custom,
+                  Content: bool
                 },
-                VarBinds: [
+                Binds: [
                   {
                     Kind: VarBindNode,
                     Name: booly,
@@ -37,16 +33,19 @@
             ],
             Statements: [
               {
-                Kind: AssignmentNode,
+                Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationNode,
-                  Root: booly
+                  Kind: LocationExpression,
+                  Root: {
+                    Kind: IdentifierExpression,
+                    Name: booly
+                  }
                 },
                 Expression: {
-                  Kind: PrefixExpressionNode,
+                  Kind: PrefixExpression,
                   Operator: !,
                   Operand: {
-                    Kind: BoolLiteralNode,
+                    Kind: BooleanLiteral,
                     Value: true
                   }
                 }

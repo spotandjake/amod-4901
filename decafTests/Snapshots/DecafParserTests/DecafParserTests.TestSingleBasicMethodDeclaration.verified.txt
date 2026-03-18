@@ -3,15 +3,13 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
           Name: foo,
           Body: {

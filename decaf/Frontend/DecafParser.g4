@@ -71,6 +71,7 @@ simple_expr:
   | call_expr # CallExpr
   ;
 
+// TODO: make root an expr
 location: root=ID (path=location_path | indexExpr=location_array_index)?;
 location_path: DOT ID; // TODO: Allow paths like root.path1.path2 -- Restrict Semantically
 location_array_index: LBRACK expr RBRACK; // TODO: Allow nested array paths -- Restrict Semantically

@@ -3,16 +3,14 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      VariableDeclarations: [
+      Fields: [
         {
-          Kind: VariableDeclarationNode,
-          VarType: {
+          Kind: VariableDeclNode,
+          Type: {
             Kind: TypeNode,
-            Type: {
-              Content: int
-            }
+            Content: int
           },
-          VarBinds: [
+          Binds: [
             {
               Kind: VarBindNode,
               Name: x,
@@ -21,15 +19,13 @@
           ]
         },
         {
-          Kind: VariableDeclarationNode,
-          VarType: {
+          Kind: VariableDeclNode,
+          Type: {
             Kind: TypeNode,
-            Type: {
-              Type: Boolean,
-              Content: boolean
-            }
+            Type: Boolean,
+            Content: boolean
           },
-          VarBinds: [
+          Binds: [
             {
               Kind: VarBindNode,
               Name: y,
@@ -38,15 +34,13 @@
           ]
         },
         {
-          Kind: VariableDeclarationNode,
-          VarType: {
+          Kind: VariableDeclNode,
+          Type: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
-          VarBinds: [
+          Binds: [
             {
               Kind: VarBindNode,
               Name: z,
@@ -55,15 +49,13 @@
           ]
         },
         {
-          Kind: VariableDeclarationNode,
-          VarType: {
+          Kind: VariableDeclNode,
+          Type: {
             Kind: TypeNode,
-            Type: {
-              Type: Custom,
-              Name: t
-            }
+            Type: Custom,
+            Content: t
           },
-          VarBinds: [
+          Binds: [
             {
               Kind: VarBindNode,
               Name: y,

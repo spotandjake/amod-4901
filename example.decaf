@@ -3,7 +3,7 @@ class Program {
   void Main() {
     int x;
     if (x) {
-      int z;
+      int z, z;
       z = 1;
     }
   }

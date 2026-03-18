@@ -1,7 +1,9 @@
 using System.Threading.Tasks;
-using ParseTree;
 using VerifyMSTest;
 using VerifyTests;
+
+using Decaf.IR.ParseTree;
+using Decaf.Utils.Errors.ScopeErrors;
 
 [TestClass]
 public class DecafSemanticTests : VerifyBase {
@@ -30,8 +32,8 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
-    Assert.IsTrue(program.Scope.HasVariable("Second"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Second"));
     return Verify(program.Scope.ToString(), CreateSettings());
   }
   [TestMethod]
@@ -46,7 +48,7 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
     Assert.HasCount(1, program.Classes);
     Assert.IsNotNull(program.Classes[0]);
     Assert.AreEqual("Program", program.Classes[0].Name);
@@ -62,7 +64,7 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
     Assert.HasCount(1, program.Classes);
     Assert.IsNotNull(program.Classes[0]);
     Assert.AreEqual("Program", program.Classes[0].Name);
@@ -81,7 +83,7 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
     Assert.HasCount(1, program.Classes);
     Assert.IsNotNull(program.Classes[0]);
     Assert.AreEqual("Program", program.Classes[0].Name);
@@ -104,21 +106,21 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
     Assert.HasCount(1, program.Classes);
     var programClass = program.Classes[0];
     Assert.IsNotNull(programClass);
     Assert.AreEqual("Program", programClass.Name);
-    Assert.HasCount(1, programClass.VariableDeclarations);
-    Assert.HasCount(1, programClass.MethodDeclarations);
-    var mainMethod = programClass.MethodDeclarations[0];
+    Assert.HasCount(1, programClass.Fields);
+    Assert.HasCount(1, programClass.Methods);
+    var mainMethod = programClass.Methods[0];
     Assert.IsNotNull(mainMethod);
     Assert.AreEqual("Main", mainMethod.Name);
     Assert.HasCount(3, mainMethod.Body.Statements);
     Assert.IsTrue(mainMethod.Body.Statements[0] is StatementNode);
     Assert.IsTrue(mainMethod.Body.Statements[1] is StatementNode);
-    Assert.IsTrue(mainMethod.Body.Statements[2] is IfNode);
-    var ifNode = mainMethod.Body.Statements[2] as IfNode;
+    Assert.IsTrue(mainMethod.Body.Statements[2] is StatementNode.IfNode);
+    var ifNode = mainMethod.Body.Statements[2] as StatementNode.IfNode;
     Assert.IsNotNull(ifNode);
     return Verify(ifNode.TrueBranch.Scope.ToString(), CreateSettings());
   }
@@ -137,20 +139,19 @@ public class DecafSemanticTests : VerifyBase {
     ");
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
-    Assert.IsTrue(program.Scope.HasVariable("Program"));
+    Assert.IsTrue(program.Scope.HasDeclaration("Program"));
     Assert.HasCount(1, program.Classes);
     var programClass = program.Classes[0];
     Assert.IsNotNull(programClass);
     Assert.AreEqual("Program", programClass.Name);
-    Assert.HasCount(1, programClass.VariableDeclarations);
-    Assert.HasCount(1, programClass.MethodDeclarations);
-    var mainMethod = programClass.MethodDeclarations[0];
+    Assert.HasCount(1, programClass.Fields);
+    Assert.HasCount(1, programClass.Methods);
+    var mainMethod = programClass.Methods[0];
     Assert.IsNotNull(mainMethod);
     Assert.AreEqual("Main", mainMethod.Name);
     Assert.HasCount(1, mainMethod.Body.Statements);
-    var IfNode = mainMethod.Body.Statements[0] as IfNode;
-    Assert.IsNotNull(IfNode);
-    Assert.IsTrue(IfNode is IfNode);
+    Assert.IsTrue(mainMethod.Body.Statements[0] is StatementNode.IfNode);
+    var IfNode = mainMethod.Body.Statements[0] as StatementNode.IfNode;
     return Verify(IfNode.TrueBranch.Scope.ToString(), CreateSettings());
   }
   [TestMethod]

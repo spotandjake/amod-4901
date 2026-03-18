@@ -3,29 +3,30 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: {
-              Type: Void,
-              Content: void
-            }
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: AssignmentNode,
+                Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationNode,
-                  Root: Base,
+                  Kind: LocationExpression,
+                  Root: {
+                    Kind: IdentifierExpression,
+                    Name: Base
+                  },
                   Path: x
                 },
                 Expression: {
-                  Kind: IntegerLiteralNode,
+                  Kind: IntegerLiteral,
                   Value: 1
                 }
               }
