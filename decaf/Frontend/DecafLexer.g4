@@ -5,8 +5,10 @@ lexer grammar DecafLexer;
 
 // Keywords
 BOOLEAN : 'b' 'o' 'o' 'l' 'e' 'a' 'n' ;
+BREAK   : 'b' 'r' 'e' 'a' 'k' ;
 CALLOUT : 'c' 'a' 'l' 'l' 'o' 'u' 't' ;
 CLASS   : 'c' 'l' 'a' 's' 's' ;
+CONTINUE: 'c' 'o' 'n' 't' 'i' 'n' 'u' 'e';
 ELSE    : 'e' 'l' 's' 'e' ;
 EXTENDS : 'e' 'x' 't' 'e' 'n' 'd' 's';
 FALSE   : 'f' 'a' 'l' 's' 'e' ;

@@ -27,6 +27,8 @@ namespace Decaf.IR.ParseTree {
     ExprStatement,
     IfStatement,
     WhileStatement,
+    ContinueStatement,
+    BreakStatement,
     ReturnStatement,
     // Expressions
     CallExpression,
@@ -173,6 +175,8 @@ namespace Decaf.IR.ParseTree {
   [JsonDerivedType(typeof(ExprNode), "ExpressionStatement")]
   [JsonDerivedType(typeof(IfNode), "IfStatement")]
   [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
+  [JsonDerivedType(typeof(ContinueNode), "ContinueStatement")]
+  [JsonDerivedType(typeof(BreakNode), "BreakStatement")]
   [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
   public abstract record StatementNode : Node {
     protected StatementNode(Position position) : base(position) { }
@@ -208,6 +212,14 @@ namespace Decaf.IR.ParseTree {
       public override NodeKind Kind => NodeKind.WhileStatement;
       public ExpressionNode Condition { get; } = Condition;
       public BlockNode Body { get; } = Body;
+    };
+    /// <summary>A continue statement.</summary>
+    public record ContinueNode(Position Position) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.ContinueStatement;
+    };
+    /// <summary>A break statement.</summary>
+    public record BreakNode(Position Position) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.BreakStatement;
     };
     /// <summary>A return statement.</summary>
     public record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {

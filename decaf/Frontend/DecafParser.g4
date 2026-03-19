@@ -34,6 +34,9 @@ statement:
   | if_stmt # IfStatement
   | while_stmt # WhileStatement
   | return_stmt # ReturnStatement
+  | continue_stmt # ContinueStatement
+  | break_stmt # BreakStatement
+  | return_stmt # ReturnStatement
   | block # BlockStatement
   ;
 
@@ -41,6 +44,8 @@ assign_stmt: location ASSIGN expr SEMI;
 expression_stmt: call_expr SEMI # CallExpressionStatement;
 if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
 while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
+continue_stmt: CONTINUE SEMI;
+break_stmt: BREAK SEMI;
 return_stmt: RETURN value=expr? SEMI;
 
 call_expr: 

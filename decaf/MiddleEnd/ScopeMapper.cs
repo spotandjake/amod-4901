@@ -130,6 +130,10 @@ namespace Decaf.MiddleEnd {
             var body = MapBlockNode(whileNode.Body, parentScope);
             return new StatementNode.WhileNode(whileNode.Position, condition, body);
           }
+        case StatementNode.ContinueNode continueNode:
+          return continueNode; // Nothing to map
+        case StatementNode.BreakNode breakNode:
+          return breakNode; // Nothing to map
         case StatementNode.ReturnNode returnNode: {
             var value = returnNode.Value != null ? MapExpressionNode(returnNode.Value, parentScope) : null;
             return new StatementNode.ReturnNode(returnNode.Position, value);

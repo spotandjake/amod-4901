@@ -100,6 +100,8 @@ namespace Decaf.Frontend {
         DecafParser.ExpressionStatementContext exprStmtCtx => MapExprStatementNode(exprStmtCtx.expression_stmt()),
         DecafParser.IfStatementContext ifCtx => MapIfStatementNode(ifCtx.if_stmt()),
         DecafParser.WhileStatementContext whileCtx => MapWhileStatementNode(whileCtx.while_stmt()),
+        DecafParser.ContinueStatementContext continueCtx => MapContinueStatementNode(continueCtx.continue_stmt()),
+        DecafParser.BreakStatementContext breakCtx => MapBreakStatementNode(breakCtx.break_stmt()),
         DecafParser.ReturnStatementContext returnCtx => MapReturnStatementNode(returnCtx.return_stmt()),
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible statement at StatementNode.FromContext"),
@@ -140,6 +142,14 @@ namespace Decaf.Frontend {
       var condition = MapExpressionContext(context.condition);
       var body = MapBlockContext(context.body);
       return new StatementNode.WhileNode(position, condition, body);
+    }
+    private static StatementNode.ContinueNode MapContinueStatementNode(DecafParser.Continue_stmtContext context) {
+      var position = MapPositionContext(context);
+      return new StatementNode.ContinueNode(position);
+    }
+    private static StatementNode.BreakNode MapBreakStatementNode(DecafParser.Break_stmtContext context) {
+      var position = MapPositionContext(context);
+      return new StatementNode.BreakNode(position);
     }
     private static StatementNode.ReturnNode MapReturnStatementNode(DecafParser.Return_stmtContext context) {
       var position = MapPositionContext(context);

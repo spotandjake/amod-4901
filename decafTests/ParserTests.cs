@@ -274,6 +274,32 @@ public class DecafParserTests : VerifyBase {
     ");
     return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
+  [TestMethod]
+  public Task TestContinueStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        while (true) {
+          continue;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBreakStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        while (true) {
+          break;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
   // Expressions
   [TestMethod]
   public Task TestSimpleLocationAssignment() {

@@ -53,8 +53,10 @@ The following tokens are implemented:
 
 * Keywords (Meaningful words within the language)
   * boolean
+  * break
   * callout
   * class
+  * continue
   * else
   * extends
   * false

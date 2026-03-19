@@ -7,7 +7,6 @@ using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.TypeCheckingErrors;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace Decaf.MiddleEnd.TypeChecker {
   // The private engine that handles type checking, rules
@@ -310,6 +309,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.StatementNode.ExprNode exprStmt => TypeStatementExprNode(exprStmt, parentContext),
         ParseTree.StatementNode.IfNode ifNode => TypeStatementIfNode(ifNode, parentContext, ref HasReturn),
         ParseTree.StatementNode.WhileNode whileNode => TypeStatementWhileNode(whileNode, parentContext, ref HasReturn),
+        ParseTree.StatementNode.ContinueNode continueNode => TypeStatementContinueNode(continueNode, parentContext),
+        ParseTree.StatementNode.BreakNode breakNode => TypeStatementBreakNode(breakNode, parentContext),
         ParseTree.StatementNode.ReturnNode returnNode => TypeStatementReturnNode(returnNode, parentContext, ref HasReturn),
         _ => throw new Exception($"Unknown statement node type: {node.Kind}"),
       };
@@ -371,6 +372,20 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var body = TypeBlockNode(node.Body, parentContext, ref HasReturn);
       // Map the node itself
       return new StatementNode.WhileNode(node.Position, condition, body);
+    }
+    private static StatementNode.ContinueNode TypeStatementContinueNode(
+     ParseTree.StatementNode.ContinueNode node,
+     TypeCheckContext _
+   ) {
+      // We just map to the type tree directly as there are no type rules
+      return new StatementNode.ContinueNode(node.Position);
+    }
+    private static StatementNode.BreakNode TypeStatementBreakNode(
+     ParseTree.StatementNode.BreakNode node,
+     TypeCheckContext _
+   ) {
+      // We just map to the type tree directly as there are no type rules
+      return new StatementNode.BreakNode(node.Position);
     }
     private static StatementNode.ReturnNode TypeStatementReturnNode(
       ParseTree.StatementNode.ReturnNode node,
