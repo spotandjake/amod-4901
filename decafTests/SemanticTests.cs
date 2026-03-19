@@ -4,6 +4,7 @@ using VerifyTests;
 
 using Decaf.IR.ParseTree;
 using Decaf.Utils.Errors.ScopeErrors;
+using Decaf.Utils.Errors.SemanticErrors;
 
 [TestClass]
 public class DecafSemanticTests : VerifyBase {
@@ -256,6 +257,213 @@ public class DecafSemanticTests : VerifyBase {
   }
   #endregion
   #region SemanticTests
-  // TODO: Add semantic analysis tests
+  // Program.Main Checks
+  [TestMethod]
+  public void TestValidSemanticProgramMain() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {}
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestInValidSemanticNoProgram() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {}
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInValidSemanticNoMain() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Program {}
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInValidSemanticMainNoVoid() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Program {
+        int Main() {}
+      }
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInValidSemanticMainArgs() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Program {
+        void Main(int args) {}
+      }
+    ");
+    });
+  }
+  // Loop Checks
+  [TestMethod]
+  public void TestValidSemanticLoops() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {
+          while (true) {
+            continue;
+            break;
+          }
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestValidSemanticNestedLoops() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {
+          while (true) {
+            if (true) {
+              continue;
+              break;
+            }
+          }
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestInValidSemanticContinue() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {
+        void Main() {
+          continue;
+        }
+      }
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInValidSemanticBreak() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {
+        void Main() {
+          break;
+        }
+      }
+    ");
+    });
+  }
+  // Arithmetic Checks
+  [TestMethod]
+  public void TestValidSemanticArithmetic() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {
+          int x;
+          x = 1 / 2;
+          x = 0 / 1;
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestInValidSemanticArithmetic() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {
+        void Main() {
+          int x;
+          x = 1 / 0;
+        }
+      }
+    ");
+    });
+  }
+  // Array Checks
+  [TestMethod]
+  public void TestValidSemanticArrayInit() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {
+          int a[];
+          int x;
+          a = new int[5];
+          a = new int[0];
+          a = new int[x];
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestInValidSemanticArrayInit() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {
+        void Main() {
+          int a[];
+          a = new int[-1];
+        }
+      }
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestValidArrayIndex() {
+    try {
+      SemanticAnalysis(@"
+      class Program {
+        void Main() {
+          int a[];
+          a = new int[5];
+          a[0] = 1;
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
+  }
+  [TestMethod]
+  public void TestInValidSemanticArrayIndex() {
+    Assert.Throws<SemanticException>(() => {
+      SemanticAnalysis(@"
+      class Main {
+        void Main() {
+          int a[];
+          a = new int[-1];
+          a[-1] = 1;
+        }
+      }
+    ");
+    });
+  }
   #endregion
 }

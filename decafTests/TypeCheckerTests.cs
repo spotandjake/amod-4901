@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
