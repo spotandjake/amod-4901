@@ -28,10 +28,12 @@ public class DecafLexerTests : VerifyBase {
   // Unit Testing
   [TestMethod]
   public void TestKeywords() {
-    DecafLexer lexer = Lex("boolean callout class else extends false if int new null return this true void while");
+    DecafLexer lexer = Lex("boolean break callout class continue else extends false if int new null return this true void while");
     Assert.AreEqual(DecafLexer.BOOLEAN, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.BREAK, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CALLOUT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CLASS, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.CONTINUE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ELSE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.EXTENDS, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.FALSE, lexer.NextToken().Type);

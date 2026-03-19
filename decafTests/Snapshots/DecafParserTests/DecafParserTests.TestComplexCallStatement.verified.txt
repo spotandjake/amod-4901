@@ -3,24 +3,29 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: ExpressionStatementNode,
+                Kind: ExprStatement,
                 Content: {
-                  Kind: CallNode,
-                  MethodPath: {
-                    Kind: LocationNode,
-                    Root: Base,
+                  Kind: CallExpression,
+                  IsPrimitive: false,
+                  Path: {
+                    Kind: LocationExpression,
+                    Root: {
+                      Kind: IdentifierExpression,
+                      Name: Base
+                    },
                     Path: foo
                   }
                 }

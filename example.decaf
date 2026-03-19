@@ -1,5 +1,13 @@
-class Main {
-  void testMethod() {
-    x = !1 + 1;
+class A {
+  int x;
+  void add() {}
+}
+class Program {
+  void Main() {
+    int x;
+    x = A.x;
+    A.add();
   }
 }
+
+x[1/0]();

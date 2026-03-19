@@ -3,12 +3,13 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void,
+            Type: Void,
+            Content: void,
             Position: {
               fileName: <unknown file>,
               line: 1,
@@ -22,7 +23,7 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int,
+                Content: int,
                 Position: {
                   fileName: <unknown file>,
                   line: 1,
@@ -43,7 +44,7 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int,
+                Content: int,
                 Position: {
                   fileName: <unknown file>,
                   line: 1,

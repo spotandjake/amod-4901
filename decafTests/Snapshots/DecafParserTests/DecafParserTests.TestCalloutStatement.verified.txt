@@ -3,22 +3,53 @@
     {
       Kind: ClassDeclNode,
       Name: Main,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: Void,
+            Content: void
           },
           Name: testMethod,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: ExpressionStatementNode,
+                Kind: ExprStatement,
                 Content: {
-                  Kind: PrimitiveCallNode,
-                  PrimitiveId: "Test"
+                  Kind: CallExpression,
+                  IsPrimitive: true,
+                  Path: {
+                    Kind: LocationExpression,
+                    Root: {
+                      Kind: IdentifierExpression,
+                      Name: "Test"
+                    }
+                  },
+                  Arguments: [
+                    {
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 1
+                      }
+                    },
+                    {
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 2
+                      }
+                    },
+                    {
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: StringLiteral,
+                        Value: y
+                      }
+                    }
+                  ]
                 }
               }
             ]

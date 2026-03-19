@@ -4,14 +4,14 @@
       Kind: ClassDeclNode,
       Name: Main,
       SuperClassName: Base,
-      VariableDeclarations: [
+      Fields: [
         {
-          Kind: VariableDeclarationNode,
-          VarType: {
+          Kind: VariableDeclNode,
+          Type: {
             Kind: TypeNode,
-            Type: int
+            Content: int
           },
-          VarBinds: [
+          Binds: [
             {
               Kind: VarBindNode,
               Name: x,
@@ -30,12 +30,13 @@
           ]
         }
       ],
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: Void,
+            Content: void
           },
           Name: foo,
           Parameters: [
@@ -43,7 +44,7 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int
+                Content: int
               },
               Name: a,
               IsArray: false
@@ -52,7 +53,8 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: boolean
+                Type: Boolean,
+                Content: boolean
               },
               Name: b,
               IsArray: false
@@ -61,7 +63,7 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Type: int
+                Content: int
               },
               Name: c,
               IsArray: true
@@ -71,55 +73,64 @@
             Kind: BlockNode,
             Statements: [
               {
-                Kind: IfNode,
+                Kind: IfStatement,
                 Condition: {
-                  Kind: BinopExpressionNode,
+                  Kind: BinopExpression,
                   Lhs: {
-                    Kind: BinopExpressionNode,
+                    Kind: BinopExpression,
                     Lhs: {
-                      Content: {
-                        Kind: LocationNode,
-                        Root: a
-                      },
-                      Kind: SimpleExpressionNode
+                      Kind: LocationExpression,
+                      Root: {
+                        Kind: IdentifierExpression,
+                        Name: a
+                      }
                     },
                     Operator: <,
                     Rhs: {
-                      Kind: IntegerLiteralNode,
-                      Value: 10
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 10
+                      }
                     }
                   },
                   Operator: &&,
                   Rhs: {
-                    Content: {
-                      Kind: LocationNode,
-                      Root: b
-                    },
-                    Kind: SimpleExpressionNode
+                    Kind: LocationExpression,
+                    Root: {
+                      Kind: IdentifierExpression,
+                      Name: b
+                    }
                   }
                 },
                 TrueBranch: {
                   Kind: BlockNode,
                   Statements: [
                     {
-                      Kind: AssignmentNode,
+                      Kind: AssignmentStatement,
                       Location: {
-                        Kind: LocationNode,
-                        Root: x
+                        Kind: LocationExpression,
+                        Root: {
+                          Kind: IdentifierExpression,
+                          Name: x
+                        }
                       },
                       Expression: {
-                        Kind: BinopExpressionNode,
+                        Kind: BinopExpression,
                         Lhs: {
-                          Content: {
-                            Kind: LocationNode,
-                            Root: x
-                          },
-                          Kind: SimpleExpressionNode
+                          Kind: LocationExpression,
+                          Root: {
+                            Kind: IdentifierExpression,
+                            Name: x
+                          }
                         },
                         Operator: +,
                         Rhs: {
-                          Kind: IntegerLiteralNode,
-                          Value: 1
+                          Kind: LiteralExpression,
+                          Content: {
+                            Kind: IntegerLiteral,
+                            Value: 1
+                          }
                         }
                       }
                     }
@@ -129,24 +140,30 @@
                   Kind: BlockNode,
                   Statements: [
                     {
-                      Kind: AssignmentNode,
+                      Kind: AssignmentStatement,
                       Location: {
-                        Kind: LocationNode,
-                        Root: x
+                        Kind: LocationExpression,
+                        Root: {
+                          Kind: IdentifierExpression,
+                          Name: x
+                        }
                       },
                       Expression: {
-                        Kind: BinopExpressionNode,
+                        Kind: BinopExpression,
                         Lhs: {
-                          Content: {
-                            Kind: LocationNode,
-                            Root: x
-                          },
-                          Kind: SimpleExpressionNode
+                          Kind: LocationExpression,
+                          Root: {
+                            Kind: IdentifierExpression,
+                            Name: x
+                          }
                         },
                         Operator: -,
                         Rhs: {
-                          Kind: IntegerLiteralNode,
-                          Value: 1
+                          Kind: LiteralExpression,
+                          Content: {
+                            Kind: IntegerLiteral,
+                            Value: 1
+                          }
                         }
                       }
                     }
@@ -160,20 +177,20 @@
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: int
+            Content: int
           },
           Name: bar,
           Body: {
             Kind: BlockNode,
             Statements: [
               {
-                Kind: ReturnNode,
+                Kind: ReturnStatement,
                 Value: {
-                  Content: {
-                    Kind: LocationNode,
-                    Root: x
-                  },
-                  Kind: SimpleExpressionNode
+                  Kind: LocationExpression,
+                  Root: {
+                    Kind: IdentifierExpression,
+                    Name: x
+                  }
                 }
               }
             ]
@@ -184,12 +201,13 @@
     {
       Kind: ClassDeclNode,
       Name: Base,
-      MethodDeclarations: [
+      Methods: [
         {
           Kind: MethodDeclNode,
           ReturnType: {
             Kind: TypeNode,
-            Type: void
+            Type: Void,
+            Content: void
           },
           Name: calloutMethod,
           Body: {

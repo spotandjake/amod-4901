@@ -1,0 +1,8 @@
+﻿Scope:
+  a: False
+  b: False
+  c: False
+  d: False
+  Main: False
+  Scope:
+    Program: False

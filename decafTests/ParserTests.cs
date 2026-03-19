@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
+using Decaf.IR.ParseTree;
+
 [TestClass]
 public class DecafParserTests : VerifyBase {
   private VerifySettings CreateSettings() {
@@ -10,10 +12,10 @@ public class DecafParserTests : VerifyBase {
     return settings;
   }
 #nullable enable
-  private ParseTree.ProgramNode? Parse(string text) {
+  private ProgramNode? Parse(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream, null);
+    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
     return program;
   }
   #region ValidTests
@@ -26,49 +28,49 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public Task TestEmptyBaseClass() {
     var result = Parse("class Main {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestEmptyClass() {
     var result = Parse("class Main extends Base {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestEmptyMultiClass() {
     var result = Parse("class Main {} class Main2 {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   // Class Variable Declarations
   [TestMethod]
   public Task TestSingleVariableDeclaration() {
     var result = Parse("class Main { int x; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiVariableDeclaration() {
     var result = Parse("class Main { int x; int y; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiBindsDeclaration() {
     var result = Parse("class Main { int x, y, z; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestArrayBindsDeclaration() {
     var result = Parse("class Main { int x[]; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   // Class Method Declarations
   [TestMethod]
   public Task TestSingleBasicMethodDeclaration() {
     var result = Parse("class Main { void foo() {} }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiBasicMethodDeclaration() {
     var result = Parse("class Main { void foo() {} void bar() {} }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   // Method Parameters
   [TestMethod]
@@ -97,7 +99,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestVarOnlyBasicBlock() {
@@ -108,7 +110,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestStatementOnlyBasicBlock() {
@@ -120,7 +122,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   #region Statements
   [TestMethod]
@@ -133,7 +135,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestComplexAssignmentStatement() {
@@ -144,7 +146,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestSimpleCallStatement() {
@@ -155,7 +157,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestComplexCallStatement() {
@@ -166,7 +168,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestSingleArgCallStatement() {
@@ -177,7 +179,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestMultiArgCallStatement() {
@@ -188,7 +190,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestNestedArgCallStatement() {
@@ -199,13 +201,13 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCalloutStatement() {
     // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
-    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2); } }");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2, \"y\"); } }");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestSimpleIfStatement() {
@@ -218,7 +220,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestComplexIfStatement() {
@@ -234,7 +236,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestWhileStatement() {
@@ -248,7 +250,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestSimpleReturnStatement() {
@@ -259,7 +261,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestComplexReturnStatement() {
@@ -270,7 +272,33 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestContinueStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        while (true) {
+          continue;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestBreakStatement() {
+    var result = Parse(@"
+    class Main {
+      void testMethod() {
+        while (true) {
+          break;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   // Expressions
   [TestMethod]
@@ -283,7 +311,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestDotExpression() {
@@ -293,7 +321,7 @@ public class DecafParserTests : VerifyBase {
         x = Base.y; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestThisExpression() {
@@ -303,7 +331,7 @@ public class DecafParserTests : VerifyBase {
         x = this; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCallExpression1() {
@@ -313,7 +341,7 @@ public class DecafParserTests : VerifyBase {
         x = foo(); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCallExpression2() {
@@ -323,7 +351,7 @@ public class DecafParserTests : VerifyBase {
         x = foo(1); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCallExpression3() {
@@ -333,20 +361,40 @@ public class DecafParserTests : VerifyBase {
         x = foo(1, 2); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCalloutExpression() {
     return Verify(Parse(@"
     class Main { 
       void testMethod() { 
-        x = callout(""test"", 1, 2); 
+        x = callout(""test"", 1, 2, ""y""); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
-  // NOTE: We don't test `new test()` as our parseTree won't handle this
-  // NOTE: We don't test `new int 1` as our parseTree won't handle this
+  [TestMethod]
+  public Task TestClassDeclaration() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        T x;
+        x = new T();
+      }
+    }
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestArrayDeclaration() {
+    return Verify(Parse(@"
+    class Main { 
+      void testMethod() { 
+        T x[];
+        x = new T[1];
+      }
+    }
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
   [TestMethod]
   public Task TestIntExpression() {
     return Verify(Parse(@"
@@ -355,7 +403,7 @@ public class DecafParserTests : VerifyBase {
         x = 1; 
       }
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestCharExpression() {
@@ -365,7 +413,7 @@ public class DecafParserTests : VerifyBase {
         x = 'a'; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestBoolExpression1() {
@@ -375,7 +423,7 @@ public class DecafParserTests : VerifyBase {
         x = true; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestBoolExpression2() {
@@ -385,7 +433,7 @@ public class DecafParserTests : VerifyBase {
         x = false; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestNullExpression() {
@@ -395,7 +443,7 @@ public class DecafParserTests : VerifyBase {
         x = null; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestPrefixExpression() {
@@ -406,7 +454,7 @@ public class DecafParserTests : VerifyBase {
         booly = !true; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestBinopExpression1() {
@@ -416,7 +464,7 @@ public class DecafParserTests : VerifyBase {
         x = 1 + 1; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestBinopExpression2() {
@@ -426,7 +474,7 @@ public class DecafParserTests : VerifyBase {
         x = 1 + 1 + 1; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestParenExpression() {
@@ -436,7 +484,7 @@ public class DecafParserTests : VerifyBase {
         x = (1 + 1); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestSimpleExpression() {
@@ -447,7 +495,7 @@ public class DecafParserTests : VerifyBase {
       }
     } 
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   #endregion
   #region Precedence
@@ -461,7 +509,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestPrecedence2() {
@@ -472,7 +520,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestPrecedence3() {
@@ -483,7 +531,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestPrecedence4() {
@@ -494,7 +542,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   [TestMethod]
   public Task TestPrecedence5() {
@@ -505,7 +553,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   // TODO: Add more precedence testing
   #endregion
@@ -521,7 +569,7 @@ public class DecafParserTests : VerifyBase {
       t y;
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
 
   // Full Stress Test Programs
@@ -550,7 +598,7 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<ParseTree.Node>(x => x.Position);
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
   #endregion
   // Invalid Tests
