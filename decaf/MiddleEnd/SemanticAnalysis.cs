@@ -55,11 +55,11 @@ namespace MiddleEnd {
     }
 
     private static void CheckStatementNode(StatementNode statement, ParentContext context) {
-      switch(statement) {
-        case StatementNode.AssignmentNode assign: 
+      switch (statement) {
+        case StatementNode.AssignmentNode assign:
           CheckExpressionNode(assign.Expression, context);
           break;
-        case StatementNode.ExprNode expr: 
+        case StatementNode.ExprNode expr:
           CheckExpressionNode(expr.Content, context);
           break;
         case StatementNode.IfNode ifNode:
@@ -77,46 +77,50 @@ namespace MiddleEnd {
     }
 
     private static void CheckExpressionNode(ExpressionNode expression, ParentContext context) {
-    switch (expression) {
+      switch (expression) {
         case ExpressionNode.CallNode call:
-            var innerCtx = new ParentContext { InPrimCall = call.IsPrimitive };
-            foreach (var arg in call.Arguments) {
-                CheckExpressionNode(arg, innerCtx);
-            }
-            break;
+          var innerCtx = new ParentContext { InPrimCall = call.IsPrimitive };
+          foreach (var arg in call.Arguments) {
+            CheckExpressionNode(arg, innerCtx);
+          }
+          break;
 
         case ExpressionNode.BinopNode binop:
-            CheckExpressionNode(binop.Lhs, context);
-            CheckExpressionNode(binop.Rhs, context);
-            break;
+          CheckExpressionNode(binop.Lhs, context);
+          CheckExpressionNode(binop.Rhs, context);
+
+          if (binop.Operator == "/" && binop.Rhs is LiteralNode.IntegerNode { Value: 0 }) {
+            throw new SemanticException("Division by zero is not allowed.");
+          }
+          break;
 
         case ExpressionNode.PrefixNode prefix:
-            CheckExpressionNode(prefix.Operand, context);
-            break;
+          CheckExpressionNode(prefix.Operand, context);
+          break;
 
         case ExpressionNode.LocationNode location:
-            CheckExpressionNode(location.Root, context);
-            if (location.IndexExpr != null) {
-                if (location.IndexExpr is LiteralNode.IntegerNode { Value: < 0 } negativeIndex)
-                  throw new SemanticException($"Array index must be non-negative: {negativeIndex.Value}");
-                CheckExpressionNode(location.IndexExpr, context);
-            }
-            break;
-            
+          CheckExpressionNode(location.Root, context);
+          if (location.IndexExpr != null) {
+            if (location.IndexExpr is LiteralNode.IntegerNode { Value: < 0 } negativeIndex)
+              throw new SemanticException($"Array index must be non-negative: {negativeIndex.Value}");
+            CheckExpressionNode(location.IndexExpr, context);
+          }
+          break;
+
         case LiteralNode.StringNode:
-            if (!context.InPrimCall)
-                throw new SemanticException("String literals may only appear as arguments to a primitive call");
-            break;
+          if (!context.InPrimCall)
+            throw new SemanticException("String literals may only appear as arguments to a primitive call");
+          break;
+      }
     }
-}
 
     private struct ParentContext {
       public bool InPrimCall { get; init; }
 
       public static ParentContext Default() => new ParentContext {
-          InPrimCall = false
+        InPrimCall = false
       };
     }
 
-    }
   }
+}
