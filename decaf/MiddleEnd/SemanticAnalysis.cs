@@ -37,13 +37,13 @@ namespace MiddleEnd {
         if (!(mainMethod.ReturnType.Type is TypeNode.PrimitiveType.Void)) {
           throw new SemanticException("`Program.Main()` must return void");
         }
+        foreach (var method in _class.Methods) {
+          CheckMethodNode(method);
+        }
       }
     }
 
     private static void CheckMethodNode(DeclarationNode.MethodNode _methodDecl) {
-      // String literal can only occur in a CallNode if it IsPrimitive any other parent node is incorrect
-      // * The way to check this would be to pass the parentNode in a context struct and when you visit 
-      // a stringNode you bassically say hey if my parent isn't a callNode who has IsPrim then this is invalid.
       var parentContext = ParentContext.Default();
       CheckBlockNode(_methodDecl.Body, parentContext);
     }
@@ -84,18 +84,25 @@ namespace MiddleEnd {
                 CheckExpressionNode(arg, innerCtx);
             }
             break;
+
         case ExpressionNode.BinopNode binop:
             CheckExpressionNode(binop.Lhs, context);
             CheckExpressionNode(binop.Rhs, context);
             break;
+
         case ExpressionNode.PrefixNode prefix:
             CheckExpressionNode(prefix.Operand, context);
             break;
+
         case ExpressionNode.LocationNode location:
             CheckExpressionNode(location.Root, context);
-            if (location.IndexExpr != null)
+            if (location.IndexExpr != null) {
+                if (location.IndexExpr is LiteralNode.IntegerNode { Value: < 0 } negativeIndex)
+                  throw new SemanticException($"Array index must be non-negative: {negativeIndex.Value}");
                 CheckExpressionNode(location.IndexExpr, context);
+            }
             break;
+            
         case LiteralNode.StringNode:
             if (!context.InPrimCall)
                 throw new SemanticException("String literals may only appear as arguments to a primitive call");
