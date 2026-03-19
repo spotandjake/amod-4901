@@ -136,7 +136,15 @@ After we are done scoping and have a brand new parseTree with scope information 
 * `Program.Main()` exists
   * `Program.Main()` has no parameters
   * `Program.Main()` returns void
-* TODO: Add more semantic analysis rules
+* Loop Checks
+  * Continue can only be used in a loop
+  * Break can only be used in a loop
+* Arithmetic Checks
+  * No divide by constant zero
+* Array checks
+  * No initialization of arrays with constant negative size
+  * No indexing of arrays with constant negative index
+
 
 Tests can be found in: [`./decafTests/SemanticTests.cs`](./decafTests/SemanticTests.cs) which also uses snapshot testing to capture the output of the semantic analysis traversal.
 

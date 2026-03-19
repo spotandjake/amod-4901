@@ -1,21 +1,24 @@
 using Decaf.IR.ParseTree;
 using System;
 using System.Linq;
-using System.Reflection;
 
-namespace MiddleEnd {
-  // Possible exceptions that can be thrown during semantic analysis
-  // TODO: Add position information to these exceptions for better error reporting
-  public class SemanticException(string message) : Exception(message) { }
+using ParseTree = Decaf.IR.ParseTree;
+using Decaf.Utils.Errors.SemanticErrors;
+
+namespace Decaf.MiddleEnd {
   // Performs semantic analysis on the parse tree, ensuring that the program is semantically valid
   public class SemanticChecker {
+    private readonly record struct ParentContext(bool InPrimCall, bool InLoop) {
+      public bool InPrimCall { get; } = InPrimCall;
+      public bool InLoop { get; } = InLoop;
+    }
     private SemanticChecker() { }
     public static void CheckProgramNode(ProgramNode program) {
       // Ensure the program contains a class named "Program"
       if (!program.Classes.Any(m => m.Name == "Program")) {
-        throw new SemanticException("A program must contain a class called 'Program'");
+        throw new SemanticException(program.Position, "A program must contain a class called 'Program'");
       }
-
+      // Check in each class
       foreach (var _class in program.Classes) {
         CheckClassNode(_class);
       }
@@ -27,100 +30,156 @@ namespace MiddleEnd {
         // Find the Main method in the Program class
         var mainMethodCandidates = _class.Methods.Where(m => m.Name == mainName);
         if (mainMethodCandidates.Count() != 1) {
-          throw new SemanticException("A main entry point must exist at `Program.Main()`");
+          throw new SemanticException(_class.Position, "A main entry point must exist at `Program.Main()`");
         }
         // We get the first, note that the list is guaranteed to have exactly one element due to the previous check
         var mainMethod = mainMethodCandidates.First(m => m.Name == mainName);
         if (mainMethod.Parameters.Length != 0) {
-          throw new SemanticException("`Program.Main()` should not accept any parameters");
+          throw new SemanticException(mainMethod.Position, "`Program.Main()` should not accept any parameters");
         }
-        if (!(mainMethod.ReturnType.Type is TypeNode.PrimitiveType.Void)) {
-          throw new SemanticException("`Program.Main()` must return void");
-        }
-        foreach (var method in _class.Methods) {
-          CheckMethodNode(method);
+        if (mainMethod.ReturnType.Type is not PrimitiveType.Void) {
+          throw new SemanticException(mainMethod.Position, "`Program.Main()` must return void");
         }
       }
+      // Check each method in the class
+      foreach (var method in _class.Methods) {
+        CheckMethodNode(method);
+      }
     }
-
     private static void CheckMethodNode(DeclarationNode.MethodNode _methodDecl) {
-      var parentContext = ParentContext.Default();
+      // Create a new context
+      var parentContext = new ParentContext(false, false);
+      // Check the method body
       CheckBlockNode(_methodDecl.Body, parentContext);
     }
-
     private static void CheckBlockNode(BlockNode block, ParentContext context) {
+      // Check every statement in the block node
       foreach (var statement in block.Statements) {
         CheckStatementNode(statement, context);
       }
     }
-
-    private static void CheckStatementNode(StatementNode statement, ParentContext context) {
+    private static void CheckStatementNode(StatementNode statement, ParentContext parentContext) {
       switch (statement) {
         case StatementNode.AssignmentNode assign:
-          CheckExpressionNode(assign.Expression, context);
+          // Check the path
+          CheckExpressionNode(assign.Location, parentContext);
+          // Check The Expression
+          CheckExpressionNode(assign.Expression, parentContext);
           break;
         case StatementNode.ExprNode expr:
-          CheckExpressionNode(expr.Content, context);
+          // Check the inner expression
+          CheckExpressionNode(expr.Content, parentContext);
           break;
         case StatementNode.IfNode ifNode:
-          CheckExpressionNode(ifNode.Condition, context);
+          // Check the condition
+          CheckExpressionNode(ifNode.Condition, parentContext);
+          // Check the true branch
+          CheckBlockNode(ifNode.TrueBranch, parentContext);
+          // Check the false branch if it exists
+          if (ifNode.FalseBranch != null) {
+            CheckBlockNode(ifNode.FalseBranch, parentContext);
+          }
+          break;
+        case StatementNode.WhileNode whileNode: {
+            var context = new ParentContext(parentContext.InPrimCall, true);
+            // Check the condition
+            CheckExpressionNode(whileNode.Condition, context);
+            // Check the body
+            CheckBlockNode(whileNode.Body, context);
+            break;
+          }
+        case StatementNode.ContinueNode:
+          // Check that the continue statement is inside a loop
+          if (!parentContext.InLoop) {
+            throw new SemanticException(statement.Position, "Continue statements must be inside a loop");
+          }
+          break;
+        case StatementNode.BreakNode:
+          // Check that the break statement is inside a loop
+          if (!parentContext.InLoop) {
+            throw new SemanticException(statement.Position, "Break statements must be inside a loop");
+          }
           break;
         case StatementNode.ReturnNode ret:
-          if (ret.Value != null)
-            CheckExpressionNode(ret.Value, context);
+          if (ret.Value != null) {
+            CheckExpressionNode(ret.Value, parentContext);
+          }
           break;
-        case StatementNode.WhileNode whileNode:
-          CheckExpressionNode(whileNode.Condition, context);
-          CheckBlockNode(whileNode.Body, context);
-          break;
+        default:
+          throw new Exception($"Unknown statement node of type {statement.GetType()}");
       }
     }
-
-    private static void CheckExpressionNode(ExpressionNode expression, ParentContext context) {
+    private static void CheckExpressionNode(ExpressionNode expression, ParentContext parentContext) {
       switch (expression) {
-        case ExpressionNode.CallNode call:
-          var innerCtx = new ParentContext { InPrimCall = call.IsPrimitive };
-          foreach (var arg in call.Arguments) {
-            CheckExpressionNode(arg, innerCtx);
+        case ExpressionNode.CallNode call: {
+            // Update the context - Set IsPrimitive
+            var context = new ParentContext(call.IsPrimitive, parentContext.InLoop);
+            // Check the path
+            CheckExpressionNode(call.Path, context);
+            // Check each argument
+            foreach (var arg in call.Arguments) {
+              CheckExpressionNode(arg, context);
+            }
+            break;
           }
-          break;
-
-        case ExpressionNode.BinopNode binop:
-          CheckExpressionNode(binop.Lhs, context);
-          CheckExpressionNode(binop.Rhs, context);
-
-          if (binop.Operator == "/" && binop.Rhs is LiteralNode.IntegerNode { Value: 0 }) {
-            throw new SemanticException("Division by zero is not allowed.");
+        case ExpressionNode.BinopNode binop: {
+            // Check the left hand side
+            CheckExpressionNode(binop.Lhs, parentContext);
+            // Check the right hand side
+            CheckExpressionNode(binop.Rhs, parentContext);
+            switch (binop.Operator) {
+              // Check for cases of <x>/0 where x is any expression
+              case "/":
+                if (binop.Rhs is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: 0 } }) {
+                  throw new SemanticException(binop.Position, "Division by zero is not allowed.");
+                }
+                break;
+            }
+            break;
           }
-          break;
-
         case ExpressionNode.PrefixNode prefix:
-          CheckExpressionNode(prefix.Operand, context);
+          // Check Prefix operand
+          // NOTE: It might make sense to warn if this were a constant `true` or `false`
+          CheckExpressionNode(prefix.Operand, parentContext);
           break;
-
+        case ExpressionNode.NewClassNode _classInit:
+          // Check the path
+          CheckExpressionNode(_classInit.Path, parentContext);
+          break;
+        case ExpressionNode.NewArrayNode arrayInit:
+          // Check size expression
+          CheckExpressionNode(arrayInit.SizeExpr, parentContext);
+          // An array cannot have a negative size
+          if (
+            arrayInit.SizeExpr is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: < 0 } }
+          ) throw new SemanticException(arrayInit.Position, $"Array size must be non-negative");
+          break;
         case ExpressionNode.LocationNode location:
-          CheckExpressionNode(location.Root, context);
-          if (location.IndexExpr != null) {
-            if (location.IndexExpr is LiteralNode.IntegerNode { Value: < 0 } negativeIndex)
-              throw new SemanticException($"Array index must be non-negative: {negativeIndex.Value}");
-            CheckExpressionNode(location.IndexExpr, context);
+          // Check the root
+          CheckExpressionNode(location.Root, parentContext);
+          // Check the expression
+          if (location.IndexExpr != null) CheckExpressionNode(location.IndexExpr, parentContext);
+          // Array indices cannot be negative
+          if (
+            location.IndexExpr is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: < 0 } }
+          ) throw new SemanticException(location.Position, $"Array index must be non-negative");
+          break;
+        case ExpressionNode.ThisNode:
+        case ExpressionNode.IdentifierNode:
+          // Nothing to check here
+          break;
+        case ExpressionNode.LiteralNode literalNode:
+          switch (literalNode.Content) {
+            case ParseTree.LiteralNodes.StringNode:
+              if (!parentContext.InPrimCall) {
+                throw new SemanticException(literalNode.Position, "String literals can only be used as arguments to primitive calls");
+              }
+              break;
           }
           break;
-
-        case LiteralNode.StringNode:
-          if (!context.InPrimCall)
-            throw new SemanticException("String literals may only appear as arguments to a primitive call");
-          break;
+        default:
+          throw new Exception($"Unknown expression node of type {expression.GetType()}");
       }
     }
-
-    private struct ParentContext {
-      public bool InPrimCall { get; init; }
-
-      public static ParentContext Default() => new ParentContext {
-        InPrimCall = false
-      };
-    }
-
   }
 }
