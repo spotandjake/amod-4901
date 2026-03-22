@@ -214,9 +214,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
         foreach (var bind in typedField.Binds) {
           // After mapping the method we need to update the class signature and the global scope
           context.CurrentClass.Members[bind.Name] = bind.Signature;
-          // Update the global scope with the new partial signature
-          parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
         }
+        // Update the global scope with the new partial signature
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
         // Return the mapped class
         return typedField;
       }).ToArray();
@@ -333,6 +333,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
     ) {
       // Map the inner expression
       var content = TypeExpressionNode(node.Content, parentContext);
+      // NOTE: It might make sense to check that the expression returns void
       // Map the node itself
       return new StatementNode.ExprNode(node.Position, content);
     }
@@ -589,6 +590,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Validate the type expression is a compatible type
+      // NOTE: This could break as we add more types
       if (node.Type.Type == ParseTree.PrimitiveType.Void) {
         throw new LhsNotRhs(node.Position, "array of void", "an array of `int`, `boolean` or `T`");
       }

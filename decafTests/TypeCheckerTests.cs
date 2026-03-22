@@ -827,4 +827,91 @@ public class DecafTypeCheckerTests : VerifyBase {
     ");
     });
   }
+  // Test Return Statements
+  [TestMethod]
+  public void TestValidReturnStatement1() {
+    try {
+      TypeCheck(@"
+      class Program {
+        void Main() {
+        }
+        int add(int x) {
+          if (true) {
+            return 1;
+          } else {
+            return 2;
+          }
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Type checking threw an exception on valid return program");
+    }
+  }
+  [TestMethod]
+  public void TestValidReturnStatement2() {
+    try {
+      TypeCheck(@"
+      class Program {
+        void Main() {
+        }
+        int add(int x) {
+          if (true) {
+            return 1;
+          }
+          return 2;
+        }
+      }
+    ");
+    }
+    catch {
+      Assert.Fail("Type checking threw an exception on valid return program");
+    }
+  }
+  [TestMethod]
+  public void TestInvalidReturnStatement1() {
+    Assert.Throws<LhsNotRhs>(() => {
+      TypeCheck(@"
+      class Program {
+        void Main() {
+        }
+        int add(int x) {
+        }
+      }
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInvalidReturnStatement2() {
+    Assert.Throws<LhsNotRhs>(() => {
+      TypeCheck(@"
+      class Program {
+        void Main() {
+        }
+        int add(int x) {
+          if (true) {
+            return 1;
+          }
+        }
+      }
+    ");
+    });
+  }
+  [TestMethod]
+  public void TestInvalidReturnStatement3() {
+    Assert.Throws<LhsNotRhs>(() => {
+      TypeCheck(@"
+      class Program {
+        void Main() {
+        }
+        int add(int x) {
+          while (true) {
+           return 1;
+          }
+        }
+      }
+    ");
+    });
+  }
 }
