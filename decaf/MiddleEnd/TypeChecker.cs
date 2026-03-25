@@ -308,7 +308,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.StatementNode.AssignmentNode assignment => TypeStatementAssignmentNode(assignment, parentContext),
         ParseTree.StatementNode.ExprNode exprStmt => TypeStatementExprNode(exprStmt, parentContext),
         ParseTree.StatementNode.IfNode ifNode => TypeStatementIfNode(ifNode, parentContext, ref HasReturn),
-        ParseTree.StatementNode.WhileNode whileNode => TypeStatementWhileNode(whileNode, parentContext, ref HasReturn),
+        ParseTree.StatementNode.WhileNode whileNode => TypeStatementWhileNode(whileNode, parentContext),
         ParseTree.StatementNode.ContinueNode continueNode => TypeStatementContinueNode(continueNode, parentContext),
         ParseTree.StatementNode.BreakNode breakNode => TypeStatementBreakNode(breakNode, parentContext),
         ParseTree.StatementNode.ReturnNode returnNode => TypeStatementReturnNode(returnNode, parentContext, ref HasReturn),
@@ -351,15 +351,18 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Map the true branch & false branch
-      var trueBranch = TypeBlockNode(node.TrueBranch, parentContext, ref HasReturn);
-      var falseBranch = node.FalseBranch != null ? TypeBlockNode(node.FalseBranch, parentContext, ref HasReturn) : null;
+      bool hasReturnTrueBranch = false;
+      bool hasReturnFalseBranch = false;
+      var trueBranch = TypeBlockNode(node.TrueBranch, parentContext, ref hasReturnTrueBranch);
+      var falseBranch = node.FalseBranch != null ? TypeBlockNode(node.FalseBranch, parentContext, ref hasReturnFalseBranch) : null;
+      // Properly set the HasReturn value for this if statement up the tree.
+      if (!HasReturn) HasReturn = hasReturnTrueBranch && hasReturnFalseBranch;
       // Map the node itself
       return new StatementNode.IfNode(node.Position, condition, trueBranch, falseBranch);
     }
     private static StatementNode.WhileNode TypeStatementWhileNode(
       ParseTree.StatementNode.WhileNode node,
-      TypeCheckContext parentContext,
-      ref bool HasReturn
+      TypeCheckContext parentContext
       ) {
       // Map the condition
       var condition = TypeExpressionNode(node.Condition, parentContext);
@@ -370,7 +373,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Map the body
-      var body = TypeBlockNode(node.Body, parentContext, ref HasReturn);
+      bool hasReturn = false;
+      var body = TypeBlockNode(node.Body, parentContext, ref hasReturn);
       // Map the node itself
       return new StatementNode.WhileNode(node.Position, condition, body);
     }
