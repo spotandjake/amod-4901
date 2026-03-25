@@ -11,3 +11,4 @@ namespace Decaf.MiddleEnd.TypeChecker {
     }
   }
 }
+

@@ -1,13 +1,11 @@
-class A {
-  int x;
-  void add() {}
-}
 class Program {
   void Main() {
-    int x;
-    x = A.x;
-    A.add();
+  }
+  int add(int x) {
+    if (true) {
+      return 1;
+    } else {
+      return 2;
+    }
   }
 }
-
-x[1/0]();

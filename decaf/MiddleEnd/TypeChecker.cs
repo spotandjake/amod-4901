@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using Decaf.IR.TypedTree;
 using TypedTree = Decaf.IR.TypedTree;
 using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.TypeCheckingErrors;
-using System.Collections.Generic;
 
 namespace Decaf.MiddleEnd.TypeChecker {
   // The private engine that handles type checking, rules
@@ -214,9 +214,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
         foreach (var bind in typedField.Binds) {
           // After mapping the method we need to update the class signature and the global scope
           context.CurrentClass.Members[bind.Name] = bind.Signature;
-          // Update the global scope with the new partial signature
-          parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
         }
+        // Update the global scope with the new partial signature
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
         // Return the mapped class
         return typedField;
       }).ToArray();
@@ -308,7 +308,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.StatementNode.AssignmentNode assignment => TypeStatementAssignmentNode(assignment, parentContext),
         ParseTree.StatementNode.ExprNode exprStmt => TypeStatementExprNode(exprStmt, parentContext),
         ParseTree.StatementNode.IfNode ifNode => TypeStatementIfNode(ifNode, parentContext, ref HasReturn),
-        ParseTree.StatementNode.WhileNode whileNode => TypeStatementWhileNode(whileNode, parentContext, ref HasReturn),
+        ParseTree.StatementNode.WhileNode whileNode => TypeStatementWhileNode(whileNode, parentContext),
         ParseTree.StatementNode.ContinueNode continueNode => TypeStatementContinueNode(continueNode, parentContext),
         ParseTree.StatementNode.BreakNode breakNode => TypeStatementBreakNode(breakNode, parentContext),
         ParseTree.StatementNode.ReturnNode returnNode => TypeStatementReturnNode(returnNode, parentContext, ref HasReturn),
@@ -333,6 +333,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
     ) {
       // Map the inner expression
       var content = TypeExpressionNode(node.Content, parentContext);
+      // NOTE: It might make sense to check that the expression returns void
       // Map the node itself
       return new StatementNode.ExprNode(node.Position, content);
     }
@@ -350,15 +351,18 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Map the true branch & false branch
-      var trueBranch = TypeBlockNode(node.TrueBranch, parentContext, ref HasReturn);
-      var falseBranch = node.FalseBranch != null ? TypeBlockNode(node.FalseBranch, parentContext, ref HasReturn) : null;
+      bool hasReturnTrueBranch = false;
+      bool hasReturnFalseBranch = false;
+      var trueBranch = TypeBlockNode(node.TrueBranch, parentContext, ref hasReturnTrueBranch);
+      var falseBranch = node.FalseBranch != null ? TypeBlockNode(node.FalseBranch, parentContext, ref hasReturnFalseBranch) : null;
+      // Properly set the HasReturn value for this if statement up the tree.
+      if (!HasReturn) HasReturn = hasReturnTrueBranch && hasReturnFalseBranch;
       // Map the node itself
       return new StatementNode.IfNode(node.Position, condition, trueBranch, falseBranch);
     }
     private static StatementNode.WhileNode TypeStatementWhileNode(
       ParseTree.StatementNode.WhileNode node,
-      TypeCheckContext parentContext,
-      ref bool HasReturn
+      TypeCheckContext parentContext
       ) {
       // Map the condition
       var condition = TypeExpressionNode(node.Condition, parentContext);
@@ -369,7 +373,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Map the body
-      var body = TypeBlockNode(node.Body, parentContext, ref HasReturn);
+      bool hasReturn = false;
+      var body = TypeBlockNode(node.Body, parentContext, ref hasReturn);
       // Map the node itself
       return new StatementNode.WhileNode(node.Position, condition, body);
     }
@@ -589,6 +594,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         parentContext.CurrentScope
       );
       // Validate the type expression is a compatible type
+      // NOTE: This could break as we add more types
       if (node.Type.Type == ParseTree.PrimitiveType.Void) {
         throw new LhsNotRhs(node.Position, "array of void", "an array of `int`, `boolean` or `T`");
       }

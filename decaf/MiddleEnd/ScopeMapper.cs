@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+
 using Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.ScopeErrors;
