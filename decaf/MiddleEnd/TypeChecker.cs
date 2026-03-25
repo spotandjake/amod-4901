@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 using Decaf.IR.TypedTree;
 using TypedTree = Decaf.IR.TypedTree;
 using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.TypeCheckingErrors;
-using System.Collections.Generic;
 
 namespace Decaf.MiddleEnd.TypeChecker {
   // The private engine that handles type checking, rules
