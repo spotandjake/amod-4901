@@ -32,6 +32,17 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, message)) {
       public Position Position { get; } = position;
     }
+    /// <summary>
+    /// An exception to be thrown when a declaration is not mutable but is being assigned to during scope lookup.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    /// <param name="message">The error message.</param>
+    public class DeclarationNotMutableException(
+      Position position,
+      string message
+    ) : Exception(ErrorConstructor.CreateError(position, $"`{message}` cannot be assigned as it is not mutable.")) {
+      public Position Position { get; } = position;
+    }
   }
   // Semantic Analysis Errors
   namespace SemanticErrors {
