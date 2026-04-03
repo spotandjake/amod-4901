@@ -1,4 +1,6 @@
+using Decaf.IR.AnfTree.LiteralNodes;
 using Decaf.IR.ParseTree;
+using Decaf.IR.TypedTree;
 using Decaf.Utils;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -6,45 +8,27 @@ using System.Text.Json.Serialization;
 // This namespace contains the definition for our typed tree.
 // The typed tree is pretty much the exact same as the parse tree except it attaches extra type information to each node.
 // This tree is generated from our typechecker and the typing information can be used later during codegen and analysis.
-namespace Decaf.IR.TypedTree {
+namespace Decaf.IR.AnfTree {
   // A primitive type represents the basic types in our language
-  public enum PrimitiveType {
+
+  // ? RM ME:I think I should be able to remove this because it's already defined in typedtree. 
+/*   public enum PrimitiveType {
     Int,
     Character,
     String,
     Boolean,
     Void,
     Null
-  }
-  // A signature represents the type information for a given declaration. This is used for type checking and method resolution.
-  [JsonDerivedType(typeof(ClassSignature), "ClassSignature")]
-  [JsonDerivedType(typeof(MethodSignature), "MethodSignature")]
-  [JsonDerivedType(typeof(ArraySignature), "ArraySignature")]
-  [JsonDerivedType(typeof(PrimitiveSignature), "PrimitiveSignature")]
-  [JsonDerivedType(typeof(CustomSignature), "CustomSignature")]
-  public abstract record Signature {
-    public Position Position { get; }
-    private Signature(Position Position) { this.Position = Position; }
-    public record ClassSignature(Position Position, Dictionary<string, Signature> Members) : Signature(Position);
-    public record MethodSignature(Position Position, Signature ReturnType, Signature[] ParameterTypes) : Signature(Position);
-    public record ArraySignature(Position Position, Signature Typ) : Signature(Position);
-    public record PrimitiveSignature(Position Position, PrimitiveType Type) : Signature(Position);
-    public record CustomSignature(Position Position, string Name) : Signature(Position);
-  }
+  } */
   /// <summary>
-  /// A base typed tree node that all other typed tree nodes inherit from.
+  /// A base ANF Tree node that all other ANF tree nodes inherit from.
   /// </summary>
   public abstract record Node {
-    /// <summary>The kind of the node.</summary>
     public abstract ParseTree.NodeKind Kind { get; }
-    /// <summary>The source position of the node.</summary>
     public Position Position { get; }
-    /// <summary>
-    /// The constructor for the base node, it takes in a position which is used for error reporting and debugging later on.
-    /// </summary>
-    /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
+  
   public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<Signature> Scope) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ProgramNode;
     public DeclarationNode.ClassNode[] Classes { get; } = Classes;
@@ -53,12 +37,12 @@ namespace Decaf.IR.TypedTree {
   public record BlockNode(
     Position Position,
     DeclarationNode.VariableNode[] Declarations,
-    StatementNode[] Statements,
+    InstructionNode[] Instructions, // * statements are now refered as instructions?
     Scope<Signature> Scope
   ) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BlockNode;
     public DeclarationNode.VariableNode[] Declarations { get; } = Declarations;
-    public StatementNode[] Statements { get; } = Statements;
+    public InstructionNode[] Instructions { get; } = Instructions;
     public Scope<Signature> Scope { get; } = Scope;
   }
   /// <summary>
@@ -152,27 +136,29 @@ namespace Decaf.IR.TypedTree {
   /// <summary>
   /// The supertype for all statement nodes, we use a supertype to ensure strict type checking.
   /// </summary>
-  [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
-  [JsonDerivedType(typeof(ExprNode), "ExpressionStatement")]
-  [JsonDerivedType(typeof(IfNode), "IfStatement")]
-  [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
-  [JsonDerivedType(typeof(ContinueNode), "ContinueStatement")]
-  [JsonDerivedType(typeof(BreakNode), "BreakStatement")]
-  [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
-  public abstract record StatementNode : Node {
-    protected StatementNode(Position position) : base(position) { }
+  [JsonDerivedType(typeof(AssignmentNode), "AssignmentInstruction")]
+  [JsonDerivedType(typeof(ExprNode), "ExpressionInstruction")]
+  [JsonDerivedType(typeof(IfNode), "IfInstruction")]
+  [JsonDerivedType(typeof(WhileNode), "WhileInstruction")]
+  [JsonDerivedType(typeof(ContinueNode), "ContinueInstruction")]
+  [JsonDerivedType(typeof(BreakNode), "BreakInstruction")]
+  [JsonDerivedType(typeof(ReturnNode), "ReturnInstruction")]
+  [JsonDerivedType(typeof(BindNode), "BindInstruction")]
+  public abstract record InstructionNode : Node {
+
+    protected InstructionNode(Position position) : base(position) { }
     /// <summary>An assignment statement.</summary>
     public record AssignmentNode(
       Position Position,
       ExpressionNode.LocationNode Location,
       ExpressionNode Expression
-    ) : StatementNode(Position) {
+    ) : InstructionNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.AssignmentStatement;
       public ExpressionNode.LocationNode Location { get; } = Location;
       public ExpressionNode Expression { get; } = Expression;
     };
     /// <summary>An expression statement.</summary>
-    public record ExprNode(Position Position, ExpressionNode Content) : StatementNode(Position) {
+    public record ExprNode(Position Position, ExpressionNode Content) : InstructionNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ExprStatement;
       public ExpressionNode Content { get; } = Content;
     };
@@ -184,7 +170,7 @@ namespace Decaf.IR.TypedTree {
 #nullable enable
       BlockNode? FalseBranch
 #nullable disable
-    ) : StatementNode(Position) {
+    ) : InstructionNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IfStatement;
       public ExpressionNode Condition { get; } = Condition;
       public BlockNode TrueBranch { get; } = TrueBranch;
@@ -193,26 +179,34 @@ namespace Decaf.IR.TypedTree {
 #nullable disable
     };
     /// <summary>A while loop statement.</summary>
-    public record WhileNode(Position Position, ExpressionNode Condition, BlockNode Body) : StatementNode(Position) {
+    public record WhileNode(Position Position, ExpressionNode Condition, BlockNode Body) : InstructionNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.WhileStatement;
       public ExpressionNode Condition { get; } = Condition;
       public BlockNode Body { get; } = Body;
     };
     /// <summary>A continue statement.</summary>
-    public record ContinueNode(Position Position) : StatementNode(Position) {
+    public record ContinueNode(Position Position) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.ContinueStatement;
     };
     /// <summary>A break statement.</summary>
-    public record BreakNode(Position Position) : StatementNode(Position) {
+    public record BreakNode(Position Position) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.BreakStatement;
+    };
+
+    public record BindNode(Position Position, ExpressionNode Value, Signature Signature, String Name) : InstructionNode(Position){
+
+      public String Name { get; } = Name;
+      public ExpressionNode Value { get; } = Value;
+      public Signature Signature { get; } = Signature;
     };
     /// <summary>A return statement.</summary>
 #nullable enable
-    public record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {
+    public record ReturnNode(Position Position, ExpressionNode? Value) : InstructionNode(Position) {
 #nullable disable
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ReturnStatement;
 #nullable enable
       public ExpressionNode? Value { get; } = Value;
+
 #nullable disable
     };
   };
@@ -319,11 +313,11 @@ namespace Decaf.IR.TypedTree {
     /// <summary>A literal expression.</summary>
     public record LiteralNode(
       Position Position,
-      TypedTree.LiteralNode Content,
+      AnfTree.LiteralNode Content,
       Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.LiteralExpression;
-      public TypedTree.LiteralNode Content { get; } = Content;
+      public AnfTree.LiteralNode Content { get; } = Content;
     };
   }
   /// <summary>
