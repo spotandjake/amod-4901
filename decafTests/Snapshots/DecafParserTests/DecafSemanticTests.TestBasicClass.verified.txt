@@ -1,6 +1,6 @@
 ﻿Scope:
-  a: False
-  b: False
+  a: True
+  b: True
   Main: False
   foo: False
   Scope:

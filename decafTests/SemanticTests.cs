@@ -255,6 +255,33 @@ public class DecafSemanticTests : VerifyBase {
       ");
     });
   }
+  [TestMethod]
+  public void TestMutation1() {
+    Assert.Throws<DeclarationNotMutableException>(() => {
+      SemanticAnalysis(@"
+        class Program {
+          int x;
+          void Main() {
+            Program.x = 1;
+          }
+        }
+      ");
+    });
+  }
+  [TestMethod]
+  public void TestMutation2() {
+    Assert.Throws<DeclarationNotMutableException>(() => {
+      SemanticAnalysis(@"
+        class Program {
+          void Main() {
+          }
+          void add(int x) {
+            x = 1;
+          }
+        }
+      ");
+    });
+  }
   #endregion
   #region SemanticTests
   // Program.Main Checks

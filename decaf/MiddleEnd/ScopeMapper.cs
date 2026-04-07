@@ -32,8 +32,6 @@ namespace Decaf.MiddleEnd {
         if (!parentScope.HasDeclaration(decl.SuperClassName)) {
           throw new DeclarationNotDefinedException(decl.Position, decl.SuperClassName);
         }
-        // Mark the superClass as used in the scope
-        parentScope.SetDeclaration(decl.Position, decl.SuperClassName, true);
       }
       // Create a scope for the class
       var classScope = new Scope<bool>(parentScope);
@@ -57,8 +55,6 @@ namespace Decaf.MiddleEnd {
         if (!parentScope.HasDeclaration(typeNode.Content)) {
           throw new DeclarationNotDefinedException(typeNode.Position, typeNode.Content);
         }
-        // Mark the type as used in the scope
-        parentScope.SetDeclaration(typeNode.Position, typeNode.Content, true);
       }
       return typeNode;
     }
@@ -67,7 +63,7 @@ namespace Decaf.MiddleEnd {
       var type = MapTypeNode(decl.Type, parentScope);
       // Add variables to scope
       foreach (var bind in decl.Binds) {
-        parentScope.AddDeclaration(bind.Position, bind.Name, false);
+        parentScope.AddDeclaration(bind.Position, bind.Name, true);
       }
       return new DeclarationNode.VariableNode(decl.Position, type, decl.Binds);
     }
@@ -112,22 +108,22 @@ namespace Decaf.MiddleEnd {
     private static StatementNode MapStatementNode(StatementNode node, Scope<bool> parentScope) {
       switch (node) {
         case StatementNode.AssignmentNode assignment: {
-            var lookup = MapLocationNode(assignment.Location, parentScope);
-            var expression = MapExpressionNode(assignment.Expression, parentScope);
+            var lookup = MapLocationNode(assignment.Location, true, parentScope);
+            var expression = MapExpressionNode(assignment.Expression, false, parentScope);
             return new StatementNode.AssignmentNode(assignment.Position, lookup, expression);
           }
         case StatementNode.ExprNode exprStmt: {
-            var content = MapExpressionNode(exprStmt.Content, parentScope);
+            var content = MapExpressionNode(exprStmt.Content, false, parentScope);
             return new StatementNode.ExprNode(exprStmt.Position, content);
           }
         case StatementNode.IfNode ifNode: {
-            var condition = MapExpressionNode(ifNode.Condition, parentScope);
+            var condition = MapExpressionNode(ifNode.Condition, false, parentScope);
             var trueBranch = MapBlockNode(ifNode.TrueBranch, parentScope);
             var falseBranch = ifNode.FalseBranch != null ? MapBlockNode(ifNode.FalseBranch, parentScope) : null;
             return new StatementNode.IfNode(ifNode.Position, condition, trueBranch, falseBranch);
           }
         case StatementNode.WhileNode whileNode: {
-            var condition = MapExpressionNode(whileNode.Condition, parentScope);
+            var condition = MapExpressionNode(whileNode.Condition, false, parentScope);
             var body = MapBlockNode(whileNode.Body, parentScope);
             return new StatementNode.WhileNode(whileNode.Position, condition, body);
           }
@@ -136,47 +132,47 @@ namespace Decaf.MiddleEnd {
         case StatementNode.BreakNode breakNode:
           return breakNode; // Nothing to map
         case StatementNode.ReturnNode returnNode: {
-            var value = returnNode.Value != null ? MapExpressionNode(returnNode.Value, parentScope) : null;
+            var value = returnNode.Value != null ? MapExpressionNode(returnNode.Value, false, parentScope) : null;
             return new StatementNode.ReturnNode(returnNode.Position, value);
           }
         default:
           throw new Exception($"Unknown statement node type: {node.Kind}");
       }
     }
-    private static ExpressionNode MapExpressionNode(ExpressionNode expression, Scope<bool> parentScope) {
+    private static ExpressionNode MapExpressionNode(ExpressionNode expression, bool mutating, Scope<bool> parentScope) {
       switch (expression) {
         case ExpressionNode.CallNode callNode: {
             // NOTE: Because we don't want to scope primitive calls we just avoid mapping them
-            var path = callNode.IsPrimitive ? callNode.Path : MapLocationNode(callNode.Path, parentScope);
-            var args = callNode.Arguments.Select(arg => MapExpressionNode(arg, parentScope)).ToArray();
+            var path = callNode.IsPrimitive ? callNode.Path : MapLocationNode(callNode.Path, mutating, parentScope);
+            var args = callNode.Arguments.Select(arg => MapExpressionNode(arg, false, parentScope)).ToArray();
             return new ExpressionNode.CallNode(callNode.Position, callNode.IsPrimitive, path, args);
           }
         case ExpressionNode.BinopNode binopExprNode:
           return new ExpressionNode.BinopNode(
             binopExprNode.Position,
-            MapExpressionNode(binopExprNode.Lhs, parentScope),
+            MapExpressionNode(binopExprNode.Lhs, false, parentScope),
             binopExprNode.Operator,
-            MapExpressionNode(binopExprNode.Rhs, parentScope)
+            MapExpressionNode(binopExprNode.Rhs, false, parentScope)
           );
         case ExpressionNode.PrefixNode prefixExprNode:
           return new ExpressionNode.PrefixNode(
             prefixExprNode.Position,
             prefixExprNode.Operator,
-            MapExpressionNode(prefixExprNode.Operand, parentScope)
+            MapExpressionNode(prefixExprNode.Operand, false, parentScope)
           );
         case ExpressionNode.NewClassNode newClassExprNode:
           return new ExpressionNode.NewClassNode(
             newClassExprNode.Position,
-            MapLocationNode(newClassExprNode.Path, parentScope)
+            MapLocationNode(newClassExprNode.Path, false, parentScope)
           );
         case ExpressionNode.NewArrayNode newArrayExprNode:
           return new ExpressionNode.NewArrayNode(
             newArrayExprNode.Position,
             MapTypeNode(newArrayExprNode.Type, parentScope),
-            MapExpressionNode(newArrayExprNode.SizeExpr, parentScope)
+            MapExpressionNode(newArrayExprNode.SizeExpr, false, parentScope)
           );
         case ExpressionNode.LocationNode locationNode:
-          return MapLocationNode(locationNode, parentScope);
+          return MapLocationNode(locationNode, mutating, parentScope);
         case ExpressionNode.ThisNode thisNode:
           return thisNode; // No mapping is needed for `this` as it contains no children
         case ExpressionNode.IdentifierNode identifierNode:
@@ -184,7 +180,11 @@ namespace Decaf.MiddleEnd {
           if (!parentScope.HasDeclaration(identifierNode.Name)) {
             throw new DeclarationNotDefinedException(identifierNode.Position, identifierNode.Name);
           }
-          parentScope.SetDeclaration(identifierNode.Position, identifierNode.Name, true); // Mark the variable as used
+          if (parentScope.GetDeclaration(identifierNode.Position, identifierNode.Name) == false && mutating) {
+            throw new DeclarationNotMutableException(identifierNode.Position, identifierNode.Name);
+          }
+          Console.WriteLine(parentScope.GetDeclaration(identifierNode.Position, identifierNode.Name));
+          Console.WriteLine(mutating);
           return identifierNode; // No further mapping is needed for identifiers as they contain no children
         case ExpressionNode.LiteralNode literalNode:
           return literalNode; // No mapping is needed for literals as they contain no scope-relevant children
@@ -192,10 +192,14 @@ namespace Decaf.MiddleEnd {
           throw new Exception($"Unknown expression node type: {expression.Kind}");
       }
     }
-    private static ExpressionNode.LocationNode MapLocationNode(ExpressionNode.LocationNode node, Scope<bool> parentScope) {
-      var root = MapExpressionNode(node.Root, parentScope);
+    private static ExpressionNode.LocationNode MapLocationNode(
+      ExpressionNode.LocationNode node,
+      bool mutating,
+      Scope<bool> parentScope
+    ) {
+      var root = MapExpressionNode(node.Root, mutating && node.IndexExpr == null, parentScope);
       // If the location is an array access, map the index expression
-      var indexExpr = node.IndexExpr != null ? MapExpressionNode(node.IndexExpr, parentScope) : null;
+      var indexExpr = node.IndexExpr != null ? MapExpressionNode(node.IndexExpr, false, parentScope) : null;
       // Return the new mapped location node
       return new ExpressionNode.LocationNode(node.Position, root, node.Path, indexExpr);
     }

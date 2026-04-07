@@ -1,8 +1,8 @@
 ﻿Scope:
-  a: False
-  b: False
-  c: False
-  d: False
+  a: True
+  b: True
+  c: True
+  d: True
   Main: False
   Scope:
     Program: False

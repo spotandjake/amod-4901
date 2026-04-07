@@ -1,10 +1,10 @@
 ﻿Scope:
-  a: False
+  a: True
   Scope:
-    a: False
+    a: True
     Scope:
       Scope:
-        a: False
+        a: True
         Main: False
         Scope:
           Program: False
