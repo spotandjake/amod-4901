@@ -171,11 +171,26 @@ namespace Decaf.MiddleEnd {
             MapTypeNode(newArrayExprNode.Type, parentScope),
             MapExpressionNode(newArrayExprNode.SizeExpr, false, parentScope)
           );
-        case ExpressionNode.LocationNode locationNode:
-          return MapLocationNode(locationNode, mutating, parentScope);
-        case ExpressionNode.ThisNode thisNode:
-          return thisNode; // No mapping is needed for `this` as it contains no children
-        case ExpressionNode.IdentifierNode identifierNode:
+        case ExpressionNode.LocationAccessNode locationNode:
+          return new ExpressionNode.LocationAccessNode(
+            locationNode.Position,
+            MapLocationNode(locationNode.Content, mutating, parentScope)
+          );
+        case ExpressionNode.LiteralNode literalNode:
+          return literalNode; // No mapping is needed for literals as they contain no scope-relevant children
+        default:
+          throw new Exception($"Unknown expression node type: {expression.Kind}");
+      }
+    }
+    private static LocationNode MapLocationNode(
+      LocationNode node,
+      bool mutating,
+      Scope<bool> parentScope
+    ) {
+      switch (node) {
+        case LocationNode.ThisNode thisNode:
+          return thisNode; // No mapping needed for `this` as it contains no children
+        case LocationNode.IdentifierAccessNode identifierNode:
           // Check if the identifier exists in the scope
           if (!parentScope.HasDeclaration(identifierNode.Name)) {
             throw new DeclarationNotDefinedException(identifierNode.Position, identifierNode.Name);
@@ -183,25 +198,21 @@ namespace Decaf.MiddleEnd {
           if (parentScope.GetDeclaration(identifierNode.Position, identifierNode.Name) == false && mutating) {
             throw new DeclarationNotMutableException(identifierNode.Position, identifierNode.Name);
           }
-          Console.WriteLine(parentScope.GetDeclaration(identifierNode.Position, identifierNode.Name));
-          Console.WriteLine(mutating);
           return identifierNode; // No further mapping is needed for identifiers as they contain no children
-        case ExpressionNode.LiteralNode literalNode:
-          return literalNode; // No mapping is needed for literals as they contain no scope-relevant children
-        default:
-          throw new Exception($"Unknown expression node type: {expression.Kind}");
+        case LocationNode.MemberAccessNode fieldAccessNode:
+          return new LocationNode.MemberAccessNode(
+            fieldAccessNode.Position,
+            MapLocationNode(fieldAccessNode.Root, false, parentScope),
+            fieldAccessNode.Member
+          );
+        case LocationNode.ArrayAccessNode arrayAccessNode:
+          return new LocationNode.ArrayAccessNode(
+            arrayAccessNode.Position,
+            MapLocationNode(arrayAccessNode.Root, false, parentScope),
+            MapExpressionNode(arrayAccessNode.IndexExpr, false, parentScope)
+          );
+        default: throw new Exception($"Unknown location node type: {node.Kind}");
       }
-    }
-    private static ExpressionNode.LocationNode MapLocationNode(
-      ExpressionNode.LocationNode node,
-      bool mutating,
-      Scope<bool> parentScope
-    ) {
-      var root = MapExpressionNode(node.Root, mutating && node.IndexExpr == null, parentScope);
-      // If the location is an array access, map the index expression
-      var indexExpr = node.IndexExpr != null ? MapExpressionNode(node.IndexExpr, false, parentScope) : null;
-      // Return the new mapped location node
-      return new ExpressionNode.LocationNode(node.Position, root, node.Path, indexExpr);
     }
   }
 }

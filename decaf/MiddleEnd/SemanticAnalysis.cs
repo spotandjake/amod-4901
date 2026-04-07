@@ -62,7 +62,7 @@ namespace Decaf.MiddleEnd {
       switch (statement) {
         case StatementNode.AssignmentNode assign:
           // Check the path
-          CheckExpressionNode(assign.Location, parentContext);
+          CheckLocationNode(assign.Location, parentContext);
           // Check The Expression
           CheckExpressionNode(assign.Expression, parentContext);
           break;
@@ -115,7 +115,7 @@ namespace Decaf.MiddleEnd {
             // Update the context - Set IsPrimitive
             var context = new ParentContext(call.IsPrimitive, parentContext.InLoop);
             // Check the path
-            CheckExpressionNode(call.Path, context);
+            CheckLocationNode(call.Path, context);
             // Check each argument
             foreach (var arg in call.Arguments) {
               CheckExpressionNode(arg, context);
@@ -144,7 +144,7 @@ namespace Decaf.MiddleEnd {
           break;
         case ExpressionNode.NewClassNode _classInit:
           // Check the path
-          CheckExpressionNode(_classInit.Path, parentContext);
+          CheckLocationNode(_classInit.Path, parentContext);
           break;
         case ExpressionNode.NewArrayNode arrayInit:
           // Check size expression
@@ -154,19 +154,8 @@ namespace Decaf.MiddleEnd {
             arrayInit.SizeExpr is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: < 0 } }
           ) throw new SemanticException(arrayInit.Position, $"Array size must be non-negative");
           break;
-        case ExpressionNode.LocationNode location:
-          // Check the root
-          CheckExpressionNode(location.Root, parentContext);
-          // Check the expression
-          if (location.IndexExpr != null) CheckExpressionNode(location.IndexExpr, parentContext);
-          // Array indices cannot be negative
-          if (
-            location.IndexExpr is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: < 0 } }
-          ) throw new SemanticException(location.Position, $"Array index must be non-negative");
-          break;
-        case ExpressionNode.ThisNode:
-        case ExpressionNode.IdentifierNode:
-          // Nothing to check here
+        case ExpressionNode.LocationAccessNode locationNode:
+          CheckLocationNode(locationNode.Content, parentContext);
           break;
         case ExpressionNode.LiteralNode literalNode:
           switch (literalNode.Content) {
@@ -179,6 +168,30 @@ namespace Decaf.MiddleEnd {
           break;
         default:
           throw new Exception($"Unknown expression node of type {expression.GetType()}");
+      }
+    }
+    private static void CheckLocationNode(LocationNode location, ParentContext parentContext) {
+      switch (location) {
+        case LocationNode.ThisNode _:
+        case LocationNode.IdentifierAccessNode _:
+          // Nothing to check here
+          break;
+        case LocationNode.MemberAccessNode fieldAccessNode:
+          CheckLocationNode(fieldAccessNode.Root, parentContext);
+          break;
+        case LocationNode.ArrayAccessNode arrayAccessNode:
+          // Check the expression
+          if (arrayAccessNode.IndexExpr != null) {
+            CheckExpressionNode(arrayAccessNode.IndexExpr, parentContext);
+          }
+          // Array indices cannot be negative
+          if (
+            arrayAccessNode.IndexExpr is ExpressionNode.LiteralNode { Content: ParseTree.LiteralNodes.IntegerNode { Value: < 0 } }
+          ) {
+            throw new SemanticException(location.Position, $"Array index must be non-negative");
+          }
+          break;
+        default: throw new Exception($"Unknown location node type: {location.Kind}");
       }
     }
   }

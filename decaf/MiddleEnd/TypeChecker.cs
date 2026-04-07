@@ -234,7 +234,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
       return new DeclarationNode.ClassNode(
         node.Position,
         node.Name,
-        node.SuperClassName,
         fields,
         methods,
         context.CurrentScope,
@@ -320,10 +319,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
       TypeCheckContext parentContext
     ) {
       // Map the left and right hand sides
-      var location = TypeExpressionLocationNode(node.Location, parentContext);
+      var location = TypeLocationNode(node.Location, parentContext);
       var expression = TypeExpressionNode(node.Expression, parentContext);
       // Ensure lhs == rhs
-      TypeCheckerEngine.CheckType(location.ExpressionType, expression.ExpressionType, parentContext.CurrentScope);
+      TypeCheckerEngine.CheckType(location.LocationType, expression.ExpressionType, parentContext.CurrentScope);
       // Map the node itself
       return new StatementNode.AssignmentNode(node.Position, location, expression);
     }
@@ -430,9 +429,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.ExpressionNode.PrefixNode prefix => TypeExpressionPrefixNode(prefix, parentContext),
         ParseTree.ExpressionNode.NewClassNode newClass => TypeExpressionNewClassNode(newClass, parentContext),
         ParseTree.ExpressionNode.NewArrayNode newArray => TypeExpressionNewArrayNode(newArray, parentContext),
-        ParseTree.ExpressionNode.LocationNode location => TypeExpressionLocationNode(location, parentContext),
-        ParseTree.ExpressionNode.ThisNode thisNode => TypeExpressionThisNode(thisNode, parentContext),
-        ParseTree.ExpressionNode.IdentifierNode identifier => TypeExpressionIdentifierNode(identifier, parentContext),
+        ParseTree.ExpressionNode.LocationAccessNode location => TypeExpressionLocationAcccessNode(location, parentContext),
         ParseTree.ExpressionNode.LiteralNode literal => TypeExpressionLiteralNode(literal, parentContext),
         _ => throw new Exception($"Unknown expression node type: {node.Kind}"),
       };
@@ -442,20 +439,20 @@ namespace Decaf.MiddleEnd.TypeChecker {
       TypeCheckContext parentContext
     ) {
       // Map the path and find the signature
-      ExpressionNode.LocationNode path = node.IsPrimitive switch {
+      LocationNode path = node.IsPrimitive switch {
         true => MapPrimitivePath(node.Path, parentContext),
-        false => TypeExpressionLocationNode(node.Path, parentContext)
+        false => TypeLocationNode(node.Path, parentContext)
       };
       // Map the arguments
       var args = node.Arguments.Select(arg => TypeExpressionNode(arg, parentContext)).ToArray();
       // Validate the path is actually a method
-      if (path.ExpressionType is not Signature.MethodSignature methodSignature) {
+      if (path.LocationType is not Signature.MethodSignature methodSignature) {
         throw new CallOnNonMethod(node.Position);
       }
       // Create a signature for the call node based on the values
       var signature = new Signature.MethodSignature(
         node.Position,
-        ((Signature.MethodSignature)path.ExpressionType).ReturnType,
+        ((Signature.MethodSignature)path.LocationType).ReturnType,
         args.Select(arg => arg.ExpressionType).ToArray()
       );
       // Check the signature matches the expected signature
@@ -463,27 +460,21 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Map the node itself
       return new ExpressionNode.CallNode(node.Position, node.IsPrimitive, path, args, signature.ReturnType);
     }
-    private static ExpressionNode.LocationNode MapPrimitivePath(
-      ParseTree.ExpressionNode.LocationNode node,
+    private static LocationNode MapPrimitivePath(
+      ParseTree.LocationNode node,
       TypeCheckContext _
     ) {
-      // Ensure that the root is just a simple identifier
-      if (node.Root is not ParseTree.ExpressionNode.IdentifierNode) {
+      switch (node) {
+        case ParseTree.LocationNode.IdentifierAccessNode identifierAccess:
+          // Get the raw string value
+          var primitiveName = identifierAccess.Name;
+          // Get the signature of the primitive callout based on the name, this will throw if the primitive name is invalid
+          var signature = PrimitiveTypes.GetPrimitiveCallSignature(primitiveName, node.Position);
+          // Map the node itself, we know the signature is correct based on the primitive name so
+          return new LocationNode.IdentifierAccessNode(node.Position, primitiveName, signature);
         // NOTE: This case can never be hit due to parsing but its a sanity check for the future
-        throw new Exception("Primitive callouts must be simple identifiers");
+        default: throw new Exception("Primitive callouts must be simple identifiers");
       }
-      // Get the raw string value
-      var primitiveName = ((ParseTree.ExpressionNode.IdentifierNode)node.Root).Name;
-      // Get the signature of the primitive callout based on the name, this will throw if the primitive name is invalid
-      var signature = PrimitiveTypes.GetPrimitiveCallSignature(primitiveName, node.Position);
-      // Map the node itself, we know the signature is correct based on the primitive name so
-      return new ExpressionNode.LocationNode(
-        node.Position,
-        new ExpressionNode.IdentifierNode(node.Position, primitiveName, signature),
-        null,
-        null,
-        signature
-      );
     }
     private static ExpressionNode.BinopNode TypeExpressionBinopNode(
       ParseTree.ExpressionNode.BinopNode node,
@@ -572,8 +563,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
       TypeCheckContext parentContext
     ) {
       // Map the path
-      var path = TypeExpressionLocationNode(node.Path, parentContext);
-      var signature = path.ExpressionType;
+      var path = TypeLocationNode(node.Path, parentContext);
+      var signature = path.LocationType;
       // Ensure the path is actually a class type
       if (signature is not Signature.ClassSignature) {
         throw new InitializationOfNonClass(node.Position);
@@ -603,68 +594,14 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Map the node itself
       return new ExpressionNode.NewArrayNode(node.Position, sizeExpr, signature);
     }
-    private static ExpressionNode.LocationNode TypeExpressionLocationNode(
-      ParseTree.ExpressionNode.LocationNode node,
+    private static ExpressionNode.LocationAccessNode TypeExpressionLocationAcccessNode(
+      ParseTree.ExpressionNode.LocationAccessNode node,
       TypeCheckContext parentContext
     ) {
-      // Map the root of the location expression
-      var root = TypeExpressionNode(node.Root, parentContext);
-      var signature = root.ExpressionType;
-      // If we are mapping a path access then we need to validate the path
-      if (node.Path != null) {
-        // Ensure the root expression is a class type
-        if (signature is not Signature.ClassSignature classSignature) {
-          throw new MemberAccessOnNonClass(node.Position);
-        }
-        // Ensure the class has the member being accessed
-        if (!classSignature.Members.TryGetValue(node.Path, out Signature value)) {
-          throw new MemberAccessUnknown(node.Position, node.Path);
-        }
-        // Get the signature of the member being accessed
-        signature = value;
-      }
-      // If we are mapping an array access then we need to validate the index and return the inner type of the array
-      ExpressionNode indexExpr = null;
-      if (node.IndexExpr != null) {
-        // Ensure the root expression is an array type
-        if (signature is not Signature.ArraySignature arraySignature) {
-          throw new ArrayAccessOnNonArray(node.IndexExpr.Position);
-        }
-        // Map the index expression
-        indexExpr = TypeExpressionNode(node.IndexExpr, parentContext);
-        // Ensure the index expression is an integer
-        TypeCheckerEngine.CheckType(
-          TypeCheckerEngine.BuildSimpleSignature(indexExpr.Position, PrimitiveType.Int),
-          indexExpr.ExpressionType,
-          parentContext.CurrentScope
-        );
-        // Update the signature to be the inner type of the array
-        signature = arraySignature.Typ;
-      }
+      // Map the location
+      var location = TypeLocationNode(node.Content, parentContext);
       // Map the node itself
-      return new ExpressionNode.LocationNode(node.Position, root, node.Path, indexExpr, signature);
-    }
-    private static ExpressionNode.ThisNode TypeExpressionThisNode(
-      ParseTree.ExpressionNode.ThisNode node,
-      TypeCheckContext parentContext
-    ) {
-      // Get the current class context and return its partial signature
-      var parentClassSignature = parentContext.CurrentClass;
-      // NOTE: This could never actually happen due to parsing but it's a future check if we ever allowed top level statements
-      if (parentClassSignature == null) {
-        throw new ThisAccessOutsideOfClass(node.Position);
-      }
-      // NOTE: This only works because we require declarations to be defined before use, otherwise we would need to delay this
-      return new ExpressionNode.ThisNode(node.Position, parentClassSignature);
-    }
-    private static ExpressionNode.IdentifierNode TypeExpressionIdentifierNode(
-      ParseTree.ExpressionNode.IdentifierNode node,
-      TypeCheckContext parentContext
-    ) {
-      // Find the signature of the identifier in the current scope
-      var signature = parentContext.CurrentScope.GetDeclaration(node.Position, node.Name);
-      // Map the node itself
-      return new ExpressionNode.IdentifierNode(node.Position, node.Name, signature);
+      return new ExpressionNode.LocationAccessNode(node.Position, location, location.LocationType);
     }
     private static ExpressionNode.LiteralNode TypeExpressionLiteralNode(
       ParseTree.ExpressionNode.LiteralNode node,
@@ -707,6 +644,58 @@ namespace Decaf.MiddleEnd.TypeChecker {
     }
     private static TypedTree.LiteralNodes.NullNode TypeLiteralNullNode(ParseTree.LiteralNodes.NullNode node) {
       return new TypedTree.LiteralNodes.NullNode(node.Position);
+    }
+    // Locations
+    private static LocationNode TypeLocationNode(ParseTree.LocationNode node, TypeCheckContext parentContext) {
+      switch (node) {
+        case ParseTree.LocationNode.ThisNode: {
+            // Get the current class context and return its partial signature
+            var parentClassSignature = parentContext.CurrentClass;
+            // NOTE: This could never actually happen due to parsing but it's a future check if we ever allowed top level statements
+            if (parentClassSignature == null) throw new ThisAccessOutsideOfClass(node.Position);
+            // NOTE: This only works because we require declarations to be defined before use, otherwise we would need to delay t
+            return new LocationNode.ThisNode(node.Position, parentClassSignature);
+          }
+        case ParseTree.LocationNode.IdentifierAccessNode identifierAccess: {
+            // Find the signature of the identifier in the current scope
+            var signature = parentContext.CurrentScope.GetDeclaration(node.Position, identifierAccess.Name);
+            // Map the node itself
+            return new LocationNode.IdentifierAccessNode(node.Position, identifierAccess.Name, signature);
+          }
+        case ParseTree.LocationNode.MemberAccessNode pathAccess: {
+            // Map the root of the member access
+            var root = TypeLocationNode(pathAccess.Root, parentContext);
+            // Ensure the root expression is a class type
+            if (root.LocationType is not Signature.ClassSignature classSignature) {
+              throw new MemberAccessOnNonClass(node.Position);
+            }
+            // Ensure the class has the member being accessed
+            if (!classSignature.Members.TryGetValue(pathAccess.Member, out Signature signature)) {
+              throw new MemberAccessUnknown(node.Position, pathAccess.Member);
+            }
+            // Map the node itself
+            return new LocationNode.MemberAccessNode(node.Position, root, pathAccess.Member, signature);
+          }
+        case ParseTree.LocationNode.ArrayAccessNode arrayAccess: {
+            // Map the root of the array access
+            var root = TypeLocationNode(arrayAccess.Root, parentContext);
+            // Ensure the root expression is an array type
+            if (root.LocationType is not Signature.ArraySignature arraySignature) {
+              throw new ArrayAccessOnNonArray(arrayAccess.IndexExpr.Position);
+            }
+            // Map the index expression
+            var indexExpr = TypeExpressionNode(arrayAccess.IndexExpr, parentContext);
+            // Ensure the index expression is an integer
+            TypeCheckerEngine.CheckType(
+              TypeCheckerEngine.BuildSimpleSignature(indexExpr.Position, PrimitiveType.Int),
+              indexExpr.ExpressionType,
+              parentContext.CurrentScope
+            );
+            // Produce the typed array access node with the inner type of the array as its signature
+            return new LocationNode.ArrayAccessNode(node.Position, root, indexExpr, arraySignature.Typ);
+          }
+        default: throw new Exception($"Unknown location node type: {node.Kind}");
+      }
     }
   }
 }

@@ -41,9 +41,9 @@ Statements are going to be lowered within a function to wasm instructions.
 ### Assignments
 Assignments are pretty simple we need to compile the left hand side which is the location accessor to become a `global.get` if we are working on an array we are going to need to set a memory address.
 
-We are then either going to use ` WasmI32.store` for arrays or `local.set` for local variables or `local.set` for global variables `global.set`
+We are then either going to use `WasmI32.store` for arrays or `local.set` for local variables or `local.set` for global variables `global.set`
 
-### Expression Statetements
+### Expression Statements
 These compile pretty simply as we compile the expression like normal and just `(drop)` the result if there is one.
 
 ### If Statements
@@ -70,13 +70,13 @@ This is going to compile to a wasm call pretty cleanly
 This is going to compile pretty cleanly into a wasm instruction we are going to need to use the signature and operator to determine what instruction to use from a lookup table.
 
 ### Prefix Node
-This is going to be done just like binops but with different instructions. I think for not we have a few option for compiling the simplest one is probably bitwise. It's also ussually the fastest
+This is going to be done just like binops but with different instructions. I think for not we have a few option for compiling the simplest one is probably bitwise. It's also usually the fastest.
 
 ### New Class Node
 This isn't going to be compiled if it was we would store some sort of record in linear memory that points to everything.
 
 ### New Array Node
-This is going to probably use a very primtive bump allocator to compile some instructions that write a simple data structure to memory probably something like ```<arrayTypeID>, <size>, ...<values>````
+This is going to probably use a very primitive bump allocator to compile some instructions that write a simple data structure to memory probably something like `<arrayTypeID>, <size>, ...<values>`
 
 ### LocationNode
 I think we still need todo some thoughts here but it's essentially going to be come a local.get or local.set depending on the use, this is probably going to be compiled in a somewhat context aware manner.
@@ -97,14 +97,10 @@ This is going to become a `(i32.const <value>)`
 This is also going to become a `(i32.const <value>)` we will make no distinction between a character and an integer at runtime.
 
 ### String
-This is only going to be compiledin one place the values will go into data sections and we will copy from the data section into memory passing around the pointer.
+This is only going to be compiled one place the values will go into data sections and we will copy from the data section into memory passing around the pointer.
 
 ### BooleanNode
 This is going to compile to a `(i32.const <value>)` with `1` for `true` and `0` for `false`.
 
 ### NullNode
-This is going to compile to a `(i32.const 0)` most likely though I need to consider this a bit more. 
-
-
-#### Other Notes
-* We can't modify parameters so we are going to need to not allow assignments on parameters this can be done in the typechecker.
+This is going to compile to a `(i32.const 0)` most likely though I need to consider this a bit more.
