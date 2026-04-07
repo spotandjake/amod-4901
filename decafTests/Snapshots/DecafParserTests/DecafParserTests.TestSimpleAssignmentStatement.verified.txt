@@ -34,11 +34,8 @@
               {
                 Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationExpression,
-                  Root: {
-                    Kind: IdentifierExpression,
-                    Name: x
-                  }
+                  Kind: IdentifierLocation,
+                  Name: x
                 },
                 Expression: {
                   Kind: LiteralExpression,

@@ -79,9 +79,9 @@
                   Lhs: {
                     Kind: BinopExpression,
                     Lhs: {
-                      Kind: LocationExpression,
-                      Root: {
-                        Kind: IdentifierExpression,
+                      Kind: LocationAccessExpression,
+                      Content: {
+                        Kind: IdentifierLocation,
                         Name: a
                       }
                     },
@@ -96,9 +96,9 @@
                   },
                   Operator: &&,
                   Rhs: {
-                    Kind: LocationExpression,
-                    Root: {
-                      Kind: IdentifierExpression,
+                    Kind: LocationAccessExpression,
+                    Content: {
+                      Kind: IdentifierLocation,
                       Name: b
                     }
                   }
@@ -109,18 +109,15 @@
                     {
                       Kind: AssignmentStatement,
                       Location: {
-                        Kind: LocationExpression,
-                        Root: {
-                          Kind: IdentifierExpression,
-                          Name: x
-                        }
+                        Kind: IdentifierLocation,
+                        Name: x
                       },
                       Expression: {
                         Kind: BinopExpression,
                         Lhs: {
-                          Kind: LocationExpression,
-                          Root: {
-                            Kind: IdentifierExpression,
+                          Kind: LocationAccessExpression,
+                          Content: {
+                            Kind: IdentifierLocation,
                             Name: x
                           }
                         },
@@ -142,18 +139,15 @@
                     {
                       Kind: AssignmentStatement,
                       Location: {
-                        Kind: LocationExpression,
-                        Root: {
-                          Kind: IdentifierExpression,
-                          Name: x
-                        }
+                        Kind: IdentifierLocation,
+                        Name: x
                       },
                       Expression: {
                         Kind: BinopExpression,
                         Lhs: {
-                          Kind: LocationExpression,
-                          Root: {
-                            Kind: IdentifierExpression,
+                          Kind: LocationAccessExpression,
+                          Content: {
+                            Kind: IdentifierLocation,
                             Name: x
                           }
                         },
@@ -186,9 +180,9 @@
               {
                 Kind: ReturnStatement,
                 Value: {
-                  Kind: LocationExpression,
-                  Root: {
-                    Kind: IdentifierExpression,
+                  Kind: LocationAccessExpression,
+                  Content: {
+                    Kind: IdentifierLocation,
                     Name: x
                   }
                 }

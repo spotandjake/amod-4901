@@ -18,16 +18,13 @@
               {
                 Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationExpression,
-                  Root: {
-                    Kind: IdentifierExpression,
-                    Name: x
-                  }
+                  Kind: IdentifierLocation,
+                  Name: x
                 },
                 Expression: {
-                  Kind: LocationExpression,
-                  Root: {
-                    Kind: IdentifierExpression,
+                  Kind: LocationAccessExpression,
+                  Content: {
+                    Kind: IdentifierLocation,
                     Name: y
                   }
                 }

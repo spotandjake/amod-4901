@@ -257,7 +257,7 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestMutation1() {
-    Assert.Throws<DeclarationNotMutableException>(() => {
+    try {
       SemanticAnalysis(@"
         class Program {
           int x;
@@ -266,7 +266,10 @@ public class DecafSemanticTests : VerifyBase {
           }
         }
       ");
-    });
+    }
+    catch (DeclarationNotMutableException) {
+      Assert.Fail("Semantic analysis threw an exception on a valid program.");
+    }
   }
   [TestMethod]
   public void TestMutation2() {

@@ -21,12 +21,12 @@
                   Kind: CallExpression,
                   IsPrimitive: false,
                   Path: {
-                    Kind: LocationExpression,
+                    Kind: MemberLocation,
                     Root: {
-                      Kind: IdentifierExpression,
+                      Kind: IdentifierLocation,
                       Name: Base
                     },
-                    Path: foo
+                    Member: foo
                   }
                 }
               }

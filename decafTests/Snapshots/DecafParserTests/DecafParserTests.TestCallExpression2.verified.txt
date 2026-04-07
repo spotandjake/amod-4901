@@ -18,21 +18,15 @@
               {
                 Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationExpression,
-                  Root: {
-                    Kind: IdentifierExpression,
-                    Name: x
-                  }
+                  Kind: IdentifierLocation,
+                  Name: x
                 },
                 Expression: {
                   Kind: CallExpression,
                   IsPrimitive: false,
                   Path: {
-                    Kind: LocationExpression,
-                    Root: {
-                      Kind: IdentifierExpression,
-                      Name: foo
-                    }
+                    Kind: IdentifierLocation,
+                    Name: foo
                   },
                   Arguments: [
                     {
