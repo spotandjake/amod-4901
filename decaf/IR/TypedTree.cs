@@ -215,6 +215,8 @@ namespace Decaf.IR.TypedTree {
   [JsonDerivedType(typeof(CallNode), "CallExpression")]
   [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
+  [JsonDerivedType(typeof(NewClassNode), "NewClassExpression")]
+  [JsonDerivedType(typeof(NewArrayNode), "NewArrayExpression")]
   [JsonDerivedType(typeof(LocationAccessNode), "LocationAccessExpression")]
   [JsonDerivedType(typeof(LiteralNode), "LiteralExpression")]
   public abstract record ExpressionNode : Node {

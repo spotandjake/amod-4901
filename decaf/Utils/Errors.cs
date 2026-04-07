@@ -29,7 +29,7 @@ namespace Decaf.Utils.Errors {
     public class DeclarationNotDefinedException(
       Position position,
       string message
-    ) : Exception(ErrorConstructor.CreateError(position, message)) {
+    ) : Exception(ErrorConstructor.CreateError(position, $"Declaration of `{message}` not found during scope lookup.")) {
       public Position Position { get; } = position;
     }
     /// <summary>
@@ -131,5 +131,65 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, "`return` statement must be within a method.")) {
     }
     // Code Generation Errors
+  }
+
+
+  public static class ErrorHandler {
+    public static void HandleError(bool debug, Exception exn) {
+      switch (exn) {
+        // Lexer
+        case System.Data.SyntaxErrorException e:
+          Console.WriteLine(e.Message);
+          break;
+        // Parser
+        case Antlr4.Runtime.Misc.ParseCanceledException e:
+          Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
+          break;
+        // Scoping
+        case ScopeErrors.DuplicateDeclarationException e:
+          Console.WriteLine(e.Message);
+          break;
+        case ScopeErrors.DeclarationNotDefinedException e:
+          Console.WriteLine(e.Message);
+          break;
+        case ScopeErrors.DeclarationNotMutableException e:
+          Console.WriteLine(e.Message);
+          break;
+        // Semantic Analysis
+        case SemanticErrors.SemanticException e:
+          Console.WriteLine(e.Message);
+          break;
+        // Type Checking
+        case TypeCheckingErrors.LhsNotRhs e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.CallOnNonMethod e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.MemberAccessOnNonClass e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.MemberAccessUnknown e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.InitializationOfNonClass e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.ArrayAccessOnNonArray e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.ThisAccessOutsideOfClass e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.ReturnUseOutsideOfClass e:
+          Console.WriteLine(e.Message);
+          break;
+        // Unknown
+        default:
+          if (debug) throw exn;
+          else Console.WriteLine($"Compilation failed: {exn.Message}");
+          break;
+      }
+    }
   }
 }

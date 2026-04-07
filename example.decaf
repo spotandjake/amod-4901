@@ -1,5 +1,6 @@
 class Program {
   void Main() {
-    Second.main();
+    int x;
+    x = 1 + 2 + 3;
   }
 }
