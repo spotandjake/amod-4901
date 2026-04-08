@@ -18,12 +18,12 @@
               {
                 Kind: AssignmentStatement,
                 Location: {
-                  Kind: LocationExpression,
+                  Kind: MemberLocation,
                   Root: {
-                    Kind: IdentifierExpression,
+                    Kind: IdentifierLocation,
                     Name: Base
                   },
-                  Path: x
+                  Member: x
                 },
                 Expression: {
                   Kind: LiteralExpression,

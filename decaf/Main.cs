@@ -7,10 +7,14 @@ using System.Data;
 
 using ParseTree = Decaf.IR.ParseTree;
 using TypedTree = Decaf.IR.TypedTree;
+using AnfTree = Decaf.IR.AnfTree;
 using Decaf.Utils;
 using Decaf.Frontend;
 using Decaf.MiddleEnd;
 using Decaf.MiddleEnd.TypeChecker;
+using Decaf.Backend;
+using Antlr4.Runtime.Misc;
+using Decaf.Utils.Errors;
 
 namespace Compiler {
   public class Compiler {
@@ -42,6 +46,9 @@ namespace Compiler {
     public static TypedTree.ProgramNode TypeChecking(ParseTree.ProgramNode program) {
       return TypeChecker.TypeProgramNode(program);
     }
+    public static AnfTree.ProgramNode AnfMapping(TypedTree.ProgramNode program) {
+      return AnfMapper.FromProgramNode(program);
+    }
 #nullable enable
     public static void CompileString(string source, string? inputFileName) {
       // Lexing
@@ -62,8 +69,10 @@ namespace Compiler {
       var scopedProgram = SemanticAnalysis(program);
       // TypeChecking
       var TypeCheckingProgram = TypeChecking(scopedProgram);
+      // Anf Conversion
+      var anfProgram = AnfMapping(TypeCheckingProgram);
       // TODO: Code Generation
-      string json = JsonSerializer.Serialize(TypeCheckingProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+      string json = JsonSerializer.Serialize(anfProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
       Console.WriteLine(json);
     }
   }
@@ -102,18 +111,8 @@ namespace CLI {
         // TODO: Write output to opts.output if specified
         Compiler.Compiler.CompileString(source, relPath);
       }
-      // TODO: Improve error handling unify error handler
-      catch (SyntaxErrorException e) {
-        Console.WriteLine(e.Message);
-      }
-      catch (Antlr4.Runtime.Misc.ParseCanceledException e) {
-        Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
-      }
       catch (Exception e) {
-        if (opts.Debug) throw;
-        else {
-          Console.WriteLine($"Compilation failed: {e.Message}");
-        }
+        ErrorHandler.HandleError(opts.Debug, e);
       }
     }
     static void HandleCommandLineErrors(IEnumerable<Error> errs) {

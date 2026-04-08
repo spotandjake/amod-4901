@@ -36,16 +36,19 @@ namespace Decaf.IR.ParseTree {
     PrefixExpression,
     NewClassExpression,
     NewArrayExpression,
-    LocationExpression,
-    ThisExpression,
-    IdentifierExpression,
+    LocationAccessExpression,
     LiteralExpression,
     // Literals
     IntegerLiteral,
     CharacterLiteral,
     StringLiteral,
     BooleanLiteral,
-    NullLiteral
+    NullLiteral,
+    // Locations
+    ThisLocation,
+    IdentifierLocation,
+    MemberLocation,
+    ArrayLocation
   }
   /// <summary>
   /// A base parse tree node that all other parse tree nodes inherit from.
@@ -183,11 +186,11 @@ namespace Decaf.IR.ParseTree {
     /// <summary>An assignment statement.</summary>
     public record AssignmentNode(
       Position Position,
-      ExpressionNode.LocationNode Location,
+      LocationNode Location,
       ExpressionNode Expression
     ) : StatementNode(Position) {
       public override NodeKind Kind => NodeKind.AssignmentStatement;
-      public ExpressionNode.LocationNode Location { get; } = Location;
+      public LocationNode Location { get; } = Location;
       public ExpressionNode Expression { get; } = Expression;
     };
     /// <summary>An expression statement.</summary>
@@ -233,9 +236,7 @@ namespace Decaf.IR.ParseTree {
   [JsonDerivedType(typeof(CallNode), "CallExpression")]
   [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
-  [JsonDerivedType(typeof(LocationNode), "LocationExpression")]
-  [JsonDerivedType(typeof(ThisNode), "ThisExpression")]
-  [JsonDerivedType(typeof(IdentifierNode), "IdentifierExpression")]
+  [JsonDerivedType(typeof(LocationAccessNode), "LocationAccessExpression")]
   [JsonDerivedType(typeof(LiteralNode), "LiteralExpression")]
   public abstract record ExpressionNode : Node {
     protected ExpressionNode(Position position) : base(position) { }
@@ -280,25 +281,9 @@ namespace Decaf.IR.ParseTree {
       public ExpressionNode SizeExpr { get; } = SizeExpr;
     };
     /// <summary>A location access expression.</summary>
-    public record LocationNode(
-      Position Position,
-      ExpressionNode Root,
-      string? Path,
-      ExpressionNode? IndexExpr
-    ) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.LocationExpression;
-      public ExpressionNode Root { get; } = Root;
-      public string? Path { get; } = Path;
-      public ExpressionNode? IndexExpr { get; } = IndexExpr;
-    };
-    /// <summary>A `this` expression.</summary>
-    public record ThisNode(Position Position) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.ThisExpression;
-    };
-    /// <summary>An identifier expression.</summary>
-    public record IdentifierNode(Position Position, string Name) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.IdentifierExpression;
-      public string Name { get; } = Name;
+    public record LocationAccessNode(Position Position, LocationNode Content) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.LocationAccessExpression;
+      public LocationNode Content { get; } = Content;
     };
     /// <summary>A literal expression.</summary>
     public record LiteralNode(Position Position, ParseTree.LiteralNode Content) : ExpressionNode(Position) {
@@ -341,6 +326,52 @@ namespace Decaf.IR.ParseTree {
     /// <summary>An null literal node.</summary>
     public record NullNode(Position Position) : LiteralNode(Position) {
       public override NodeKind Kind => NodeKind.NullLiteral;
+    };
+  }
+  /// <summary>
+  /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
+  /// A location node represents any access to a variable, field or array.
+  /// </summary>
+  [JsonDerivedType(typeof(ThisNode), "ThisLocation")]
+  [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
+  [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
+  [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
+  public abstract record LocationNode : Node {
+    protected LocationNode(Position position) : base(position) { }
+    /// <summary>A location node representing a `this` access.</summary>
+    public record ThisNode(Position Position) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.ThisLocation;
+    };
+    /// <summary>
+    /// An identifier node, is used to represent a simple variable access of the form `x`.
+    /// </summary>
+    public record IdentifierAccessNode(Position Position, string Name) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.IdentifierLocation;
+      public string Name { get; } = Name;
+    };
+    /// <summary>
+    /// A member access node, is used to represent a member access of the form `x.y` where `x` is the root and `y` is the member.
+    /// </summary>
+    public record MemberAccessNode(
+      Position Position,
+      LocationNode Root,
+      string Member
+    ) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.MemberLocation;
+      public LocationNode Root { get; } = Root;
+      public string Member { get; } = Member;
+    };
+    /// <summary>
+    /// An array access node, is used to represent an array access of the form `x[y]` where `x` is the root and `y` is the index.
+    /// </summary>
+    public record ArrayAccessNode(
+      Position Position,
+      LocationNode Root,
+      ExpressionNode IndexExpr
+    ) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.ArrayLocation;
+      public LocationNode Root { get; } = Root;
+      public ExpressionNode IndexExpr { get; } = IndexExpr;
     };
   }
 }

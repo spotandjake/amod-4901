@@ -109,7 +109,7 @@ namespace Decaf.Frontend {
     }
     private static StatementNode.AssignmentNode MapAssignmentStatementNode(DecafParser.Assign_stmtContext context) {
       var position = MapPositionContext(context);
-      var location = MapLocationExpressionContext(context.location());
+      var location = MapLocationContext(context.location());
       var expression = MapExpressionContext(context.expr());
       return new StatementNode.AssignmentNode(position, location, expression);
     }
@@ -183,19 +183,14 @@ namespace Decaf.Frontend {
     }
     private static ExpressionNode.CallNode MapCallExpressionContext(DecafParser.Method_callContext context) {
       var position = MapPositionContext(context);
-      var path = MapLocationExpressionContext(context.methodPath);
+      var path = MapLocationContext(context.methodPath);
       var args = context.args != null ? context.args.expr().Select(MapExpressionContext).ToArray() : [];
       return new ExpressionNode.CallNode(position, false, path, args);
     }
     private static ExpressionNode.CallNode MapPrimitiveCallExpressionContext(DecafParser.Prim_calloutContext context) {
       var position = MapPositionContext(context);
       // Create a fake location node
-      var path = new ExpressionNode.LocationNode(
-        position,
-        new ExpressionNode.IdentifierNode(position, context.primId.Text),
-        null,
-        null
-      );
+      var path = new LocationNode.IdentifierAccessNode(position, context.primId.Text);
       // Map the arguments
       var args = new List<ExpressionNode>();
       foreach (var child in context.args.children) {
@@ -232,26 +227,19 @@ namespace Decaf.Frontend {
       var operand = MapExpressionContext(context.operand);
       return new ExpressionNode.PrefixNode(position, op, operand);
     }
-    private static ExpressionNode.LocationNode MapLocationExpressionContext(DecafParser.LocationContext context) {
+    private static ExpressionNode.LocationAccessNode MapLocationExpressionContext(DecafParser.LocationContext context) {
       var position = MapPositionContext(context);
-      var root = new ExpressionNode.IdentifierNode(position, context.root.Text);
-      var path = context.path?.ID().GetText();
-      var indexExpr = context.indexExpr != null ? MapExpressionContext(context.indexExpr.expr()) : null;
-      return new ExpressionNode.LocationNode(position, root, path, indexExpr);
+      var location = MapLocationContext(context);
+      return new ExpressionNode.LocationAccessNode(position, location);
     }
-    private static ExpressionNode.ThisNode MapThisExpressionContext(DecafParser.ThisExprContext context) {
+    private static ExpressionNode.LocationAccessNode MapThisExpressionContext(DecafParser.ThisExprContext context) {
       var position = MapPositionContext(context);
-      return new ExpressionNode.ThisNode(position);
+      return new ExpressionNode.LocationAccessNode(position, new LocationNode.ThisNode(position));
     }
     private static ExpressionNode.NewClassNode MapNewClassExpressionContext(DecafParser.NewObjectExprContext context) {
       var position = MapPositionContext(context);
       var className = context.ID().GetText();
-      var identifier = new ExpressionNode.LocationNode(
-        position,
-        new ExpressionNode.IdentifierNode(position, className),
-        null,
-        null
-      );
+      var identifier = new LocationNode.IdentifierAccessNode(position, className);
       return new ExpressionNode.NewClassNode(position, identifier);
     }
     private static ExpressionNode.NewArrayNode MapNewArrayExpressionContext(DecafParser.NewArrayExprContext context) {
@@ -273,6 +261,21 @@ namespace Decaf.Frontend {
         _ => throw new InvalidProgramException("Impossible literal at LiteralNode.FromContext"),// NOTE: This should be impossible due to grammar restrictions
       };
       return new ExpressionNode.LiteralNode(position, literal);
+    }
+    // Locations
+    private static LocationNode MapLocationContext(DecafParser.LocationContext context) {
+      var position = MapPositionContext(context);
+      LocationNode node = new LocationNode.IdentifierAccessNode(position, context.root.Text);
+      // If it's a member access then we need to update the node to be a member access node
+      if (context.path != null) {
+        var member = context.path.ID().GetText();
+        node = new LocationNode.MemberAccessNode(position, node, member);
+      }
+      // If it's an array access then we need to update the node to be an array access node
+      if (context.indexExpr != null) {
+        node = new LocationNode.ArrayAccessNode(position, node, MapExpressionContext(context.indexExpr.expr()));
+      }
+      return node;
     }
   }
 }

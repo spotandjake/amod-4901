@@ -21,11 +21,8 @@
                   Kind: CallExpression,
                   IsPrimitive: true,
                   Path: {
-                    Kind: LocationExpression,
-                    Root: {
-                      Kind: IdentifierExpression,
-                      Name: "Test"
-                    }
+                    Kind: IdentifierLocation,
+                    Name: "Test"
                   },
                   Arguments: [
                     {
