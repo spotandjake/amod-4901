@@ -20,87 +20,330 @@ This document is just a high level overview more similar to compiling a parseTre
 Instead of directly emitting wasm instructions by traversing the anf tree, we are instead going to convert the anf tree to a wasm tree this will allow us to collect module types and other things in a more organized manner.
 
 ## Program
-Programs map directly onto wasm modules, so we are going to compile a program into a wasm module. This means that the program node is going to be the top level. Inside a program we will directly compile the classes inside.
+Programs are the top level of our language and map directly onto files. They are static elements and don't have any runtime representation. We are going to convert a program directly to a wasm module this transformation would convert a file like:
+```java
+<program_body>
+```
+to a wasm module like:
+```wasm
+(module <program_body>)
+```
+in reality we are going to be generating a wasm tree and instead of outputting `wat` which is the Webassembly text format we are going to be outputting `wasm` which is the binary format, which is more compact and easier for machines to parse and work with. We are documenting the process here in `wat` for simplicity the wasm spec can be followed for the conversion.
+
+Documentation on wasm modules can be found here: https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Understanding_the_text_format#the_simplest_module
 
 ## Classes
-Given classes are static in our language like namespaces they don't really get compiled into a code unit instead we just compile the things inside.
+Classes in our language are static that means they don't have any runtime representation and cannot be instantiated at runtime. In a sense they are equivalent to namespaces or modules in other languages. As classes have no runtime component they don't really get compiled into code instead they act as a literal namespace.
 
-If classes we'rent static we have two options either compile them to a wasm gc struct or compile them to a struct in linear memory however this isn't very trivial and would affect a lot of other little details of compilation.
+When compiling a class of the form:
+```java
+class Program {
+  int x;
+  void Main() {}
+}
+```
+we compile the properties as described in the properties section and the methods as described in the methods section. Notably we mangle the name to the class so `x` becomes something similar to `Program_x` and `Main` becomes something similar to `Program_Main` this ensures that every property and method has a unique name and we don't have to worry about name collisions.
 
 ### Properties
-Class properties can be thought of as global as they save state between function calls and are shared globally, all were going todo is compile them directly into globals so an `int x` might compile into `(global $x i32)` however we are going to need to mangle these names to avoid name collisions so lets say that the `int x` is within the `Program` class we might compile it to something like `(global $Program_x i32)` this is a pretty simple way to compile properties and it works well with the static nature of our classes.
+Class properties in our language are treated as globals given there is no instance this means the `int x` in the `Program` class above is going to become `(global $Program_x i32)` in wasm, which is a pretty simple compilation.
 
 ### Methods
-Methods in our language are also pretty simple, they are not first class and don't have closures which means they are pretty much a 1 to 1 compilation to a wasm function.  [function example here](https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Understanding_the_text_format#our_first_function_body).
+Methods in our language are also pretty simple, as the are not first class and don't have closures which means they are pretty much a 1 to 1 compilation to a wasm function. 
 
-If we had first class functions things would get more complicated we would need to compute a closure which would essentially be at the time of creation we take all the variables used from outside the functions scope and put them into a struct in linear memory this struct also contains a function reference or table index that we can use to call the function without knowing it's name (for first class functions). We would then need to add an extra parameter to the function for the closure struct and compile the function body to extract the values from the struct.
+As an example the function:
+```java
+int Add(int a, int b) {
+  <body>
+}
+```
+is going to compile into something like:
+```wasm
+(func $Program_Add (param $a i32) (param $b i32) (result i32)
+  <body>
+)
+```
+
+If we had first class functions things would get more complicated as we would need to build a closure which is essentially a record of all the variables used from the parent scope, we would also need to allow functions to be passed around as values which would require us to use indirect calls and function tables in wasm. This is a bit more complicated to implement however.
+
+For more information on wasm classes see: https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Understanding_the_text_format#our_first_function_body
 
 ## Statements
-Statements are going to be lowered within a function to wasm instructions.
+Statements in our language are pretty simple to compile as most of them map pretty closely to wasm instructions.
 
 ### Assignments
-Assignments are pretty simple we need to compile the left hand side which is the location accessor to become a `global.get` if we are working on an array we are going to need to set a memory address.
+Assignments are one of the slightly more complicated statements to compile as we need to consider the location which can have a few different forms.
 
-We are then either going to use `WasmI32.store` for arrays or `local.set` for local variables or `local.set` for global variables `global.set`
+#### Simple Variable Assignment
+This is the simplest form of assignment and is pretty much a 1 to 1 compilation. Take the code:
+```java
+int x;
+x = <expr>;
+```
+This would compile into something like:
+```wasm
+(local.set $x <expr>)
+```
+
+For more information on `local.set` see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.set
+
+#### Property Assignment
+This is also a rather simple case, given a property assignment like:
+```java
+Program.x = <expr>;
+```
+This would compile into something like:
+```wasm
+(global.set $Program_x <expr>)
+```
+
+For more information on `global.set` see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global.set
+
+#### Array Assignment
+This is where assignments get a tiny bit more tricky, arrays are stored in linear memory and there are a few steps to generating them.
+It may be helpful to take a look at [ArrayInitialization](#ArrayInitialization) for more information on how arrays are stored in memory, in order to have enough context to understand how to compile array assignments. Given an array assignment like:
+```java
+arr[<index>] = <expr>;
+```
+This would compile into something like:
+```wasm
+; Load the array length
+(local.set $arr_length ; Set a temporary variable to hold the array length
+  (i32.load
+    (local.get $arr) ; Get the base pointer of the array
+    0 ; offset is the first 4 bytes of the array data structure
+  )
+)
+; Check if index is out of bounds and trap if it is
+(if
+  (i32.ge_u (local.get $index) (local.get $arr_length)) ; Check if the index is out of bounds
+  (then
+    unreachable ; This causes wasm to trap (throw an exception) if the index is out of bounds
+  )
+  (else
+    (i32.store
+      (local.get $arr) ; Get the base pointer of the array
+      (i32.add
+        (i32.mul (local.get $index) 4) ; Calculate the offset for the index, each item is 4 bytes
+        4 ; Add 4 to skip the length field at the start of the array data structure
+      )
+      <expr> ; The value to store at the index
+    )
+  )
+)
+```
+
+For more information the [wasm spec](https://webassembly.github.io/spec/core/) is probably the best resource for understanding how these instructions work.
 
 ### Expression Statements
-These compile pretty simply as we compile the expression like normal and just `(drop)` the result if there is one.
+Expression statements are extremely easy to compile, we compile them like any other function, with one slight difference which is we don't want to leave the result no the stack so we most drop it. This means that the code:
+```java
+add(1, 2);
+```
+would compile into:
+```wasm
+(drop
+  (call $Program_add (i32.const 1) (i32.const 2))
+)
+```
+or more generically:
+```
+<expr>
+```
+becomes:
+```wasm
+(drop <expr>)
+```
+
+For more information on drop see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/drop
+
+For more information on compiling expressions see: [Expressions](#Expressions)
 
 ### If Statements
-If statements are not to hard to compile they basically compile to a wasm if after we compile the expression. 
+If statements are extremely simple to compile as they have a direct wasm equivalent, given an if statement like:
+```java
+if (<condition>) {
+  <then_body>
+} else {
+  <else_body>
+}
+```
+This would compile into something like:
+```wasm
+(if
+  <condition>
+  (then
+    <then_body>
+  )
+  (else
+    <else_body>
+  )
+)
+``` 
+In the case that there is no else body we can just omit the else block.
+
+For more information on if statements see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/if...else
 
 ### While Node
+`While` loops are pretty easy to compile however there is no directly equivalent to a while loop at the webassembly level, instead we need to use `loop` and `br` instructions to create a loop. Given a while loop like:
+```java
+while (<condition>) {
+  <body>
+}
+```
+This would turn into something like:
+```wasm
+(block $break_label
+  (loop $while_loop
+    (if
+      (i32.eqz <condition>) ; Check if the condition is false
+      (then
+        (br $break_label) ; If the condition is false, break out of the loop
+      )
+    )
+    <body>
+    (br $while_loop) ; Jump back to the start of the loop
+  )
+)
+```
+This is a pretty standard way for compilers to implement loops, one thing to note is that while we do a lot of the lowering to wasm when performing codegen this is actually something that we simplify during the ANF conversion process, to unify any type of loop we have in the language. This means that codegen for `while`, `for`, and `do while` is all just syntax sugar on top of a loop.
+
 This is going to compile to a basic loop see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/loop
 
 ### ContinueNode
-This is going to compile pretty cleanly to a `br` back to the top of the loop
+Continue statements are extremely easy to compile, given a continue statement `continue;` this would compile into:
+```wasm
+(br $while_loop) ; Jump back to the start of the loop
+```
+
+For more information on `br` see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br
 
 ### BreakNode
-This is going to compile pretty cleanly to a `br` to the end of the loop (I need to look at codegen for this a tiny bit more)
+Break statements are also pretty easy to compile, given a break statement `break;` this would compile into:
+```wasm
+(br $break_label) ; Jump to the end of the loop
+```
+
+For more information on `br` see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br
 
 ### ReturnNode
+Return statements are also extremely easy to compile, given the statement `return <expr>;` this would compile into:
+```wasm
+(return <expr>)
+```
+
 This is going to compile to a return https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/return
 
 ## Expressions
 
+Compiling expressions is pretty simple just like statements as most of them have a pretty direct mapping to wasm instructions.
+
 ### Call Node
-This is going to compile to a wasm call pretty cleanly
+Call nodes in our language are pretty simple to compile as they have a direct mapping to wasm function calls, given a call like:
+```java
+add(1, 2);
+```
+This would compile into:
+```wasm
+(call $Program_add (i32.const 1) (i32.const 2))
+```
+or more generally:
+```java
+<function_name>(<arg1>, <arg2>, ...)
+```
+becomes:
+```wasm
+(call $<function_name> <arg1> <arg2> ...)
+```
+
+For more information on function calls see: https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/call
+
+It's worth noting that this is only simple because we don't have closures or first class functions, for closures we would need to pass a closure pointer as an additional argument to the function, and for first class functions we would need to use indirect calls and function tables in wasm which is a bit more complicated to implement.
+
+We are leaving the design for primitive callouts until we are at that point as they are going to be able to compile into a variety of different constructs from low level wasm instructions to regular function calls depending on the callout.
 
 ### Binop Node
-This is going to compile pretty cleanly into a wasm instruction we are going to need to use the signature and operator to determine what instruction to use from a lookup table.
+Binary operations are also pretty simple to compile as they have direct mappings in webassembly the exact instruction we are going to use is going to depend on both the operator and the types of the operands, but an example of compiling `a + b` would be:
+```wasm
+(i32.add (local.get $a) (local.get $b))
+```
+For subtraction it may become:
+```wasm
+(i32.sub (local.get $a) (local.get $b))
+```
+or more generally, `<expr1> <operator> <expr2>` becomes:
+```wasm
+(<wasm_operator> <expr1> <expr2>)
+```
 
 ### Prefix Node
-This is going to be done just like binops but with different instructions. I think for not we have a few option for compiling the simplest one is probably bitwise. It's also usually the fastest.
+Prefix nodes are going to be handled the exact same way as binops, given a prefix operation like: `!a` this would compile into:
+```wasm
+(i32.eqz (local.get $a))
+```
+or more generally, `<operator> <expr>` becomes:
+```wasm
+(<wasm_operator> <expr>)
+```
+As a note while we have described compilation of prefix nodes in a universal manner the only prefix operator in our language is `!` which is the logical not operator.
 
 ### New Class Node
-This isn't going to be compiled if it was we would store some sort of record in linear memory that points to everything.
+This is an object oriented feature as such it does not get compiled. If we had object oriented features it would likely get compiled into a memory allocation or wasm gc struct, of the form `{ <classID>, <field1>, <field2>, ...}`. I would describe a bit more but given we are not implementing them it seems like a waste.
 
-### New Array Node
-This is going to probably use a very primitive bump allocator to compile some instructions that write a simple data structure to memory probably something like `<arrayTypeID>, <size>, ...<values>`
+### ArrayInitialization
+Array initialization is likely the hardest thing to compile in our language as it requires us to work with linear memory.
+Our current plan is to ship a basic bump allocator with our runtime which is essentially just a pointer to the end of the allocated memory, and when we want to allocate something we just move the pointer forward by the size of the allocation, this isn't the most efficient and fragments fast but it works for our use cases.
 
-### LocationNode
-I think we still need todo some thoughts here but it's essentially going to be come a local.get or local.set depending on the use, this is probably going to be compiled in a somewhat context aware manner.
+Arrays are going to be stored in linear memory following the format, `<length> ...<items>` this means that:
+```
+ptr -> length
+ptr + 4 -> item 1
+ptr + 8 -> item 2
+...
+```
+
+I don't show the compilation process here as it is a bit complex and will likely be lowered to use a few helper functions in a basic runtime.
 
 ### ThisNode
-I don't actually think we need to compile this for any real reason instead what we are probably going to be needing todo is just interpret this as a location client side, technically I guess we can assign each class an id. We may skip compiling this all together though do to the oop limiting nature.
+We don't actually compile `this` itself but instead we resolve it during compilation so the code:
+```java
+class Program {
+  int x;
+  void Main() {
+    this.x = 5;
+  }
+}
+```
+is directly equivalent to:
+```java
+class Program {
+  int x;
+  void Main() {
+    Program.x = 5;
+  }
+}
+```
 
-### IdentiferNode
-This is just a subpart of location nodes. Handled by that.
+This only works because `this` is only valid in a static context, this approach would completely break with instance properties and methods as `this` would need to refer to the instance rather than the class, but given we don't have instance properties or methods this is a perfectly fine approach.
+
+### LocationNode
+Location nodes are probably one of the more complex things to compile as well, we already gave a brief overview of them when discussing assignments. Compiling locations is going to be handled the exact same way as compiling the left hand side of an assignment however `set` will become `get` and `store` will become `load`.
 
 ### LiteralNode
-These are going to be compiled to either memory allocations or simple constants
+Literal nodes are rather simple to compile because they are just constants, exact compilation will depend on the type.
 
 #### Integer
 This is going to become a `(i32.const <value>)`
 
 ### Character
-This is also going to become a `(i32.const <value>)` we will make no distinction between a character and an integer at runtime.
-
-### String
-This is only going to be compiled one place the values will go into data sections and we will copy from the data section into memory passing around the pointer.
+This is also going to become a `(i32.const <value>)` we will make no distinction between a character and an integer at runtime. The value itself is going to be the unicode scalar value of the character.
 
 ### BooleanNode
 This is going to compile to a `(i32.const <value>)` with `1` for `true` and `0` for `false`.
 
 ### NullNode
-This is going to compile to a `(i32.const 0)` most likely though I need to consider this a bit more.
+`Null` is an interesting one as it is a special value it probably makes the most sense to compile it into `(i32.const 0)` as this would give it falsey semantics however there would be no distinction between `null` and `false` at runtime, which is a bit unfortunate. 
+
+We could also make the decision to not compile this given classes are static there really isn't much use for `null` as nothing can be `null`.
+
+### String
+Strings are an interesting case you can think of them as arrays of characters, so we could compile them into linear memory following the same format as arrays. This would be pretty efficient however its worth noting this doesn't follow `utf-8` directly making ffi slightly annoying, we only need strings for callout nodes however so we can just convert them to `utf-8` when we pass them to the callouts if needed.
