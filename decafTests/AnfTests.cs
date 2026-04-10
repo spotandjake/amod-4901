@@ -14,7 +14,7 @@ using Decaf.IR.AnfTree;
 public class DecafAnfTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/Anf/");
     return settings;
   }
 #nullable enable

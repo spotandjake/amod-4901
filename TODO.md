@@ -60,3 +60,7 @@
 * Investigate using wasm gc
   * We should do some simple investigation on how hard it would be to use wasm gc
 * Add an enum to represent operations or use primitive calls
+* Correct precidence / validate
+  * We never handled this quite right before
+* Replace snapshot tests with more specific test where possible
+  * Justification: It's way to easy to just update snapshots without actually checking the output

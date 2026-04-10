@@ -10,7 +10,7 @@ using Decaf.Utils.Errors.SemanticErrors;
 public class DecafSemanticTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/Semantic/");
     return settings;
   }
   private ProgramNode SemanticAnalysis(string text) {

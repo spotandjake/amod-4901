@@ -8,7 +8,7 @@ using Decaf.IR.ParseTree;
 public class DecafParserTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/Parser/");
     return settings;
   }
 #nullable enable

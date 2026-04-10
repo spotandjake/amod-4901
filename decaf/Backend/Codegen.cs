@@ -41,7 +41,7 @@ namespace Decaf.Backend {
         if (mod.Methods.Any((m) => m.Name == "Main") && mod.Name != "Program") {
           startCalls.Add(new WasmExpression.Call(
             mod.Position,
-            new WasmLabel.Label(mod.Position, GetMemberGlobalName(mod.Name, "Main")),
+            CodegenUtils.GetMemberLabel(mod.Position, mod.Name, "Main"),
             []
           ));
         }
@@ -49,7 +49,7 @@ namespace Decaf.Backend {
       // Add our call to `Program.Main`
       startCalls.Add(new WasmExpression.Call(
         node.Position,
-        new WasmLabel.Label(node.Position, GetMemberGlobalName("Program", "Main")),
+        CodegenUtils.GetMemberLabel(node.Position, "Program", "Main"),
         []
       ));
       // TODO: Generate a `_start` function that calls the `<x>.Main` method
@@ -59,9 +59,10 @@ namespace Decaf.Backend {
     private static void CompileModule(CodegenContext ctx, AnfTree.DeclarationNode.ModuleNode node) {
       //Create a global for each member
       foreach (var global in node.Globals) {
+        var globalLabel = CodegenUtils.GetMemberLabel(global.Position, node.Name, global.Name);
         var wasmGlobal = new WasmGlobal(
           node.Position,
-          new WasmLabel.Label(node.Position, GetMemberGlobalName(node.Name, global.Name)),
+          globalLabel,
           // TODO: Map the signature
           new WasmType.I32(node.Position), // TODO: Support more types
           true, // TODO: Support immutable globals
@@ -225,10 +226,7 @@ namespace Decaf.Backend {
         // TODO: More robust name resolution here
         AnfTree.LocationNode.IdentifierAccessNode idNode => new WasmLabel.Label(idNode.Position, idNode.Name),
         AnfTree.LocationNode.MemberAccessNode memberNode =>
-          new WasmLabel.Label(
-            memberNode.Position,
-            GetMemberGlobalName(memberNode.Root.Name, memberNode.Member)
-          ),
+          CodegenUtils.GetMemberLabel(memberNode.Position, memberNode.Root.Name, memberNode.Member),
         // NOTE: This is an enforced restriction due to the fact that we can't have arrays of functions
         _ => throw new Exception("Impossible, method call with unexpected path type"),
       };
@@ -324,13 +322,9 @@ namespace Decaf.Backend {
     ) {
       // TODO: We should be smarter about name resolution
       // Get the mangled name
-      var globalName = GetMemberGlobalName(node.Root.Name, node.Member);
+      var globalLabel = CodegenUtils.GetMemberLabel(node.Position, node.Root.Name, node.Member);
       // Build the global.set
-      return new WasmExpression.Global.Set(
-        node.Position,
-        new WasmLabel.Label(node.Position, globalName),
-        value
-      );
+      return new WasmExpression.Global.Set(node.Position, globalLabel, value);
     }
     private static WasmExpression.Block CompileLocationArrayAccessSet(
       CodegenContext ctx,
@@ -381,12 +375,9 @@ namespace Decaf.Backend {
     ) {
       // TODO: We should be smarter about name resolution
       // Get the mangled name
-      var globalName = GetMemberGlobalName(node.Root.Name, node.Member);
+      var globalLabel = CodegenUtils.GetMemberLabel(node.Position, node.Root.Name, node.Member);
       // Build the global.get
-      return new WasmExpression.Global.Get(
-        node.Position,
-        new WasmLabel.Label(node.Position, globalName)
-      );
+      return new WasmExpression.Global.Get(node.Position, globalLabel);
     }
     private static WasmExpression.Block CompileLocationArrayAccessGet(
       CodegenContext ctx,
@@ -408,11 +399,6 @@ namespace Decaf.Backend {
         new WasmLabel.UniqueLabel(node.Position, "arr_get"),
         [compiledBoundsCheck, compiledGet]
       );
-    }
-
-    private static string GetMemberGlobalName(string root, string member) {
-      // NOTE: It would probably be better to mangle the names at the anf level (sync issues here)
-      return $"{root}__{member}";
     }
     // Array Helper
     private static WasmExpression.I32.Add CompileArrayByteIndex(

@@ -8,7 +8,7 @@ using Decaf.Utils.Errors.TypeCheckingErrors;
 public class DecafTypeCheckerTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/TypeChecker/");
     return settings;
   }
   private static ProgramNode TypeCheck(string text) {

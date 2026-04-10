@@ -14,7 +14,7 @@ public class DecafLexerTests : VerifyBase {
   }
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/Lexer/");
     return settings;
   }
   // NOTE: There isn't a ton of testing on the lexer as it is rather basic in operation.
