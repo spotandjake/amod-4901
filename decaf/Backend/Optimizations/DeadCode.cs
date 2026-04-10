@@ -15,8 +15,6 @@ namespace Decaf.Backend.Optimizations {
   ///   * `if (false)` blocks can have their else branch lifted up and the if removed entirely
   ///   * `if (true)` blocks can have their then branch lifted up and the
   /// 
-  /// TODO: Optimize `while(false)` by checking loop body
-  /// 
   /// When to apply this optimization, this optimization is best applied after constants are propagated and inlined, as this will open
   /// more opportunities for dead code elimination. However, it may also make sense to apply this optimization immediately to cut down
   /// the size of the tree before performing other optimizations.

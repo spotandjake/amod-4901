@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Decaf.IR.PrimitiveDefinition;
 using Decaf.IR.TypedTree;
 using Decaf.Utils;
 using Decaf.WasmBuilder;
@@ -11,13 +10,7 @@ using TypedTree = Decaf.IR.TypedTree;
 // This is the core of the code generation phase. It takes an AnfTree and produces a WasmTree.
 // The WasmTree can then independently be transformed directly into a wasm module.
 namespace Decaf.Backend {
-  public static class Codegen {
-    // Runtime names for generated code to call into
-    private static readonly string RuntimeModuleName = "Runtime";
-    private static readonly string RuntimeMallocName = GetMemberGlobalName(RuntimeModuleName, "malloc");
-    private static readonly string RuntimeCallocName = GetMemberGlobalName(RuntimeModuleName, "calloc");
-    private static readonly string RuntimeAllocateArray = GetMemberGlobalName(RuntimeModuleName, "allocateArray");
-
+  public static partial class Codegen {
     private record struct CodegenContext {
       public WasmModule WasmModule; // The module we are currently building itself
       // Related to looping
@@ -247,93 +240,13 @@ namespace Decaf.Backend {
       // Create the call expression
       return new WasmExpression.Call(node.Position, methodLabel, args);
     }
-    private static WasmExpression CompilePrimitiveNode(
-      CodegenContext ctx,
-      AnfTree.ExpressionNode.PrimitiveNode node
-    ) {
-      return node.Primitive switch {
-        // --- @wasm namespace ---
-        // memory sub namespace
-        PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
-        PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(ctx, node.Arguments[0])),
-        PrimDefinition.WasmMemoryFill =>
-          new WasmExpression.Memory.Fill(
-            node.Position,
-            CompileImmediate(ctx, node.Arguments[0]),
-            CompileImmediate(ctx, node.Arguments[1]),
-            CompileImmediate(ctx, node.Arguments[2])
-          ),
-        // I32 sub namespace
-        PrimDefinition.WasmI32Store =>
-          new WasmExpression.I32.Store(
-            node.Position,
-            CompileImmediate(ctx, node.Arguments[0]),
-            CompileImmediate(ctx, node.Arguments[2]),
-            CompileImmediate(ctx, node.Arguments[1])
-          ),
-        // Unknown
-        _ => throw new Exception($"Unknown primitive: {node.Primitive}"),
-      };
-    }
-    private static WasmExpression CompileBinopNode(
-      CodegenContext ctx,
-      AnfTree.ExpressionNode.BinopNode node
-    ) {
-      WasmExpression lhs = CompileImmediate(ctx, node.Lhs);
-      WasmExpression rhs = CompileImmediate(ctx, node.Rhs);
-      // Determine what operator we are mapping
-      return (node.Operator, node.ExpressionType) switch {
-        // (int, int) => int - note as there is only one type we don't match it
-        ("+", _) => new WasmExpression.I32.Add(node.Position, lhs, rhs),
-        ("-", _) => new WasmExpression.I32.Sub(node.Position, lhs, rhs),
-        ("*", _) => new WasmExpression.I32.Mul(node.Position, lhs, rhs),
-        ("/", _) => new WasmExpression.I32.DivS(node.Position, lhs, rhs),
-        // (int, int) => boolean
-        ("<", _) => new WasmExpression.I32.LtS(node.Position, lhs, rhs),
-        (">", _) => new WasmExpression.I32.GtS(node.Position, lhs, rhs),
-        ("<=", _) => new WasmExpression.I32.LeS(node.Position, lhs, rhs),
-        (">=", _) => new WasmExpression.I32.GeS(node.Position, lhs, rhs),
-        // (a, a) => boolean - note as every literal currently is an i32 with no structural component we don't match the type
-        ("==", _) => new WasmExpression.I32.Eq(node.Position, lhs, rhs),
-        ("!=", _) => new WasmExpression.I32.Ne(node.Position, lhs, rhs),
-        // (boolean, boolean) => boolean
-        ("&&", _) =>
-          // NOTE: we can use bitwise `and` for logical because we represent true as 1 and false as 0
-          new WasmExpression.I32.And(node.Position, lhs, rhs),
-        ("||", _) =>
-          // NOTE: we can use bitwise `or` for logical because we represent true as 1 and false as 0
-          new WasmExpression.I32.Or(node.Position, lhs, rhs),
-        // (int, int) => int
-        ("&", _) => new WasmExpression.I32.And(node.Position, lhs, rhs),
-        ("|", _) => new WasmExpression.I32.Or(node.Position, lhs, rhs),
-        ("<<", _) => new WasmExpression.I32.Shl(node.Position, lhs, rhs),
-        (">>", _) => new WasmExpression.I32.ShrS(node.Position, lhs, rhs),
-        // Unknown (should be impossible)
-        _ => throw new Exception($"Unknown binary operator {node.Operator}"),
-      };
-    }
-    private static WasmExpression CompilePrefixNode(
-      CodegenContext ctx,
-      AnfTree.ExpressionNode.PrefixNode node
-    ) {
-      WasmExpression op = CompileImmediate(ctx, node.Operand);
-      // Determine what operator we are mapping
-      return (node.Operator, node.ExpressionType) switch {
-        // (boolean) => boolean 
-        ("!", _) => new WasmExpression.I32.Eqz(node.Position, op),
-        // (int) => int
-        ("~", _) => new WasmExpression.I32.Xor(node.Position, op, new WasmExpression.I32.Const(node.Position, -1)),
-        // Unknown (should be impossible)
-        _ => throw new Exception($"Unknown binary operator {node.Operator}"),
-      };
-    }
     private static WasmExpression CompileAllocateArrayNode(
       CodegenContext ctx,
       AnfTree.ExpressionNode.AllocateArrayNode node
     ) {
       return new WasmExpression.Call(
         node.Position,
-        new WasmLabel.Label(node.Position, RuntimeAllocateArray),
+        new WasmLabel.Label(node.Position, CodegenUtils.Runtime.RuntimeAllocateArray),
         [CompileImmediate(ctx, node.SizeImm)]
       );
     }
