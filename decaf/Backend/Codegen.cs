@@ -10,6 +10,13 @@ using TypedTree = Decaf.IR.TypedTree;
 // The WasmTree can then independently be transformed directly into a wasm module.
 namespace Decaf.Backend {
   public static class Codegen {
+    private record struct CodegenContext {
+      // Related to looping
+#nullable enable
+      public string? BreakLabel; // The label to break to when we encounter a `break`
+      public string? ContinueLabel; // The label to break to when we encounter
+#nullable disable
+    }
     public static void CompileProgram(AnfTree.ProgramNode node) {
       // TODO: Create our wasm module
       // TODO: Generate code for each class
@@ -29,60 +36,83 @@ namespace Decaf.Backend {
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
     // Blocks
-    private static WasmExpression CompileBlock(AnfTree.BlockNode node) {
+    private static WasmExpression CompileBlock(CodegenContext ctx, AnfTree.BlockNode node) {
+      // TODO: 
+      foreach (var instruction in node.Instructions) { }
       // TODO: Support block compilation
       throw new NotImplementedException("Blocks are not yet supported");
     }
     // Instructions
-    private static WasmExpression CompileInstruction(AnfTree.InstructionNode node) {
+    private static WasmExpression CompileInstruction(
+      CodegenContext ctx,
+      AnfTree.InstructionNode node
+    ) {
       return node switch {
-        AnfTree.InstructionNode.BindNode bindNode => CompileBindNode(bindNode),
-        AnfTree.InstructionNode.AssignmentNode assignmentNode => CompileAssignmentNode(assignmentNode),
-        AnfTree.InstructionNode.ExprNode exprNode => CompileExprNode(exprNode),
-        AnfTree.InstructionNode.IfNode ifNode => CompileIfNode(ifNode),
-        AnfTree.InstructionNode.LoopNode loopNode => CompileLoopNode(loopNode),
-        AnfTree.InstructionNode.ContinueNode continueNode => CompileContinueNode(continueNode),
-        AnfTree.InstructionNode.BreakNode breakNode => CompileBreakNode(breakNode),
-        AnfTree.InstructionNode.ReturnNode returnNode => CompileReturnNode(returnNode),
+        AnfTree.InstructionNode.BindNode bindNode => CompileBindNode(ctx, bindNode),
+        AnfTree.InstructionNode.AssignmentNode assignmentNode => CompileAssignmentNode(ctx, assignmentNode),
+        AnfTree.InstructionNode.ExprNode exprNode => CompileExprNode(ctx, exprNode),
+        AnfTree.InstructionNode.IfNode ifNode => CompileIfNode(ctx, ifNode),
+        AnfTree.InstructionNode.LoopNode loopNode => CompileLoopNode(ctx, loopNode),
+        AnfTree.InstructionNode.ContinueNode continueNode => CompileContinueNode(ctx, continueNode),
+        AnfTree.InstructionNode.BreakNode breakNode => CompileBreakNode(ctx, breakNode),
+        AnfTree.InstructionNode.ReturnNode returnNode => CompileReturnNode(ctx, returnNode),
         _ => throw new Exception($"Unknown instruction node kind: {node.Kind}"),
       };
     }
-    private static WasmExpression CompileBindNode(AnfTree.InstructionNode.BindNode node) {
+    private static WasmExpression CompileBindNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.BindNode node
+    ) {
       // Compile the expression
-      var compiledExpr = CompileSimpleExpr(node.Expression);
+      var compiledExpr = CompileSimpleExpr(ctx, node.Expression);
       // TODO: Figure out the code to set the bind
       throw new NotImplementedException("Binds are not yet supported");
     }
-    private static WasmExpression CompileAssignmentNode(AnfTree.InstructionNode.AssignmentNode node) {
+    private static WasmExpression CompileAssignmentNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.AssignmentNode node
+    ) {
       // Compile the immediate
-      var compiledValue = CompileImmediate(node.Expression);
+      var compiledValue = CompileImmediate(ctx, node.Expression);
       // TODO: Figure out the code to set the location being assigned to
       throw new NotImplementedException("Assignments are not yet supported");
     }
-    private static WasmExpression CompileExprNode(AnfTree.InstructionNode.ExprNode node
+    private static WasmExpression CompileExprNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.ExprNode node
     ) {
-      var compiledExpr = CompileImmediate(node.Content);
+      var compiledExpr = CompileImmediate(ctx, node.Content);
       if (node.Content.Signature is not Signature.PrimitiveSignature { Type: PrimitiveType.Void }) {
         return new WasmExpression.Drop(node.Position, compiledExpr);
       }
       else return compiledExpr;
     }
-    private static WasmExpression CompileIfNode(AnfTree.InstructionNode.IfNode node) {
+    private static WasmExpression CompileIfNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.IfNode node
+    ) {
       // Compile the condition
-      var compiledCondition = CompileImmediate(node.Condition);
+      var compiledCondition = CompileImmediate(ctx, node.Condition);
       // Compile the true branch
-      var compiledTrueBranch = CompileBlock(node.TrueBranch);
+      var compiledTrueBranch = CompileBlock(ctx, node.TrueBranch);
       // Compile the false branch
-      var compiledFalseBranch = node.FalseBranch != null ? CompileBlock(node.FalseBranch) : null;
+      var compiledFalseBranch = node.FalseBranch != null ? CompileBlock(ctx, node.FalseBranch) : null;
       // Create a wasm `if` expression
       return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }
-    private static WasmExpression CompileLoopNode(AnfTree.InstructionNode.LoopNode node) {
+    private static WasmExpression CompileLoopNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.LoopNode node
+    ) {
       // TODO: Properly generate the labels
       var loop_label = "loop_inner"; // TODO: Properly create a unique label for this loop
       var block_label = "loop_outer"; // TODO: Properly create a unique label for the breaking block of this loop
+      var newCtx = ctx with {
+        BreakLabel = block_label,
+        ContinueLabel = loop_label,
+      };
       // Compile the body
-      var compiledBody = CompileBlock(node.Body);
+      var compiledBody = CompileBlock(newCtx, node.Body);
       // Create the wasm loop
       var compiledLoop = new WasmExpression.Loop(node.Position, loop_label, [compiledBody]);
       // Create the outer block
@@ -90,55 +120,82 @@ namespace Decaf.Backend {
       // Return the block
       return compiledBlock;
     }
-    private static WasmExpression CompileContinueNode(AnfTree.InstructionNode.ContinueNode node) {
-      // TODO: This should emit a `br` to the appropriate label (The label should be supplied by the compile context)
-      throw new NotImplementedException("Break and continue statements are not yet supported");
+    private static WasmExpression CompileContinueNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.ContinueNode node
+    ) {
+      if (ctx.ContinueLabel == null) {
+        // NOTE: Impossible due to semantic analysis
+        throw new Exception("Continue statement not within a loop");
+      }
+      return new WasmExpression.Br(node.Position, ctx.ContinueLabel);
     }
-    private static WasmExpression CompileBreakNode(AnfTree.InstructionNode.BreakNode node) {
-      // TODO: This should emit a `br` to the appropriate label (The label should be supplied by the compile context)
-      throw new NotImplementedException("Break and continue statements are not yet supported");
+    private static WasmExpression CompileBreakNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.BreakNode node
+    ) {
+      if (ctx.BreakLabel == null) {
+        // NOTE: Impossible due to semantic analysis
+        throw new Exception("Continue statement not within a loop");
+      }
+      return new WasmExpression.Br(node.Position, ctx.BreakLabel);
     }
-    private static WasmExpression CompileReturnNode(AnfTree.InstructionNode.ReturnNode node) {
-      var compiledValue = node.Value != null ? CompileImmediate(node.Value) : null;
+    private static WasmExpression CompileReturnNode(
+      CodegenContext ctx,
+      AnfTree.InstructionNode.ReturnNode node
+    ) {
+      var compiledValue = node.Value != null ? CompileImmediate(ctx, node.Value) : null;
       return new WasmExpression.Return(node.Position, compiledValue);
     }
     // Simple Expressions
-    private static WasmExpression CompileSimpleExpr(AnfTree.ExpressionNode node) {
+    private static WasmExpression CompileSimpleExpr(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode node
+    ) {
       return node switch {
-        AnfTree.ExpressionNode.CallNode callNode => CompileCallNode(callNode),
-        AnfTree.ExpressionNode.PrimitiveNode primitiveNode => CompilePrimitiveNode(primitiveNode),
-        AnfTree.ExpressionNode.BinopNode binopNode => CompileBinopNode(binopNode),
-        AnfTree.ExpressionNode.PrefixNode prefixNode => CompilePrefixNode(prefixNode),
-        AnfTree.ExpressionNode.AllocateArrayNode allocateArrayNode => CompileAllocateArrayNode(allocateArrayNode),
+        AnfTree.ExpressionNode.CallNode callNode => CompileCallNode(ctx, callNode),
+        AnfTree.ExpressionNode.PrimitiveNode primitiveNode => CompilePrimitiveNode(ctx, primitiveNode),
+        AnfTree.ExpressionNode.BinopNode binopNode => CompileBinopNode(ctx, binopNode),
+        AnfTree.ExpressionNode.PrefixNode prefixNode => CompilePrefixNode(ctx, prefixNode),
+        AnfTree.ExpressionNode.AllocateArrayNode allocateArrayNode => CompileAllocateArrayNode(ctx, allocateArrayNode),
         _ => throw new Exception($"Unknown simple expression node kind: {node.Kind}"),
       };
     }
-    private static WasmExpression CompileCallNode(AnfTree.ExpressionNode.CallNode node) {
+    private static WasmExpression CompileCallNode(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode.CallNode node
+    ) {
       // TODO: Resolve the method being called to it's actual qualified name
       // TODO: Compile the arguments to the call
       // TODO: Create a `call` expression with the resolved method name and the compiled arguments
       throw new NotImplementedException("Method calls are not yet supported");
     }
-    private static WasmExpression CompilePrimitiveNode(AnfTree.ExpressionNode.PrimitiveNode node) {
+    private static WasmExpression CompilePrimitiveNode(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode.PrimitiveNode node
+    ) {
       return node.Primitive switch {
         // --- @wasm namespace ---
         // memory sub namespace
         PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
-        PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(node.Arguments[0])),
+        PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(ctx, node.Arguments[0])),
         PrimDefinition.WasmMemoryFill =>
           new WasmExpression.Memory.Fill(
             node.Position,
-            CompileImmediate(node.Arguments[0]),
-            CompileImmediate(node.Arguments[1]),
-            CompileImmediate(node.Arguments[2])
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            CompileImmediate(ctx, node.Arguments[2])
           ),
         // Unknown
         _ => throw new Exception($"Unknown primitive: {node.Primitive}"),
       };
     }
-    private static WasmExpression CompileBinopNode(AnfTree.ExpressionNode.BinopNode node) {
-      WasmExpression lhs = CompileImmediate(node.Lhs);
-      WasmExpression rhs = CompileImmediate(node.Rhs);
+    private static WasmExpression CompileBinopNode(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode.BinopNode node
+    ) {
+      WasmExpression lhs = CompileImmediate(ctx, node.Lhs);
+      WasmExpression rhs = CompileImmediate(ctx, node.Rhs);
       // Determine what operator we are mapping
       return (node.Operator, node.ExpressionType) switch {
         // (int, int) => int - note as there is only one type we don't match it
@@ -170,8 +227,11 @@ namespace Decaf.Backend {
         _ => throw new Exception($"Unknown binary operator {node.Operator}"),
       };
     }
-    private static WasmExpression CompilePrefixNode(AnfTree.ExpressionNode.PrefixNode node) {
-      WasmExpression op = CompileImmediate(node.Operand);
+    private static WasmExpression CompilePrefixNode(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode.PrefixNode node
+    ) {
+      WasmExpression op = CompileImmediate(ctx, node.Operand);
       // Determine what operator we are mapping
       return (node.Operator, node.ExpressionType) switch {
         // (boolean) => boolean 
@@ -182,16 +242,22 @@ namespace Decaf.Backend {
         _ => throw new Exception($"Unknown binary operator {node.Operator}"),
       };
     }
-    private static WasmExpression CompileAllocateArrayNode(AnfTree.ExpressionNode.AllocateArrayNode node) {
+    private static WasmExpression CompileAllocateArrayNode(
+      CodegenContext ctx,
+      AnfTree.ExpressionNode.AllocateArrayNode node
+    ) {
       // TODO: Call `Runtime.calloc` with the size expression + 4 (for the array length)
       // TODO: Write the array length to memory
       // TODO: Return the pointer to the array
       throw new NotImplementedException("Array allocation is not yet supported");
     }
     // Immediate Expressions
-    private static WasmExpression CompileImmediate(AnfTree.ImmediateNode node) {
+    private static WasmExpression CompileImmediate(
+      CodegenContext ctx,
+      AnfTree.ImmediateNode node
+    ) {
       return node switch {
-        AnfTree.ImmediateNode.ConstantNode constantNode => CompileLiteral(constantNode.Value),
+        AnfTree.ImmediateNode.ConstantNode constantNode => CompileLiteral(ctx, constantNode.Value),
         // TODO: Implement location access
         AnfTree.ImmediateNode.LocationAccessNode idNode =>
           throw new NotImplementedException("Location access is not yet supported"),
@@ -199,7 +265,10 @@ namespace Decaf.Backend {
       };
     }
     // Literal Nodes
-    private static WasmExpression CompileLiteral(TypedTree.LiteralNode node) {
+    private static WasmExpression CompileLiteral(
+      CodegenContext ctx,
+      TypedTree.LiteralNode node
+    ) {
       return node switch {
         // We represent integers as `(i32.const <value>)`
         TypedTree.LiteralNodes.IntegerNode integerNode =>
