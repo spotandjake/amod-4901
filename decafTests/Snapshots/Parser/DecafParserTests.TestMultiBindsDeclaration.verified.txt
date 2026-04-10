@@ -1,0 +1,34 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main,
+      Fields: [
+        {
+          Kind: VariableDeclNode,
+          Type: {
+            Kind: TypeNode,
+            Content: int
+          },
+          Binds: [
+            {
+              Kind: VarBindNode,
+              Name: x,
+              IsArray: false
+            },
+            {
+              Kind: VarBindNode,
+              Name: y,
+              IsArray: false
+            },
+            {
+              Kind: VarBindNode,
+              Name: z,
+              IsArray: false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

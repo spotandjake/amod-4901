@@ -2,13 +2,11 @@ parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
 @parser::header {#pragma warning disable 3021}
-options {
-  tokenVocab=DecafLexer;
-}
+options { tokenVocab=DecafLexer; }
 
-program: class_decl+;
+program: module_decl+;
 
-class_decl: CLASS name=ID (EXTENDS superClassName=ID)? LBRACE var_decl* method_decl* RBRACE;
+module_decl: MODULE name=ID LBRACE var_decl* method_decl* RBRACE;
 
 var_decl: typ=type binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
@@ -20,12 +18,11 @@ method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
 
 block: LBRACE var_decl* statement* RBRACE;
 
-// NOTE: Because this takes id maybe we should just restrict semantically later
 type: 
   INT # IntType
   | BOOLEAN # BooleanType
   | VOID # VoidType
-  | ID # CustomType
+  | STRING # StringType
   ;
 
 statement:
@@ -55,31 +52,32 @@ call_expr:
 method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
 method_call_args: expr (COMMA expr)*;
 prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
-prim_callout_args: (COMMA (expr | STRINGLIT))*;
+prim_callout_args: (COMMA (expr))*;
 
 expr:
   simple_expr # SimpleExpr
   | NEW ID LPAREN RPAREN # NewObjectExpr
   | NEW type LBRACK expr RBRACK # NewArrayExpr
   | literal # LiteralExpr
-  | op=NOT operand=expr # NotExpr
+  | op=prefix_op operand=expr # PrefixOpExpr
   | lhs=expr op=bin_op rhs=expr # BinaryOpExpr
   | LPAREN expr RPAREN # ParenExpr
   ;
 
+
 simple_expr:
   location # LocationExpr
-  | THIS # ThisExpr
   | call_expr # CallExpr
   ;
 
 // TODO: make root an expr
-location: root=ID (path=location_path | indexExpr=location_array_index)?;
+location: root=location_root (path=location_path | indexExpr=location_array_index)?;
+location_root: ID;
 location_path: DOT ID;
 location_array_index: LBRACK expr RBRACK;
 
 bin_op:
-  arith_op | rel_op | eq_op | cond_op;
+  arith_op | rel_op | eq_op | cond_op | bitwise_op;
 
 arith_op: PLUS | MINUS | MULT | DIV;
 
@@ -89,12 +87,14 @@ eq_op: EQ | NEQ;
 
 cond_op: AND | OR;
 
+bitwise_op: BAND | BOR | BLSHIFT | BRSHIFT;
+
+prefix_op: NOT | BNOT;
+
 // Literals
 literal:
   INTLIT # IntLit
   | CHARLIT # CharLit
-  | bool_literal # BoolLit
-  | NULL # NullLit
+  | (TRUE | FALSE) # BoolLit
+  | STRINGLIT # StringLit
   ;
-
-bool_literal: TRUE | FALSE;

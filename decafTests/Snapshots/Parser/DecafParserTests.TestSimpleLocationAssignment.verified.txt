@@ -1,0 +1,38 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main,
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: Void,
+            Content: void
+          },
+          Name: testMethod,
+          Body: {
+            Kind: BlockNode,
+            Statements: [
+              {
+                Kind: AssignmentStatement,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: x
+                },
+                Expression: {
+                  Kind: LocationAccessExpression,
+                  Content: {
+                    Kind: IdentifierLocation,
+                    Name: y
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

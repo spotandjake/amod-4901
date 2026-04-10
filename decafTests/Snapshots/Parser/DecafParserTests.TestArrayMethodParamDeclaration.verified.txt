@@ -1,0 +1,33 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main,
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: Void,
+            Content: void
+          },
+          Name: foo,
+          Parameters: [
+            {
+              Kind: ParameterNode,
+              ParamType: {
+                Kind: TypeNode,
+                Content: int
+              },
+              Name: x,
+              IsArray: true
+            }
+          ],
+          Body: {
+            Kind: BlockNode
+          }
+        }
+      ]
+    }
+  ]
+}

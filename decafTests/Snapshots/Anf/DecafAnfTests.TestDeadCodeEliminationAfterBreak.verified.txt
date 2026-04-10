@@ -1,0 +1,125 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Program,
+      Globals: [
+        {
+          Kind: GlobalDeclNode,
+          Name: y,
+          Signature: {}
+        }
+      ],
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          Name: Main,
+          Body: {
+            Kind: BlockNode,
+            Instructions: [
+              {
+                Kind: LoopInstruction,
+                Body: {
+                  Kind: BlockNode,
+                  Instructions: [
+                    {
+                      Kind: BindNode,
+                      Location: {
+                        Kind: IdentifierLocation,
+                        Name: __anf_temp_0,
+                        LocationType: {
+                          Type: Boolean
+                        }
+                      },
+                      Expression: {
+                        Kind: BinopExpression,
+                        Lhs: {
+                          Kind: LocationAccessImmediate,
+                          Location: {
+                            Kind: IdentifierLocation,
+                            Name: y,
+                            LocationType: {}
+                          },
+                          Signature: {}
+                        },
+                        Operator: ==,
+                        Rhs: {
+                          Kind: ConstantImmediate,
+                          Value: {
+                            Kind: IntegerLiteral
+                          },
+                          Signature: {}
+                        },
+                        ExpressionType: {
+                          Type: Boolean
+                        }
+                      }
+                    },
+                    {
+                      Kind: IfInstruction,
+                      Condition: {
+                        Kind: LocationAccessImmediate,
+                        Location: {
+                          Kind: IdentifierLocation,
+                          Name: __anf_temp_0,
+                          LocationType: {
+                            Type: Boolean
+                          }
+                        },
+                        Signature: {
+                          Type: Boolean
+                        }
+                      },
+                      TrueBranch: {
+                        Kind: BlockNode,
+                        Instructions: [
+                          {
+                            Kind: AssignmentInstruction,
+                            Location: {
+                              Kind: IdentifierLocation,
+                              Name: y,
+                              LocationType: {}
+                            },
+                            Expression: {
+                              Kind: ConstantImmediate,
+                              Value: {
+                                Kind: IntegerLiteral,
+                                Value: 1
+                              },
+                              Signature: {}
+                            }
+                          },
+                          {
+                            Kind: BreakInstruction
+                          }
+                        ]
+                      },
+                      FalseBranch: {
+                        Kind: BreakInstruction
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          Signature: {
+            ReturnType: {
+              Type: Void
+            }
+          }
+        }
+      ],
+      Signature: {
+        Members: {
+          Main: {
+            ReturnType: {
+              Type: Void
+            }
+          },
+          y: {}
+        }
+      }
+    }
+  ]
+}

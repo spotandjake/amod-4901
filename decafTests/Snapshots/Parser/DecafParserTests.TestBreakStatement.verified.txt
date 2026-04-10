@@ -1,0 +1,42 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main,
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: Void,
+            Content: void
+          },
+          Name: testMethod,
+          Body: {
+            Kind: BlockNode,
+            Statements: [
+              {
+                Kind: WhileStatement,
+                Condition: {
+                  Kind: LiteralExpression,
+                  Content: {
+                    Kind: BooleanLiteral,
+                    Value: true
+                  }
+                },
+                Body: {
+                  Kind: BlockNode,
+                  Statements: [
+                    {
+                      Kind: BreakStatement
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

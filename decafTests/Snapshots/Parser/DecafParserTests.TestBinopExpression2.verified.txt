@@ -1,0 +1,60 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main,
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          ReturnType: {
+            Kind: TypeNode,
+            Type: Void,
+            Content: void
+          },
+          Name: testMethod,
+          Body: {
+            Kind: BlockNode,
+            Statements: [
+              {
+                Kind: AssignmentStatement,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: x
+                },
+                Expression: {
+                  Kind: BinopExpression,
+                  Lhs: {
+                    Kind: BinopExpression,
+                    Lhs: {
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 1
+                      }
+                    },
+                    Operator: +,
+                    Rhs: {
+                      Kind: LiteralExpression,
+                      Content: {
+                        Kind: IntegerLiteral,
+                        Value: 1
+                      }
+                    }
+                  },
+                  Operator: +,
+                  Rhs: {
+                    Kind: LiteralExpression,
+                    Content: {
+                      Kind: IntegerLiteral,
+                      Value: 1
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

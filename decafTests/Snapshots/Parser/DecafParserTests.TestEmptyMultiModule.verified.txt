@@ -1,0 +1,12 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Main
+    },
+    {
+      Kind: ModuleDeclNode,
+      Name: Main2
+    }
+  ]
+}

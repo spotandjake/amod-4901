@@ -1,0 +1,69 @@
+// This is the runtime for decaf, it is a simple module that includes,
+// some core functionality required by user programs.
+module Runtime {
+  // --- Declarations ---
+  // The heap pointer.
+  int HeapPointer;
+  // The size of a page.
+  int PageSize;
+  // --- Initialization ---
+  void Main() {
+    Runtime.HeapPointer = 0;
+    Runtime.PageSize = 65536;
+  }
+  // --- Allocation ---
+  // An extremely simple implementation of malloc using a bump allocator
+  int malloc(int byteSize) {
+    // --- Declarations ---
+    // The byteSize after we have aligned it to 4 bytes
+    int alignedByteSize;
+    // The pointer to the allocated block itself
+    int pointer;
+    // The pointer to the end of the allocated block
+    int end;
+    // The number of pages returned by `@wasm.memory.size`
+    int pageCount;
+    // -- Implementation ---
+    // Align the byteSize to 4 bytes
+    alignedByteSize = (byteSize + 3) & ~3;
+    // Set the pointer value to the current heap end
+    pointer = Runtime.HeapPointer;
+    // Determine the end of the block
+    end = pointer + alignedByteSize;
+    // Fetch the page count
+    pageCount = callout("@wasm.memory.size");
+    // Determine if the program has enough memory
+    if (end <= (pageCount * PageSize)) {
+      // Grow the memory if we need
+      callout("@wasm.memory.grow", 1);
+    }
+    // Bump the heap pointer
+    Runtime.HeapPointer = end;
+    // Return the block pointer
+    return pointer;
+  }
+  // A function similar to malloc but clears the block to 0
+  int calloc(int byteSize) {
+    // The block pointer
+    int pointer;
+    // Malloc the block
+    pointer = Runtime.malloc(byteSize);
+    // Zero the region in case we used it before
+    callout("@wasm.memory.fill", pointer, 0, byteSize);
+    // Return the block pointer
+    return pointer;
+  }
+  // --- Primitive Data Type Allocation ---
+  int allocateArray(int length) {
+    int byteSize;
+    int pointer;
+    // Compute the byteSize
+    byteSize = 4 + (4 * length);
+    // Allocate the block
+    pointer = Runtime.calloc(byteSize);
+    // Store the length
+    callout("@wasm.i32.store", pointer, 0, byteSize);
+    // Return the pointer
+    return pointer;
+  }
+}

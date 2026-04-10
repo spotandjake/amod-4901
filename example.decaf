@@ -1,6 +1,8 @@
-class Program {
+module Program {
   void Main() {
-    int x;
-    x = 1 + 2 + 3;
+    //string x;
+    //x = "test";
+    int a[];
+    a = new int[10];
   }
 }

@@ -1,0 +1,109 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Program,
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          Name: Main,
+          Body: {
+            Kind: BlockNode,
+            Instructions: [
+              {
+                Kind: BindNode,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: __anf_temp_0,
+                  LocationType: {}
+                },
+                Expression: {
+                  Kind: BinopExpression,
+                  Lhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteral,
+                      Value: 1
+                    },
+                    Signature: {}
+                  },
+                  Operator: +,
+                  Rhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteral,
+                      Value: 2
+                    },
+                    Signature: {}
+                  },
+                  ExpressionType: {}
+                }
+              },
+              {
+                Kind: BindNode,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: __anf_temp_1,
+                  LocationType: {}
+                },
+                Expression: {
+                  Kind: BinopExpression,
+                  Lhs: {
+                    Kind: LocationAccessImmediate,
+                    Location: {
+                      Kind: IdentifierLocation,
+                      Name: __anf_temp_0,
+                      LocationType: {}
+                    },
+                    Signature: {}
+                  },
+                  Operator: +,
+                  Rhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteral,
+                      Value: 3
+                    },
+                    Signature: {}
+                  },
+                  ExpressionType: {}
+                }
+              },
+              {
+                Kind: AssignmentInstruction,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: x,
+                  LocationType: {}
+                },
+                Expression: {
+                  Kind: LocationAccessImmediate,
+                  Location: {
+                    Kind: IdentifierLocation,
+                    Name: __anf_temp_1,
+                    LocationType: {}
+                  },
+                  Signature: {}
+                }
+              }
+            ]
+          },
+          Signature: {
+            ReturnType: {
+              Type: Void
+            }
+          }
+        }
+      ],
+      Signature: {
+        Members: {
+          Main: {
+            ReturnType: {
+              Type: Void
+            }
+          }
+        }
+      }
+    }
+  ]
+}

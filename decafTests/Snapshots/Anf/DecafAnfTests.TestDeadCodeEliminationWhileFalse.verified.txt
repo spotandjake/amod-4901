@@ -1,0 +1,42 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Program,
+      Globals: [
+        {
+          Kind: GlobalDeclNode,
+          Name: y,
+          Signature: {}
+        }
+      ],
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          Name: Main,
+          Body: {
+            Kind: BlockNode,
+            Instructions: [
+              null
+            ]
+          },
+          Signature: {
+            ReturnType: {
+              Type: Void
+            }
+          }
+        }
+      ],
+      Signature: {
+        Members: {
+          Main: {
+            ReturnType: {
+              Type: Void
+            }
+          },
+          y: {}
+        }
+      }
+    }
+  ]
+}

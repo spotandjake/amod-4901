@@ -5,20 +5,20 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Decaf.Utils;
-using Decaf.IR.AnfTree;
+using Decaf.IR.TypedTree;
 
 // The purpose of this file is to map from the typed tree to the ANF tree.
 namespace Decaf.Backend {
   public static class AnfMapper {
 #nullable enable
-    private record AnfState(Scope<TypedTree.Signature> CurrentScope, string? CurrentClass = null) {
-      public string? CurrentClass { get; } = CurrentClass;
+    private record AnfState(Scope<TypedTree.Signature> CurrentScope, string? CurrentModule = null) {
+      public string? CurrentModule { get; } = CurrentModule;
 #nullable disable
       public Scope<TypedTree.Signature> CurrentScope { get; } = CurrentScope;
       public int TempCounter { get; set; } = 0;
     }
     private static (AnfTree.InstructionNode.BindNode, AnfTree.ImmediateNode.LocationAccessNode) GenerateTempBind(
-      AnfState state, AnfTree.ExpressionNode value
+      AnfState state, AnfTree.ExpressionNode value, Signature signature
     ) {
       // Create the binding name
       // TODO: Should we be adding this to the current scope?
@@ -33,7 +33,7 @@ namespace Decaf.Backend {
         value
       );
       // Create the imm
-      var imm = new AnfTree.ImmediateNode.LocationAccessNode(value.Position, tempLocation);
+      var imm = new AnfTree.ImmediateNode.LocationAccessNode(value.Position, tempLocation, signature);
       // Return the bind and the imm
       return (bind, imm);
     }
@@ -41,34 +41,32 @@ namespace Decaf.Backend {
       // No mapping is required on the program node, since it is just a container
       return new AnfTree.ProgramNode(
         node.Position,
-        node.Classes.Select((c) => FromClassNode(new AnfState(node.Scope, null), c)).ToArray(),
-        node.Scope
+        node.Modules.Select((c) => FromModuleNode(new AnfState(node.Scope, null), c)).ToArray()
       );
     }
     // Declarations
-    private static AnfTree.DeclarationNode.ClassNode FromClassNode(
-      AnfState state, TypedTree.DeclarationNode.ClassNode node
+    private static AnfTree.DeclarationNode.ModuleNode FromModuleNode(
+      AnfState state, TypedTree.DeclarationNode.ModuleNode node
     ) {
       // Map the fields to property nodes (We do this inline because variable declarations are not a part of the anf tree)
-      var fields = new List<AnfTree.DeclarationNode.PropertyNode>();
+      var fields = new List<AnfTree.DeclarationNode.GlobalNode>();
       foreach (var field in node.Fields) {
         foreach (var bind in field.Binds) {
-          fields.Add(new AnfTree.DeclarationNode.PropertyNode(bind.Position, bind.Name, bind.Signature));
+          fields.Add(new AnfTree.DeclarationNode.GlobalNode(bind.Position, bind.Name, bind.Signature));
         }
       }
-      var classState = new AnfState(node.Scope, node.Name);
-      // Produce the new class node
-      return new AnfTree.DeclarationNode.ClassNode(
+      var moduleState = new AnfState(node.Scope, node.Name);
+      // Produce the new module node
+      return new AnfTree.DeclarationNode.ModuleNode(
         node.Position,
         node.Name,
         fields.ToArray(),
-        node.Methods.Select((m) => FromMethodNode(classState, m)).ToArray(),
-        node.Scope,
+        node.Methods.Select((m) => FromMethodNode(moduleState, m)).ToArray(),
         node.Signature
       );
     }
     private static AnfTree.DeclarationNode.MethodNode FromMethodNode(AnfState state, TypedTree.DeclarationNode.MethodNode node) {
-      var newState = new AnfState(node.Scope, state.CurrentClass);
+      var newState = new AnfState(node.Scope, state.CurrentModule);
       return new AnfTree.DeclarationNode.MethodNode(
         node.Position,
         node.Name,
@@ -77,13 +75,12 @@ namespace Decaf.Backend {
         ).ToArray(),
         // NOTE: We generate a new state here because we want to reset the temp counter as it can be scoped per method
         FromBlockNode(newState, node.Body),
-        node.Scope,
         node.Signature
       );
     }
     // General
-    private static AnfTree.BlockNode FromBlockNode(AnfState state, TypedTree.BlockNode node) {
-      var newState = new AnfState(node.Scope, state.CurrentClass);
+    private static AnfTree.InstructionNode.BlockNode FromBlockNode(AnfState state, TypedTree.BlockNode node) {
+      var newState = new AnfState(node.Scope, state.CurrentModule);
       // TODO: We probably need to map our declarations into something????
       // Map the statements
       var statements = new List<AnfTree.InstructionNode>();
@@ -93,7 +90,7 @@ namespace Decaf.Backend {
         statements.Add(instr);
       }
       // Produce the new block node
-      return new AnfTree.BlockNode(node.Position, statements.ToArray(), node.Scope);
+      return new AnfTree.InstructionNode.BlockNode(node.Position, statements.ToArray());
     }
     // Statements
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.InstructionNode) FromStatementNode(
@@ -175,7 +172,7 @@ namespace Decaf.Backend {
         // TODO: Consider cleaning up this decomposition
         new AnfTree.InstructionNode.LoopNode(
           node.Position,
-          new AnfTree.BlockNode(
+          new AnfTree.InstructionNode.BlockNode(
             node.Body.Position,
             [
               .. binds,
@@ -183,16 +180,13 @@ namespace Decaf.Backend {
                 node.Condition.Position,
                 imm,
                 body,
-                new AnfTree.BlockNode(
+                new AnfTree.InstructionNode.BlockNode(
                   node.Body.Position,
                   [
                     new AnfTree.InstructionNode.BreakNode(node.Body.Position)
-                  ],
-                  new Utils.Scope<TypedTree.Signature>(node.Body.Scope)
-                )),
-              .. body.Instructions
-            ],
-            body.Scope
+                  ]
+                ))
+            ]
           )
         )
       );
@@ -233,23 +227,17 @@ namespace Decaf.Backend {
       AnfState state,
       TypedTree.ExpressionNode node
     ) {
-      switch (node) {
-        case TypedTree.ExpressionNode.CallNode callNode:
-          return FromCallExpressionNode(state, callNode);
-        case TypedTree.ExpressionNode.BinopNode binopNode:
-          return FromBinopExpressionNode(state, binopNode);
-        case TypedTree.ExpressionNode.PrefixNode prefixNode:
-          return FromPrefixExpressionNode(state, prefixNode);
-        case TypedTree.ExpressionNode.NewClassNode _:
-          throw new NotImplementedException("`new` class nodes are object oriented, as such we don't implement them right now");
-        case TypedTree.ExpressionNode.NewArrayNode newArrayNode:
-          return FromNewArrayExpressionNode(state, newArrayNode);
-        case TypedTree.ExpressionNode.LocationAccessNode locationAccessNode:
-          return FromLocationAccessExpressionNode(state, locationAccessNode);
-        case TypedTree.ExpressionNode.LiteralNode literalNode:
-          return FromLiteralExpressionNode(state, literalNode);
-        default: throw new Exception($"Unknown expression node: {node.Kind}");
-      }
+      return node switch {
+        TypedTree.ExpressionNode.CallNode callNode => FromCallExpressionNode(state, callNode),
+        TypedTree.ExpressionNode.PrimitiveNode primitiveNode => FromPrimitiveExpressionNode(state, primitiveNode),
+        TypedTree.ExpressionNode.BinopNode binopNode => FromBinopExpressionNode(state, binopNode),
+        TypedTree.ExpressionNode.PrefixNode prefixNode => FromPrefixExpressionNode(state, prefixNode),
+        TypedTree.ExpressionNode.NewArrayNode newArrayNode => FromNewArrayExpressionNode(state, newArrayNode),
+        TypedTree.ExpressionNode.LocationAccessNode locationAccessNode =>
+          FromLocationAccessExpressionNode(state, locationAccessNode, node.ExpressionType),
+        TypedTree.ExpressionNode.LiteralNode literalNode => FromLiteralExpressionNode(state, literalNode, node.ExpressionType),
+        _ => throw new Exception($"Unknown expression node: {node.Kind}"),
+      };
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromCallExpressionNode(
       AnfState state,
@@ -268,10 +256,32 @@ namespace Decaf.Backend {
       }
       // Create the anf node
       var anfNode = new AnfTree.ExpressionNode.CallNode(
-        node.Position, node.IsPrimitive, locationImm, args.ToArray(), node.ExpressionType
+        node.Position, locationImm, args.ToArray(), node.ExpressionType
       );
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
+      binds.Add(setup);
+      // Return the binds and the imm
+      return (binds, imm);
+    }
+    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromPrimitiveExpressionNode(
+     AnfState state,
+     TypedTree.ExpressionNode.PrimitiveNode node
+   ) {
+      var binds = new List<AnfTree.InstructionNode.BindNode>();
+      // Map the arguments
+      var args = new List<AnfTree.ImmediateNode>();
+      foreach (var arg in node.Arguments) {
+        var (argBinds, argImm) = FromExpressionNode(state, arg);
+        binds.AddRange(argBinds);
+        args.Add(argImm);
+      }
+      // Create the anf node
+      var anfNode = new AnfTree.ExpressionNode.PrimitiveNode(
+        node.Position, node.Primitive, args.ToArray(), node.ExpressionType
+      );
+      // Generate an imm for the result
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       binds.Add(setup);
       // Return the binds and the imm
       return (binds, imm);
@@ -286,7 +296,7 @@ namespace Decaf.Backend {
       // Crate the mapped node
       var anfNode = new AnfTree.ExpressionNode.BinopNode(node.Position, leftImm, node.Operator, rightImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(leftBinds);
@@ -304,7 +314,7 @@ namespace Decaf.Backend {
       // Crate the mapped node
       var anfNode = new AnfTree.ExpressionNode.PrefixNode(node.Position, node.Operator, operandImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(operandBinds);
@@ -319,9 +329,9 @@ namespace Decaf.Backend {
       // Map the size expression
       var (sizeBinds, sizeImm) = FromExpressionNode(state, node.SizeExpr);
       // Crate the mapped node
-      var anfNode = new AnfTree.ExpressionNode.NewArrayNode(node.Position, sizeImm, node.ExpressionType);
+      var anfNode = new AnfTree.ExpressionNode.AllocateArrayNode(node.Position, sizeImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(sizeBinds);
@@ -331,40 +341,35 @@ namespace Decaf.Backend {
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromLocationAccessExpressionNode(
       AnfState state,
-      TypedTree.ExpressionNode.LocationAccessNode node
+      TypedTree.ExpressionNode.LocationAccessNode node,
+      Signature signature
     ) {
       var (locationBinds, location) = FromLocationNode(state, node.Content);
-      var imm = new AnfTree.ImmediateNode.LocationAccessNode(node.Position, location);
+      var imm = new AnfTree.ImmediateNode.LocationAccessNode(node.Position, location, signature);
       // Return the binds and the imm
       return (locationBinds, imm);
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromLiteralExpressionNode(
       AnfState state,
-      TypedTree.ExpressionNode.LiteralNode node
+      TypedTree.ExpressionNode.LiteralNode node,
+      Signature signature
     ) {
-      return ([], new AnfTree.ImmediateNode.ConstantNode(node.Position, node.Content));
+      return ([], new AnfTree.ImmediateNode.ConstantNode(node.Position, node.Content, signature));
     }
     // Locations
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode) FromLocationNode(
       AnfState state,
       TypedTree.LocationNode node
     ) {
-      switch (node) {
-        case TypedTree.LocationNode.ThisNode _:
-          // We handle the resolution here because it is easier to resolve it
-          return ([], new LocationNode.IdentifierAccessNode(
-            node.Position,
-            state.CurrentClass,
-            state.CurrentScope.GetDeclaration(node.Position, state.CurrentClass)
-          ));
-        case TypedTree.LocationNode.IdentifierAccessNode identNode:
-          return FromIdentifierAccessLocationNode(state, identNode);
-        case TypedTree.LocationNode.MemberAccessNode memberNode:
-          return FromMemberAccessLocationNode(state, memberNode);
-        case TypedTree.LocationNode.ArrayAccessNode arrayNode:
-          return FromArrayAcessLocationNode(state, arrayNode);
-        default: throw new Exception($"Unknown location node: {node.Kind}");
-      }
+      return node switch {
+        TypedTree.LocationNode.IdentifierAccessNode identNode =>
+          FromIdentifierAccessLocationNode(state, identNode),
+        TypedTree.LocationNode.MemberAccessNode memberNode =>
+          FromMemberAccessLocationNode(state, memberNode),
+        TypedTree.LocationNode.ArrayAccessNode arrayNode =>
+          FromArrayAccessLocationNode(state, arrayNode),
+        _ => throw new Exception($"Unknown location node: {node.Kind}"),
+      };
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.IdentifierAccessNode) FromIdentifierAccessLocationNode(
       AnfState state,
@@ -377,12 +382,22 @@ namespace Decaf.Backend {
       TypedTree.LocationNode.MemberAccessNode node
     ) {
       var (binds, root) = FromLocationNode(state, node.Root);
+      // TODO: This is why we should consider lowering directly to `global.get`, `local.set`, `array.get`, `array.set` at the anf level
+      if (root is not AnfTree.LocationNode.IdentifierAccessNode) {
+        // NOTE: This should be impossible given type checking restrictions
+        throw new Exception("Member access root must be an identifier access");
+      }
       return (
         binds,
-        new AnfTree.LocationNode.MemberAccessNode(node.Position, root, node.Member, node.LocationType)
+        new AnfTree.LocationNode.MemberAccessNode(
+          node.Position,
+          (AnfTree.LocationNode.IdentifierAccessNode)root,
+          node.Member,
+          node.LocationType
+        )
       );
     }
-    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.ArrayAccessNode) FromArrayAcessLocationNode(
+    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.ArrayAccessNode) FromArrayAccessLocationNode(
       AnfState state,
       TypedTree.LocationNode.ArrayAccessNode node
     ) {

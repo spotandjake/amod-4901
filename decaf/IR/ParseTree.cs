@@ -6,7 +6,7 @@ namespace Decaf.IR.ParseTree {
     Int,
     Boolean,
     Void,
-    Custom
+    String
   }
   /// <summary>
   /// An enum to represent the different kinds of nodes in our parse tree. This is useful for pattern matching and type checking when we want to process the parse tree later on, it also allows us to easily tell the node type in serialized outputs.
@@ -19,7 +19,7 @@ namespace Decaf.IR.ParseTree {
     VarBindNode,
     ParameterNode,
     // Declarations
-    ClassDeclNode,
+    ModuleDeclNode,
     MethodDeclNode,
     VariableDeclNode,
     // Statements
@@ -32,9 +32,9 @@ namespace Decaf.IR.ParseTree {
     ReturnStatement,
     // Expressions
     CallExpression,
+    PrimitiveExpression,
     BinopExpression,
     PrefixExpression,
-    NewClassExpression,
     NewArrayExpression,
     LocationAccessExpression,
     LiteralExpression,
@@ -43,9 +43,7 @@ namespace Decaf.IR.ParseTree {
     CharacterLiteral,
     StringLiteral,
     BooleanLiteral,
-    NullLiteral,
     // Locations
-    ThisLocation,
     IdentifierLocation,
     MemberLocation,
     ArrayLocation
@@ -65,9 +63,9 @@ namespace Decaf.IR.ParseTree {
     protected Node(Position position) { this.Position = position; }
   };
 #nullable enable
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<bool>? Scope) : Node(Position) {
+  public record ProgramNode(Position Position, DeclarationNode.ModuleNode[] Modules, Scope<bool>? Scope) : Node(Position) {
     public override NodeKind Kind => NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
+    public DeclarationNode.ModuleNode[] Modules { get; } = Modules;
     public Scope<bool>? Scope { get; } = Scope;
   };
   public record BlockNode(
@@ -93,33 +91,24 @@ namespace Decaf.IR.ParseTree {
   /// <summary>
   /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
   /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
+  [JsonDerivedType(typeof(ModuleNode), "ModuleDeclNode")]
   [JsonDerivedType(typeof(VariableNode), "VarDeclNode")]
   [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
-    public record ClassNode : DeclarationNode {
-      public override NodeKind Kind => NodeKind.ClassDeclNode;
-      public string Name { get; }
-      public string? SuperClassName { get; }
-      public VariableNode[] Fields { get; }
-      public MethodNode[] Methods { get; }
-      public Scope<bool>? Scope { get; }
-      public ClassNode(
-        Position position,
-        string name,
-        string? superClassName,
-        VariableNode[] fields,
-        MethodNode[] methods,
-        Scope<bool>? scope
-      ) : base(position) {
-        this.Name = name;
-        this.SuperClassName = superClassName;
-        this.Fields = fields;
-        this.Methods = methods;
-        this.Scope = scope;
-      }
+    /// <summary>A module declaration.</summary>
+    public record ModuleNode(
+      Position Position,
+      string Name,
+      VariableNode[] Fields,
+      MethodNode[] Methods,
+      Scope<bool>? Scope
+    ) : DeclarationNode(Position) {
+      public override NodeKind Kind => NodeKind.ModuleDeclNode;
+      public string Name { get; } = Name;
+      public VariableNode[] Fields { get; } = Fields;
+      public MethodNode[] Methods { get; } = Methods;
+      public Scope<bool>? Scope { get; } = Scope;
     }
     /// <summary>A variable declaration.</summary>
     public record VariableNode : DeclarationNode {
@@ -265,11 +254,6 @@ namespace Decaf.IR.ParseTree {
       public string Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
     };
-    /// <summary>A new class expression.</summary>
-    public record NewClassNode(Position Position, LocationNode Path) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.NewClassExpression;
-      public LocationNode Path { get; } = Path;
-    };
     /// <summary>A new array expression.</summary>
     public record NewArrayNode(
       Position Position,
@@ -298,7 +282,6 @@ namespace Decaf.IR.ParseTree {
   [JsonDerivedType(typeof(LiteralNodes.CharacterNode), "CharLiteral")]
   [JsonDerivedType(typeof(LiteralNodes.StringNode), "StringLiteral")]
   [JsonDerivedType(typeof(LiteralNodes.BooleanNode), "BoolLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.NullNode), "NullLiteral")]
   public abstract record LiteralNode : Node {
     protected LiteralNode(Position position) : base(position) { }
   };
@@ -323,25 +306,16 @@ namespace Decaf.IR.ParseTree {
       public override NodeKind Kind => NodeKind.BooleanLiteral;
       public bool Value { get; } = Value;
     };
-    /// <summary>An null literal node.</summary>
-    public record NullNode(Position Position) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.NullLiteral;
-    };
   }
   /// <summary>
   /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
   /// A location node represents any access to a variable, field or array.
   /// </summary>
-  [JsonDerivedType(typeof(ThisNode), "ThisLocation")]
   [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
   [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
   [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
   public abstract record LocationNode : Node {
     protected LocationNode(Position position) : base(position) { }
-    /// <summary>A location node representing a `this` access.</summary>
-    public record ThisNode(Position Position) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.ThisLocation;
-    };
     /// <summary>
     /// An identifier node, is used to represent a simple variable access of the form `x`.
     /// </summary>

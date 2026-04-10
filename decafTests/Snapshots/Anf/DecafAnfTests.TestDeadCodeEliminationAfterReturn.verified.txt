@@ -1,0 +1,60 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Program,
+      Globals: [
+        {
+          Kind: GlobalDeclNode,
+          Name: y,
+          Signature: {}
+        }
+      ],
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          Name: Main,
+          Body: {
+            Kind: BlockNode,
+            Instructions: [
+              {
+                Kind: AssignmentInstruction,
+                Location: {
+                  Kind: IdentifierLocation,
+                  Name: y,
+                  LocationType: {}
+                },
+                Expression: {
+                  Kind: ConstantImmediate,
+                  Value: {
+                    Kind: IntegerLiteral,
+                    Value: 1
+                  },
+                  Signature: {}
+                }
+              },
+              {
+                Kind: ReturnInstruction
+              }
+            ]
+          },
+          Signature: {
+            ReturnType: {
+              Type: Void
+            }
+          }
+        }
+      ],
+      Signature: {
+        Members: {
+          Main: {
+            ReturnType: {
+              Type: Void
+            }
+          },
+          y: {}
+        }
+      }
+    }
+  ]
+}

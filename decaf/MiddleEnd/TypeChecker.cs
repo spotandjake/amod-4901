@@ -7,155 +7,21 @@ using TypedTree = Decaf.IR.TypedTree;
 using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.TypeCheckingErrors;
+using Decaf.IR.PrimitiveDefinition;
 
 namespace Decaf.MiddleEnd.TypeChecker {
-  // The private engine that handles type checking, rules
-  static class TypeCheckerEngine {
-    // Builders
-    public static Signature.PrimitiveSignature BuildSimpleSignature(Position position, PrimitiveType type) {
-      return new Signature.PrimitiveSignature(position, type);
-    }
-    public static Signature BuildSimpleCompoundSignature(bool IsArray, ParseTree.TypeNode node) {
-      Signature baseType = node.Type switch {
-        ParseTree.PrimitiveType.Int => BuildSimpleSignature(node.Position, PrimitiveType.Int),
-        ParseTree.PrimitiveType.Boolean => BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
-        ParseTree.PrimitiveType.Void => BuildSimpleSignature(node.Position, PrimitiveType.Void),
-        ParseTree.PrimitiveType.Custom => new Signature.CustomSignature(node.Position, node.Content),
-        // NOTE: This case can never be hit c# exhaustiveness is just being weird
-        _ => throw new Exception("Impossible: unknown primitive type"),
-      };
-      return IsArray switch {
-        true => new Signature.ArraySignature(node.Position, baseType),
-        false => baseType,
-      };
-    }
-    // Internal Helpers
-    private static string GetTypeCategoryName(Signature signature) {
-      return signature switch {
-        Signature.PrimitiveSignature _ => "primitive",
-        Signature.ClassSignature _ => "class",
-        Signature.MethodSignature _ => "method",
-        Signature.ArraySignature _ => "array",
-        Signature.CustomSignature _ => "custom type",
-        // NOTE: This is never possible c# is bad at exhaustiveness checking with records
-        _ => throw new Exception($"Unknown signature type {signature.GetType()}"),
-      };
-    }
-    private static string GetPrimitiveTypeName(PrimitiveType type) {
-      return type switch {
-        PrimitiveType.Int => "int",
-        PrimitiveType.Boolean => "boolean",
-        PrimitiveType.Void => "void",
-        PrimitiveType.Null => "null",
-        PrimitiveType.Character => "char",
-        PrimitiveType.String => "string",
-        // NOTE: This is never possible c# is bad at exhaustiveness checking with enums
-        _ => throw new Exception($"Unknown primitive type {type}"),
-      };
-    }
-    private static Signature ResolveCustomSignature(Signature.CustomSignature signature, Scope<Signature> scope) {
-      // Look up the custom signature in the scope
-      var resolvedSignature = scope.GetDeclaration(signature.Position, signature.Name);
-      // Ensure that the signature we actually found is a class signature
-      if (resolvedSignature is not Signature.ClassSignature) {
-        throw new LhsNotRhs(signature.Position, $"custom type named {signature.Name}", "no such class");
-      }
-      return resolvedSignature;
-    }
-    // Checkers
-    public static void CheckClassSignature(
-      Signature.ClassSignature expected,
-      Signature.ClassSignature received,
-      Scope<Signature> scope
-    ) {
-      // Check that we have the same number of members on both sides
-      if (expected.Members.Count != received.Members.Count) {
-        throw new LhsNotRhs(expected.Position, $"{expected.Members.Count} members", $"{received.Members.Count} members");
-      }
-      // Check that the members on the classes match
-      foreach (var expectedMember in expected.Members) {
-        if (!received.Members.TryGetValue(expectedMember.Key, out Signature value)) {
-          throw new LhsNotRhs(expected.Position, $"member named {expectedMember.Key}", "no such member");
-        }
-        // Check that the types are the same
-        CheckType(expectedMember.Value, value, scope);
-      }
-    }
-    public static void CheckMethodSignature(
-      Signature.MethodSignature expected,
-      Signature.MethodSignature received,
-      Scope<Signature> scope
-    ) {
-      // Check that the parameter counts are equal on both sides
-      if (expected.ParameterTypes.Length != received.ParameterTypes.Length) {
-        throw new LhsNotRhs(expected.Position, $"method with {expected.ParameterTypes.Length} parameters", $"method with {received.ParameterTypes.Length} parameters");
-      }
-      // Check that the parameters are the same types on both sides
-      foreach (var (expectedParam, receivedParam) in expected.ParameterTypes.Zip(received.ParameterTypes)) {
-        CheckType(expectedParam, receivedParam, scope);
-      }
-      // Check that the return types are the same on both sides
-      CheckType(expected.ReturnType, received.ReturnType, scope);
-    }
-    public static void CheckArraySignature(
-      Signature.ArraySignature expected,
-      Signature.ArraySignature received,
-      Scope<Signature> scope
-    ) {
-      // In order for an array signature to match the inner types must match
-      CheckType(expected.Typ, received.Typ, scope);
-    }
-    public static void CheckPrimitiveSignature(
-      Signature.PrimitiveSignature expected,
-      Signature.PrimitiveSignature received,
-      Scope<Signature> scope
-    ) {
-      // In order for a primitive signature to match the types must match
-      if (expected.Type != received.Type) {
-        throw new LhsNotRhs(expected.Position, GetPrimitiveTypeName(expected.Type), GetPrimitiveTypeName(received.Type));
-      }
-    }
-    public static void CheckType(Signature expected, Signature received, Scope<Signature> scope) {
-      switch ((expected, received)) {
-        // Valid Cases (lhs == rhs)
-        case (Signature.ClassSignature e, Signature.ClassSignature r):
-          CheckClassSignature(e, r, scope);
-          break;
-        case (Signature.MethodSignature e, Signature.MethodSignature r):
-          CheckMethodSignature(e, r, scope);
-          break;
-        case (Signature.ArraySignature e, Signature.ArraySignature r):
-          CheckArraySignature(e, r, scope);
-          break;
-        case (Signature.PrimitiveSignature e, Signature.PrimitiveSignature r):
-          CheckPrimitiveSignature(e, r, scope);
-          break;
-        // Custom Cases
-        case (Signature.CustomSignature e, _):
-          CheckType(ResolveCustomSignature(e, scope), received, scope);
-          break;
-        case (_, Signature.CustomSignature r):
-          CheckType(expected, ResolveCustomSignature(r, scope), scope);
-          break;
-        // NOTE: I think we want to resolve custom signatures first be they on the `e` or `r` side and then recall CheckType
-        // Invalid Cases (lhs != rhs)
-        default:
-          throw new LhsNotRhs(expected.Position, GetTypeCategoryName(expected), GetTypeCategoryName(received));
-      }
-    }
-  }
   // The Actual type checking implement
   public class TypeChecker {
     private TypeChecker() { }
     private readonly record struct TypeCheckContext(
 #nullable enable
-      Signature.ClassSignature? CurrentClass,
+      (string name, Signature.ModuleSignature signature)? CurrentModule,
       Signature.MethodSignature? CurrentMethod,
 #nullable disable
       Scope<Signature> CurrentScope
     ) {
 #nullable enable
-      public Signature.ClassSignature? CurrentClass { get; } = CurrentClass;
+      public (string name, Signature.ModuleSignature Signature)? CurrentModule { get; } = CurrentModule;
       public Signature.MethodSignature? CurrentMethod { get; } = CurrentMethod;
 #nullable disable
       public Scope<Signature> CurrentScope { get; } = CurrentScope;
@@ -164,9 +30,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Initialize a new context for the program.
       // (NOTE: The new scope is used to track signatures rather than just existence and use of declarations)
       var programContext = new TypeCheckContext(null, null, new Scope<Signature>(null));
-      // Map the internal classes
-      var classes = node.Classes.Select(decl => TypeDeclClassNode(decl, programContext)).ToArray();
-      return new ProgramNode(node.Position, classes, programContext.CurrentScope);
+      // Map the internal modules
+      var modules = node.Modules.Select(decl => TypeDeclModuleNode(decl, programContext)).ToArray();
+      return new ProgramNode(node.Position, modules, programContext.CurrentScope);
     }
     // General
     private static BlockNode TypeBlockNode(
@@ -176,7 +42,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
     ) {
       // Create a new context for the block
       var context = new TypeCheckContext(
-        parentContext.CurrentClass,
+        parentContext.CurrentModule,
         parentContext.CurrentMethod,
         new Scope<Signature>(parentContext.CurrentScope)
       );
@@ -191,53 +57,49 @@ namespace Decaf.MiddleEnd.TypeChecker {
       return new BlockNode(node.Position, decls, statements.ToArray(), context.CurrentScope);
     }
     // DeclarationNodes
-    private static DeclarationNode.ClassNode TypeDeclClassNode(
-      ParseTree.DeclarationNode.ClassNode node,
+    private static DeclarationNode.ModuleNode TypeDeclModuleNode(
+      ParseTree.DeclarationNode.ModuleNode node,
       TypeCheckContext parentContext
     ) {
-      if (node.SuperClassName != null) {
-        // TODO: Handle validation of superClass
-        throw new NotImplementedException("Subtyping and inheritance are not implemented");
-      }
-      // Create a base signature and register the class in the parent scope
-      var classSignature = new Signature.ClassSignature(node.Position, []);
-      parentContext.CurrentScope.AddDeclaration(node.Position, node.Name, classSignature);
-      // We create a new context for the class
+      // Create a base signature and register the module in the parent scope
+      var moduleSignature = new Signature.ModuleSignature(node.Position, []);
+      parentContext.CurrentScope.AddDeclaration(node.Position, node.Name, moduleSignature);
+      // We create a new context for the module
       var context = new TypeCheckContext(
-        classSignature,
+        (name: node.Name, signature: moduleSignature),
         null,
         new Scope<Signature>(parentContext.CurrentScope)
       );
-      // Map the fields of the class
+      // Map the fields of the module
       var fields = node.Fields.Select(field => {
         var typedField = TypeDeclVariableNode(field, context);
         foreach (var bind in typedField.Binds) {
-          // After mapping the method we need to update the class signature and the global scope
-          context.CurrentClass.Members[bind.Name] = bind.Signature;
+          // After mapping the method we need to update the module signature and the global scope
+          context.CurrentModule.Value.Signature.Members[bind.Name] = bind.Signature;
         }
         // Update the global scope with the new partial signature
-        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
-        // Return the mapped class
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule.Value.Signature);
+        // Return the mapped field
         return typedField;
       }).ToArray();
       // Map the methods
       var methods = node.Methods.Select(method => {
         var typedMethod = TypeDeclMethodNode(method, context);
-        // After mapping the method we need to update the class signature and the global scope
-        context.CurrentClass.Members[typedMethod.Name] = typedMethod.Signature;
+        // After mapping the method we need to update the module signature and the global scope
+        context.CurrentModule.Value.Signature.Members[typedMethod.Name] = typedMethod.Signature;
         // Update the global scope with the new partial signature
-        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentClass);
-        // Return the mapped class
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule.Value.Signature);
+        // Return the mapped method
         return typedMethod;
       }).ToArray();
-      // Return the mapped class node
-      return new DeclarationNode.ClassNode(
+      // Return the mapped module node
+      return new DeclarationNode.ModuleNode(
         node.Position,
         node.Name,
         fields,
         methods,
         context.CurrentScope,
-        context.CurrentClass
+        context.CurrentModule.Value.Signature
       );
     }
     private static DeclarationNode.VariableNode TypeDeclVariableNode(
@@ -276,7 +138,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       parentContext.CurrentScope.AddDeclaration(node.Position, node.Name, signature);
       // Create a new context for the method
       var context = new TypeCheckContext(
-        parentContext.CurrentClass,
+        parentContext.CurrentModule,
         signature,
         new Scope<Signature>(parentContext.CurrentScope)
       );
@@ -400,7 +262,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Ensure we are actually in a method, note that this will 
       // never be hit due to parsing but it's a future check if we ever allowed top level statements
       if (parentContext.CurrentMethod == null) {
-        throw new ReturnUseOutsideOfClass(node.Position);
+        throw new ReturnUseOutsideOfMethod(node.Position);
       }
       // Get the expected return type
       var expectedReturnType = parentContext.CurrentMethod.ReturnType;
@@ -427,51 +289,65 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.ExpressionNode.CallNode call => TypeExpressionCallNode(call, parentContext),
         ParseTree.ExpressionNode.BinopNode binop => TypeExpressionBinopNode(binop, parentContext),
         ParseTree.ExpressionNode.PrefixNode prefix => TypeExpressionPrefixNode(prefix, parentContext),
-        ParseTree.ExpressionNode.NewClassNode newClass => TypeExpressionNewClassNode(newClass, parentContext),
         ParseTree.ExpressionNode.NewArrayNode newArray => TypeExpressionNewArrayNode(newArray, parentContext),
         ParseTree.ExpressionNode.LocationAccessNode location => TypeExpressionLocationAcccessNode(location, parentContext),
         ParseTree.ExpressionNode.LiteralNode literal => TypeExpressionLiteralNode(literal, parentContext),
         _ => throw new Exception($"Unknown expression node type: {node.Kind}"),
       };
     }
-    private static ExpressionNode.CallNode TypeExpressionCallNode(
+    private static ExpressionNode TypeExpressionCallNode(
       ParseTree.ExpressionNode.CallNode node,
       TypeCheckContext parentContext
     ) {
-      // Map the path and find the signature
-      LocationNode path = node.IsPrimitive switch {
-        true => MapPrimitivePath(node.Path, parentContext),
-        false => TypeLocationNode(node.Path, parentContext)
-      };
-      // Map the arguments
-      var args = node.Arguments.Select(arg => TypeExpressionNode(arg, parentContext)).ToArray();
-      // Validate the path is actually a method
-      if (path.LocationType is not Signature.MethodSignature methodSignature) {
-        throw new CallOnNonMethod(node.Position);
+      if (node.IsPrimitive) {
+        // Map the path and find the signature
+        var (primSig, primDef) = MapPrimitivePath(node.Path, parentContext);
+        // Map the arguments
+        var args = node.Arguments.Select(arg => TypeExpressionNode(arg, parentContext)).ToArray();
+        // Validate the path is actually a method
+        if (primSig is not Signature.MethodSignature methodSignature) {
+          throw new CallOnNonMethod(node.Position);
+        }
+        // Create a signature for the call node based on the values
+        var signature = new Signature.MethodSignature(
+          node.Position,
+          ((Signature.MethodSignature)primSig).ReturnType,
+          args.Select(arg => arg.ExpressionType).ToArray()
+        );
+        // Check the signature matches the expected signature
+        TypeCheckerEngine.CheckType(methodSignature, signature, parentContext.CurrentScope);
+        // Map the node itself
+        return new ExpressionNode.PrimitiveNode(node.Position, primDef, args, signature.ReturnType);
       }
-      // Create a signature for the call node based on the values
-      var signature = new Signature.MethodSignature(
-        node.Position,
-        ((Signature.MethodSignature)path.LocationType).ReturnType,
-        args.Select(arg => arg.ExpressionType).ToArray()
-      );
-      // Check the signature matches the expected signature
-      TypeCheckerEngine.CheckType(methodSignature, signature, parentContext.CurrentScope);
-      // Map the node itself
-      return new ExpressionNode.CallNode(node.Position, node.IsPrimitive, path, args, signature.ReturnType);
+      else {
+        // Map the path and find the signature
+        LocationNode path = TypeLocationNode(node.Path, parentContext);
+        // Map the arguments
+        var args = node.Arguments.Select(arg => TypeExpressionNode(arg, parentContext)).ToArray();
+        // Validate the path is actually a method
+        if (path.LocationType is not Signature.MethodSignature methodSignature) {
+          throw new CallOnNonMethod(node.Position);
+        }
+        // Create a signature for the call node based on the values
+        var signature = new Signature.MethodSignature(
+          node.Position,
+          ((Signature.MethodSignature)path.LocationType).ReturnType,
+          args.Select(arg => arg.ExpressionType).ToArray()
+        );
+        // Check the signature matches the expected signature
+        TypeCheckerEngine.CheckType(methodSignature, signature, parentContext.CurrentScope);
+        // Map the node itself
+        return new ExpressionNode.CallNode(node.Position, path, args, signature.ReturnType);
+      }
     }
-    private static LocationNode MapPrimitivePath(
+    private static (Signature, PrimDefinition) MapPrimitivePath(
       ParseTree.LocationNode node,
       TypeCheckContext _
     ) {
       switch (node) {
         case ParseTree.LocationNode.IdentifierAccessNode identifierAccess:
-          // Get the raw string value
-          var primitiveName = identifierAccess.Name;
-          // Get the signature of the primitive callout based on the name, this will throw if the primitive name is invalid
-          var signature = PrimitiveTypes.GetPrimitiveCallSignature(primitiveName, node.Position);
-          // Map the node itself, we know the signature is correct based on the primitive name so
-          return new LocationNode.IdentifierAccessNode(node.Position, primitiveName, signature);
+          // Resolve the primitive name, if the primitive is invalid this will throw
+          return PrimitiveTypes.GetPrimitiveCallSignature(identifierAccess.Name, node.Position);
         // NOTE: This case can never be hit due to parsing but its a sanity check for the future
         default: throw new Exception("Primitive callouts must be simple identifiers");
       }
@@ -522,6 +398,15 @@ namespace Decaf.MiddleEnd.TypeChecker {
             TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean)
           ]
         ),
+        // Bitwise operators: (int, int) => int
+        "&" or "|" or "<<" or ">>" => new Signature.MethodSignature(
+          node.Position,
+          TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Int),
+          [
+            TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Int),
+            TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Int)
+          ]
+        ),
         _ => throw new Exception($"Unknown binary operator {node.Operator}"),
       };
       // Construct the actual signature of the operator application
@@ -540,11 +425,21 @@ namespace Decaf.MiddleEnd.TypeChecker {
       TypeCheckContext parentContext
     ) {
       // Construct the expected signature (boolean) => boolean for the not operator
-      var expectedSignature = new Signature.MethodSignature(
-        node.Position,
-        TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
-        [TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean)]
-      );
+      var expectedSignature = node.Operator switch {
+        // Not operator: (boolean) => boolean
+        "!" => new Signature.MethodSignature(
+          node.Position,
+          TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
+          [TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean)]
+        ),
+        // Bitwise not operator: (int) => int
+        "~" => new Signature.MethodSignature(
+          node.Position,
+          TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Int),
+          [TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Int)]
+        ),
+        _ => throw new Exception($"Unknown prefix operator {node.Operator}"),
+      };
       // Map the operand
       var operand = TypeExpressionNode(node.Operand, parentContext);
       // Construct the actual signature of the operator application
@@ -557,20 +452,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
       TypeCheckerEngine.CheckType(expectedSignature, actualSignature, parentContext.CurrentScope);
       // Map the node itself
       return new ExpressionNode.PrefixNode(node.Position, node.Operator, operand, expectedSignature.ReturnType);
-    }
-    private static ExpressionNode.NewClassNode TypeExpressionNewClassNode(
-      ParseTree.ExpressionNode.NewClassNode node,
-      TypeCheckContext parentContext
-    ) {
-      // Map the path
-      var path = TypeLocationNode(node.Path, parentContext);
-      var signature = path.LocationType;
-      // Ensure the path is actually a class type
-      if (signature is not Signature.ClassSignature) {
-        throw new InitializationOfNonClass(node.Position);
-      }
-      // Map the node itself
-      return new ExpressionNode.NewClassNode(node.Position, path, signature);
     }
     private static ExpressionNode.NewArrayNode TypeExpressionNewArrayNode(
       ParseTree.ExpressionNode.NewArrayNode node,
@@ -613,7 +494,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
         TypedTree.LiteralNodes.CharacterNode _ => TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Character),
         TypedTree.LiteralNodes.StringNode _ => TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.String),
         TypedTree.LiteralNodes.BooleanNode _ => TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
-        TypedTree.LiteralNodes.NullNode _ => TypeCheckerEngine.BuildSimpleSignature(node.Position, PrimitiveType.Null),
         _ => throw new Exception($"Unknown literal node type {content.Kind}"),
       };
       return new ExpressionNode.LiteralNode(node.Position, content, signature);
@@ -625,7 +505,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.LiteralNodes.CharacterNode n => TypeLiteralCharacterNode(n),
         ParseTree.LiteralNodes.StringNode n => TypeLiteralStringNode(n),
         ParseTree.LiteralNodes.BooleanNode n => TypeLiteralBooleanNode(n),
-        ParseTree.LiteralNodes.NullNode n => TypeLiteralNullNode(n),
         _ => throw new Exception($"Unknown literal node type {node.Kind}"),
       };
       ;
@@ -642,20 +521,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
     private static TypedTree.LiteralNodes.BooleanNode TypeLiteralBooleanNode(ParseTree.LiteralNodes.BooleanNode node) {
       return new TypedTree.LiteralNodes.BooleanNode(node.Position, node.Value);
     }
-    private static TypedTree.LiteralNodes.NullNode TypeLiteralNullNode(ParseTree.LiteralNodes.NullNode node) {
-      return new TypedTree.LiteralNodes.NullNode(node.Position);
-    }
     // Locations
     private static LocationNode TypeLocationNode(ParseTree.LocationNode node, TypeCheckContext parentContext) {
       switch (node) {
-        case ParseTree.LocationNode.ThisNode: {
-            // Get the current class context and return its partial signature
-            var parentClassSignature = parentContext.CurrentClass;
-            // NOTE: This could never actually happen due to parsing but it's a future check if we ever allowed top level statements
-            if (parentClassSignature == null) throw new ThisAccessOutsideOfClass(node.Position);
-            // NOTE: This only works because we require declarations to be defined before use, otherwise we would need to delay t
-            return new LocationNode.ThisNode(node.Position, parentClassSignature);
-          }
         case ParseTree.LocationNode.IdentifierAccessNode identifierAccess: {
             // Find the signature of the identifier in the current scope
             var signature = parentContext.CurrentScope.GetDeclaration(node.Position, identifierAccess.Name);
@@ -665,12 +533,12 @@ namespace Decaf.MiddleEnd.TypeChecker {
         case ParseTree.LocationNode.MemberAccessNode pathAccess: {
             // Map the root of the member access
             var root = TypeLocationNode(pathAccess.Root, parentContext);
-            // Ensure the root expression is a class type
-            if (root.LocationType is not Signature.ClassSignature classSignature) {
-              throw new MemberAccessOnNonClass(node.Position);
+            // Ensure the root expression is a module type
+            if (root.LocationType is not Signature.ModuleSignature moduleSignature) {
+              throw new MemberAccessOnNonModule(node.Position);
             }
-            // Ensure the class has the member being accessed
-            if (!classSignature.Members.TryGetValue(pathAccess.Member, out Signature signature)) {
+            // Ensure the module has the member being accessed
+            if (!moduleSignature.Members.TryGetValue(pathAccess.Member, out Signature signature)) {
               throw new MemberAccessUnknown(node.Position, pathAccess.Member);
             }
             // Map the node itself

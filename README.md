@@ -55,7 +55,7 @@ The following tokens are implemented:
   * boolean
   * break
   * callout
-  * class
+  * module
   * continue
   * else
   * extends
@@ -104,6 +104,12 @@ The following tokens are implemented:
     * OR (`||`)
   * Assignment
     * ASSIGN (`=`)
+  * Bitwise
+    * BITAND (`&`)
+    * BITOR (`|`)
+    * BITLSHIFT (`<<`)
+    * BITRSHIFT (`>>`)
+    * BITNOT (`~`)
 * Literals
   * INTLIT (e.g. `1234`)
   * BOOLLIT (`true`,`false`)

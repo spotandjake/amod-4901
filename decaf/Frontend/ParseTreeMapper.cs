@@ -23,8 +23,8 @@ namespace Decaf.Frontend {
     /// <returns>The corresponding `ProgramNode` in our internal parse tree representation.</returns>
     public static ProgramNode MapProgramContext(DecafParser.ProgramContext context) {
       var position = MapPositionContext(context);
-      var classes = context.class_decl().Select(MapClassDeclContext).ToArray();
-      return new ProgramNode(position, classes, null);
+      var modules = context.module_decl().Select(MapModuleDeclContext).ToArray();
+      return new ProgramNode(position, modules, null);
     }
     // Internal Helpers
     private static Position MapPositionContext(Antlr4.Runtime.ParserRuleContext context) {
@@ -36,13 +36,12 @@ namespace Decaf.Frontend {
       };
     }
     // Declarations
-    private static DeclarationNode.ClassNode MapClassDeclContext(DecafParser.Class_declContext context) {
+    private static DeclarationNode.ModuleNode MapModuleDeclContext(DecafParser.Module_declContext context) {
       var position = MapPositionContext(context);
       var name = context.name.Text;
-      var superClassName = context.superClassName?.Text;
       var varDecls = context.var_decl().Select(MapVarDeclContext).ToArray();
       var methodDecls = context.method_decl().Select(MapMethodDeclContext).ToArray();
-      return new DeclarationNode.ClassNode(position, name, superClassName, varDecls, methodDecls, null);
+      return new DeclarationNode.ModuleNode(position, name, varDecls, methodDecls, null);
     }
     private static DeclarationNode.VariableNode MapVarDeclContext(DecafParser.Var_declContext context) {
       var position = MapPositionContext(context);
@@ -87,7 +86,7 @@ namespace Decaf.Frontend {
         DecafParser.VoidTypeContext _ => PrimitiveType.Void,
         DecafParser.IntTypeContext _ => PrimitiveType.Int,
         DecafParser.BooleanTypeContext _ => PrimitiveType.Boolean,
-        DecafParser.CustomTypeContext _ => PrimitiveType.Custom,
+        DecafParser.StringTypeContext _ => PrimitiveType.String,
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible type at TypeNode.FromContext")
       };
@@ -161,7 +160,6 @@ namespace Decaf.Frontend {
       return context switch {
         DecafParser.SimpleExprContext simpleExprCtx => simpleExprCtx.simple_expr() switch {
           DecafParser.LocationExprContext locationCtx => MapLocationExpressionContext(locationCtx.location()),
-          DecafParser.ThisExprContext thisCtx => MapThisExpressionContext(thisCtx),
           DecafParser.CallExprContext callCtx => callCtx.call_expr() switch {
             DecafParser.MethodCallExprContext methodCallCtx => MapCallExpressionContext(methodCallCtx.method_call()),
             DecafParser.PrimCalloutExprContext primCalloutCtx => MapPrimitiveCallExpressionContext(primCalloutCtx.prim_callout()),
@@ -171,11 +169,10 @@ namespace Decaf.Frontend {
           // NOTE: This should be impossible due to grammar restrictions
           _ => throw new InvalidProgramException("Impossible expression at ExpressionNode.FromContext"),
         },
-        DecafParser.NewObjectExprContext newObjExprCtx => MapNewClassExpressionContext(newObjExprCtx),
         DecafParser.NewArrayExprContext newArrExprCtx => MapNewArrayExpressionContext(newArrExprCtx),
         DecafParser.LiteralExprContext literalExprCtx => MapLiteralExpressionContext(literalExprCtx.literal()),
         DecafParser.BinaryOpExprContext binopExprCtx => MapBinopExpressionContext(binopExprCtx),
-        DecafParser.NotExprContext prefixExprCtx => MapPrefixExpressionContext(prefixExprCtx),
+        DecafParser.PrefixOpExprContext prefixExprCtx => MapPrefixExpressionContext(prefixExprCtx),
         DecafParser.ParenExprContext parenExprCtx => MapExpressionContext(parenExprCtx.expr()),
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible expression at ExpressionNode.FromContext"),
@@ -190,26 +187,28 @@ namespace Decaf.Frontend {
     private static ExpressionNode.CallNode MapPrimitiveCallExpressionContext(DecafParser.Prim_calloutContext context) {
       var position = MapPositionContext(context);
       // Create a fake location node
-      var path = new LocationNode.IdentifierAccessNode(position, context.primId.Text);
+      var path = new LocationNode.IdentifierAccessNode(position, context.primId.Text.Trim('"'));
       // Map the arguments
       var args = new List<ExpressionNode>();
-      foreach (var child in context.args.children) {
-        switch (child) {
-          case DecafParser.ExprContext exprCtx:
-            args.Add(MapExpressionContext(exprCtx));
-            break;
-          case Antlr4.Runtime.Tree.ITerminalNode strLitCtx:
-            // Because strings are just a terminal we need to double check we are not seeing the `,` token which is also a terminal
-            if (strLitCtx.Symbol.Type != DecafParser.STRINGLIT) continue;
-            var txt = strLitCtx.GetText();
-            // Remove the quotes from the string literal
-            args.Add(new ExpressionNode.LiteralNode(
-              position,
-              new ParseTree.LiteralNodes.StringNode(position, txt[1..^1])
-            ));
-            break;
-          default:
-            throw new InvalidProgramException("Impossible argument at PrimitiveCallNode.FromContext");
+      if (context.args.ChildCount > 0) {
+        foreach (var child in context.args.children) {
+          switch (child) {
+            case DecafParser.ExprContext exprCtx:
+              args.Add(MapExpressionContext(exprCtx));
+              break;
+            case Antlr4.Runtime.Tree.ITerminalNode strLitCtx:
+              // Because strings are just a terminal we need to double check we are not seeing the `,` token which is also a terminal
+              if (strLitCtx.Symbol.Type != DecafParser.STRINGLIT) continue;
+              var txt = strLitCtx.GetText();
+              // Remove the quotes from the string literal
+              args.Add(new ExpressionNode.LiteralNode(
+                position,
+                new ParseTree.LiteralNodes.StringNode(position, txt[1..^1])
+              ));
+              break;
+            default:
+              throw new InvalidProgramException("Impossible argument at PrimitiveCallNode.FromContext");
+          }
         }
       }
       return new ExpressionNode.CallNode(position, true, path, args.ToArray());
@@ -221,9 +220,9 @@ namespace Decaf.Frontend {
       var rhs = MapExpressionContext(context.rhs);
       return new ExpressionNode.BinopNode(position, lhs, op, rhs);
     }
-    private static ExpressionNode.PrefixNode MapPrefixExpressionContext(DecafParser.NotExprContext context) {
+    private static ExpressionNode.PrefixNode MapPrefixExpressionContext(DecafParser.PrefixOpExprContext context) {
       var position = MapPositionContext(context);
-      var op = context.op.Text;
+      var op = context.op.GetText();
       var operand = MapExpressionContext(context.operand);
       return new ExpressionNode.PrefixNode(position, op, operand);
     }
@@ -231,16 +230,6 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(context);
       var location = MapLocationContext(context);
       return new ExpressionNode.LocationAccessNode(position, location);
-    }
-    private static ExpressionNode.LocationAccessNode MapThisExpressionContext(DecafParser.ThisExprContext context) {
-      var position = MapPositionContext(context);
-      return new ExpressionNode.LocationAccessNode(position, new LocationNode.ThisNode(position));
-    }
-    private static ExpressionNode.NewClassNode MapNewClassExpressionContext(DecafParser.NewObjectExprContext context) {
-      var position = MapPositionContext(context);
-      var className = context.ID().GetText();
-      var identifier = new LocationNode.IdentifierAccessNode(position, className);
-      return new ExpressionNode.NewClassNode(position, identifier);
     }
     private static ExpressionNode.NewArrayNode MapNewArrayExpressionContext(DecafParser.NewArrayExprContext context) {
       var position = MapPositionContext(context);
@@ -256,8 +245,9 @@ namespace Decaf.Frontend {
         DecafParser.CharLitContext charLitCtx =>
           new ParseTree.LiteralNodes.CharacterNode(position, charLitCtx.CHARLIT().GetText()[1]),
         DecafParser.BoolLitContext boolLitCtx =>
-          new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.bool_literal().TRUE() != null),
-        DecafParser.NullLitContext _ => new ParseTree.LiteralNodes.NullNode(position),
+          new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.TRUE() != null),
+        DecafParser.StringLitContext stringLitCtx =>
+          new ParseTree.LiteralNodes.StringNode(position, stringLitCtx.STRINGLIT().GetText()[1..^1]),
         _ => throw new InvalidProgramException("Impossible literal at LiteralNode.FromContext"),// NOTE: This should be impossible due to grammar restrictions
       };
       return new ExpressionNode.LiteralNode(position, literal);
@@ -265,7 +255,7 @@ namespace Decaf.Frontend {
     // Locations
     private static LocationNode MapLocationContext(DecafParser.LocationContext context) {
       var position = MapPositionContext(context);
-      LocationNode node = new LocationNode.IdentifierAccessNode(position, context.root.Text);
+      LocationNode node = new LocationNode.IdentifierAccessNode(position, context.root.ID().GetText());
       // If it's a member access then we need to update the node to be a member access node
       if (context.path != null) {
         var member = context.path.ID().GetText();

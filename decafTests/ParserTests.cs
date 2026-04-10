@@ -3,17 +3,19 @@ using VerifyMSTest;
 using VerifyTests;
 
 using Decaf.IR.ParseTree;
+using Decaf.Utils;
 
 [TestClass]
 public class DecafParserTests : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
-    settings.UseDirectory(System.IO.Path.Combine("Snapshots", nameof(DecafParserTests)));
+    settings.UseDirectory("Snapshots/Parser/");
     return settings;
   }
+  private ProgramNode Parse(string text) {
 #nullable enable
-  private ProgramNode? Parse(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
+#nullable disable
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
     var program = Compiler.Compiler.ParseTokenStream(tokenStream);
     return program;
@@ -24,195 +26,212 @@ public class DecafParserTests : VerifyBase {
   public void TestEmpty() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(""));
   }
-  // Classes
+  // Modules
   [TestMethod]
-  public Task TestEmptyBaseClass() {
-    var result = Parse("class Main {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  public Task TestEmptyBaseModule() {
+    var result = Parse("module Main {}");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
-  public Task TestEmptyClass() {
-    var result = Parse("class Main extends Base {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  public Task TestEmptyMultiModule() {
+    var result = Parse("module Main {} module Main2 {}");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
-  [TestMethod]
-  public Task TestEmptyMultiClass() {
-    var result = Parse("class Main {} class Main2 {}");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
-  }
-  // Class Variable Declarations
+  // Module Variable Declarations
   [TestMethod]
   public Task TestSingleVariableDeclaration() {
-    var result = Parse("class Main { int x; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { int x; }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiVariableDeclaration() {
-    var result = Parse("class Main { int x; int y; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { int x; int y; }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiBindsDeclaration() {
-    var result = Parse("class Main { int x, y, z; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { int x, y, z; }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestArrayBindsDeclaration() {
-    var result = Parse("class Main { int x[]; }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { int x[]; }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
-  // Class Method Declarations
+  // Module Method Declarations
   [TestMethod]
   public Task TestSingleBasicMethodDeclaration() {
-    var result = Parse("class Main { void foo() {} }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { void foo() {} }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiBasicMethodDeclaration() {
-    var result = Parse("class Main { void foo() {} void bar() {} }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { void foo() {} void bar() {} }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   // Method Parameters
   [TestMethod]
   public Task TestMethodSingleParamDeclaration() {
-    var result = Parse("class Main { void foo(int x) {} }");
-    return Verify(result, CreateSettings());
+    var result = Parse("module Main { void foo(int x) {} }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMethodMultiParamDeclaration() {
-    var result = Parse("class Main { void foo(int x, int y) {} }");
-    return Verify(result, CreateSettings());
+    var result = Parse("module Main { void foo(int x, int y) {} }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestArrayMethodParamDeclaration() {
-    var result = Parse("class Main { void foo(int x[]) {} }");
-    return Verify(result, CreateSettings());
+    var result = Parse("module Main { void foo(int x[]) {} }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   // Block Statements
   [TestMethod]
   public Task TestBasicBlock() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x;
         x = 1 + 1;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestVarOnlyBasicBlock() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x, y;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestStatementOnlyBasicBlock() {
     // NOTE: Because parsing doesn't do symbol validation this is valid (however it would fail semantically)
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 + 1;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   #region Statements
   [TestMethod]
   public Task TestSimpleAssignmentStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x;
         x = 1;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestComplexAssignmentStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         Base.x = 1;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestSimpleCallStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         foo();
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestComplexCallStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         Base.foo();
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestSingleArgCallStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         foo(1);
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiArgCallStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         foo(1, 2);
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestNestedArgCallStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         foo(foo());
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCalloutStatement() {
     // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
-    var result = Parse("class Main { void testMethod() { callout(\"Test\", 1, 2, \"y\"); } }");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    var result = Parse("module Main { void testMethod() { callout(\"Test\", 1, 2, \"y\"); } }");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestSimpleIfStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         if (true) {
           x = 1;
@@ -220,12 +239,13 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestComplexIfStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x;
         if (true) {
@@ -236,12 +256,13 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestWhileStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x;
         while (true) {
@@ -250,34 +271,37 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestSimpleReturnStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         return;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestComplexReturnStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         return 1;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestContinueStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         while (true) {
           continue;
@@ -285,12 +309,13 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestBreakStatement() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         while (true) {
           break;
@@ -298,204 +323,190 @@ public class DecafParserTests : VerifyBase {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   // Expressions
   [TestMethod]
   public Task TestSimpleLocationAssignment() {
     // Testing the assignment of one variable to another (LocationExpr)
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = y;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestDotExpression() {
     return Verify(Parse(@"
-    class Main {
+    module Main {
       void testMethod() { 
         x = Base.y; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
-  }
-  [TestMethod]
-  public Task TestThisExpression() {
-    return Verify(Parse(@"
-    class Main { 
-      void testMethod() { 
-        x = this; 
-      } 
-    }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCallExpression1() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = foo(); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCallExpression2() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = foo(1); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCallExpression3() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = foo(1, 2); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCalloutExpression() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = callout(""test"", 1, 2, ""y""); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
-  }
-  [TestMethod]
-  public Task TestClassDeclaration() {
-    return Verify(Parse(@"
-    class Main { 
-      void testMethod() { 
-        T x;
-        x = new T();
-      }
-    }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestArrayDeclaration() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
-        T x[];
-        x = new T[1];
+        int x[];
+        x = new int[1];
       }
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestIntExpression() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = 1; 
       }
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestCharExpression() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = 'a'; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestBoolExpression1() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = true; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestBoolExpression2() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = false; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
-  }
-  [TestMethod]
-  public Task TestNullExpression() {
-    return Verify(Parse(@"
-    class Main { 
-      void testMethod() { 
-        x = null; 
-      } 
-    }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestPrefixExpression() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
-        bool booly;
+        boolean booly;
         booly = !true; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestBinopExpression1() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = 1 + 1; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestBinopExpression2() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = 1 + 1 + 1; 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestParenExpression() {
     return Verify(Parse(@"
-    class Main { 
+    module Main { 
       void testMethod() { 
         x = (1 + 1); 
       } 
     }
-    "), CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    "), CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestSimpleExpression() {
     var result = Parse(@"
-    class main {
+    module main {
       void testMethod() {
         x = 5 * (3 + 2);
       }
     } 
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   #endregion
   #region Precedence
@@ -503,57 +514,62 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public Task TestPrecedence1() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 + 1 * 2;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestPrecedence2() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 + 1 + 2;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestPrecedence3() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 + 1 - 2;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestPrecedence4() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 - 1 + 2;
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestPrecedence5() {
     var result = Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1 - (1 + 2);
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   // TODO: Add more precedence testing
   #endregion
@@ -562,14 +578,15 @@ public class DecafParserTests : VerifyBase {
   public Task TestTypes() {
     // NOTE: Because parsing doesn't do symbol validation this is valid (however it would fail semantically)
     var result = Parse(@"
-    class Main {
+    module Main {
+      string s;
       int x;
       boolean y;
       void z;
-      t y;
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
 
   // Full Stress Test Programs
@@ -577,7 +594,7 @@ public class DecafParserTests : VerifyBase {
   public Task TestFullProgram() {
     // NOTE: The purpose of this test is just to ensure a practical program fully parses
     var result = Parse(@"
-    class Main extends Base {
+    module Main {
       int x, y, z[];
 
       void foo(int a, boolean b, int c[]) {
@@ -593,12 +610,13 @@ public class DecafParserTests : VerifyBase {
       }
     }
 
-    class Base {
+    module Base {
       void calloutMethod() {
       }
     }
     ");
-    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>();
   }
   #endregion
   // Invalid Tests
@@ -606,7 +624,7 @@ public class DecafParserTests : VerifyBase {
   public void TestInvalidBlock() {
     // NOTE: This test is invalid because you can only define variables at the top of a block 
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         int x;
         x = 1 + 1;
@@ -618,7 +636,7 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public void TestInvalidWhileSemi() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         while (true) {};
       }
@@ -628,7 +646,7 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public void TestInvalidStmtNoSemi() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    class Main {
+    module Main {
       void testMethod() {
         x = 1
       }
@@ -638,7 +656,7 @@ public class DecafParserTests : VerifyBase {
   [TestMethod]
   public void TestInvalidParenExpression() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    class Main { 
+    module Main { 
     void testMethod() { 
       x = (); 
       } 

@@ -346,4 +346,28 @@ This is going to compile to a `(i32.const <value>)` with `1` for `true` and `0` 
 We could also make the decision to not compile this given classes are static there really isn't much use for `null` as nothing can be `null`.
 
 ### String
-Strings are an interesting case you can think of them as arrays of characters, so we could compile them into linear memory following the same format as arrays. This would be pretty efficient however its worth noting this doesn't follow `utf-8` directly making ffi slightly annoying, we only need strings for callout nodes however so we can just convert them to `utf-8` when we pass them to the callouts if needed.
+Strings are an interesting case, with a few ways to compile them, the first step is figuring out how we are going to represent them some precedent is:
+* Null terminated strings: This is a simple and efficient representation but length retrieval is O(n) and it doesn't follow `utf-8` directly which can make ffi a bit annoying.
+* Length prefixed strings: These are essentially arrays of characters with a length field at the start, this allows for O(1) length retrieval and is pretty efficient however it also doesn't follow `utf-8` directly which can make ffi a bit annoying.
+* UTF-8 strings: This is the most standard representation and follows `utf-8` directly which makes ffi easy however it is a bit more complex to implement and work with as we need to handle variable length encoding and decoding.
+
+Despite the added complexity of implementing UTF-8 strings, I think it's worth it for external interop so what we are going todo is store them as `<byteLength> <utf8Bytes>` this means that the string `hello` would be stored as:
+```
+ptr -> 5
+ptr + 4 -> 'h'
+ptr + 5 -> 'e'
+ptr + 6 -> 'l'
+ptr + 7 -> 'l'
+ptr + 8 -> 'o'
+```
+This is starting to sound a bit like how we are storing arrays and when working with ascii it is, however the complexity comes out when we want to support more unicode characters like a smiley face `😀` which has a utf-8 encoding of `0xF0 0x9F 0x98 0x80` this means that the string `hi 😀` would be stored as:
+```
+ptr -> 7
+ptr + 4 -> 'h'
+ptr + 5 -> 'i'
+ptr + 6 -> ' '
+ptr + 7 -> 0xF0
+ptr + 8 -> 0x9F
+ptr + 9 -> 0x98
+ptr + 10 -> 0x80
+```
