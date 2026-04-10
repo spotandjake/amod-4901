@@ -27,6 +27,11 @@ namespace Decaf.Backend {
       // TODO: Create a wasm function with the compiled body and the signature
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
+    // Blocks
+    private static WasmExpression CompileBlock(AnfTree.BlockNode node) {
+      // TODO: Support block compilation
+      throw new NotImplementedException("Blocks are not yet supported");
+    }
     // Instructions
     private static WasmExpression CompileInstruction(AnfTree.InstructionNode node) {
       return node switch {
@@ -42,11 +47,15 @@ namespace Decaf.Backend {
       };
     }
     private static WasmExpression CompileBindNode(AnfTree.InstructionNode.BindNode node) {
-      // TODO:
+      // Compile the expression
+      var compiledExpr = CompileSimpleExpr(node.Expression);
+      // TODO: Figure out the code to set the bind
       throw new NotImplementedException("Binds are not yet supported");
     }
     private static WasmExpression CompileAssignmentNode(AnfTree.InstructionNode.AssignmentNode node) {
-      // TODO:
+      // Compile the immediate
+      var compiledValue = CompileImmediate(node.Expression);
+      // TODO: Figure out the code to set the location being assigned to
       throw new NotImplementedException("Assignments are not yet supported");
     }
     private static WasmExpression CompileExprNode(AnfTree.InstructionNode.ExprNode node
@@ -58,8 +67,14 @@ namespace Decaf.Backend {
       else return compiledExpr;
     }
     private static WasmExpression CompileIfNode(AnfTree.InstructionNode.IfNode node) {
-      // TODO:
-      throw new NotImplementedException("If statements are not yet supported");
+      // Compile the condition
+      var compiledCondition = CompileImmediate(node.Condition);
+      // Compile the true branch
+      var compiledTrueBranch = CompileBlock(node.TrueBranch);
+      // Compile the false branch
+      var compiledFalseBranch = node.FalseBranch != null ? CompileBlock(node.FalseBranch) : null;
+      // Create a wasm `if` expression
+      return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }
     private static WasmExpression CompileLoopNode(AnfTree.InstructionNode.LoopNode node) {
       // TODO:

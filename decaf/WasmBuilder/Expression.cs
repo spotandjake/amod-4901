@@ -45,6 +45,12 @@ namespace Decaf.WasmBuilder {
       public sealed record Grow(Position Position, WasmExpression PageCount) : Memory(Position);
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position);
     }
+    // If - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/if...else
+    public sealed record If(
+#nullable enable
+      Position Position, WasmExpression Condition, WasmExpression TrueBranch, WasmExpression? FalseBranch
+#nullable disable
+    ) : WasmExpression(Position);
     // Return - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/return
 #nullable enable
     public sealed record Return(Position Position, WasmExpression? Value) : WasmExpression(Position);
