@@ -1,4 +1,5 @@
 using System;
+using Decaf.IR.PrimitiveDefinition;
 using Decaf.WasmBuilder;
 using AnfTree = Decaf.IR.AnfTree;
 using TypedTree = Decaf.IR.TypedTree;
@@ -72,8 +73,21 @@ namespace Decaf.Backend {
       throw new NotImplementedException("Method calls are not yet supported");
     }
     private static WasmExpression CompilePrimitiveNode(AnfTree.ExpressionNode.PrimitiveNode node) {
-      // TODO:
-      throw new NotImplementedException("Primitive operations are not yet supported");
+      return node.Primitive switch {
+        // --- @wasm namespace ---
+        // memory sub namespace
+        PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
+        PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(node.Arguments[0])),
+        PrimDefinition.WasmMemoryFill =>
+          new WasmExpression.Memory.Fill(
+            node.Position,
+            CompileImmediate(node.Arguments[0]),
+            CompileImmediate(node.Arguments[1]),
+            CompileImmediate(node.Arguments[2])
+          ),
+        // Unknown
+        _ => throw new Exception($"Unknown primitive: {node.Primitive}"),
+      };
     }
     private static WasmExpression CompileBinopNode(AnfTree.ExpressionNode.BinopNode node) {
       WasmExpression lhs = CompileImmediate(node.Lhs);

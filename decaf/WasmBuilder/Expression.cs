@@ -39,5 +39,11 @@ namespace Decaf.WasmBuilder {
       public sealed record Ctz(Position Position, WasmExpression LHS) : I32(Position);
       public sealed record Popcnt(Position Position, WasmExpression LHS) : I32(Position);
     }
+    // Memory
+    public record Memory(Position Position) : WasmExpression(Position) {
+      public sealed record Size(Position Position) : Memory(Position);
+      public sealed record Grow(Position Position, WasmExpression PageCount) : Memory(Position);
+      public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position);
+    }
   }
 }
