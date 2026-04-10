@@ -342,6 +342,7 @@ namespace Decaf.Backend {
       AnfTree.LocationNode.IdentifierAccessNode node,
       WasmExpression value
     ) {
+      // TODO:
       throw new NotImplementedException("Identifier sets are not yet supported");
     }
     private static WasmExpression CompileLocationMemberAccessSet(
@@ -349,63 +350,113 @@ namespace Decaf.Backend {
       AnfTree.LocationNode.MemberAccessNode node,
       WasmExpression value
     ) {
+      // TODO:
       throw new NotImplementedException("Member access sets are not yet supported");
     }
-    private static WasmExpression CompileLocationArrayAccessSet(
+    private static WasmExpression.Block CompileLocationArrayAccessSet(
       CodegenContext ctx,
       AnfTree.LocationNode.ArrayAccessNode node,
       WasmExpression value
     ) {
       // Compile the root get expression
       var compiledRoot = CompileLocationGet(ctx, node.Root);
-      // Compile a statement to get the length
-      var compiledLength = new WasmExpression.I32.Load(
-        node.Position,
-        compiledRoot,
-        new WasmExpression.I32.Const(node.Position, 0) // length is at offset 0
-      );
-      // Compile a statement to get the right index
+      // Compile a statement to get the index
       var compiledIndex = CompileImmediate(ctx, node.IndexImm);
-      var compiledByteIndex = new WasmExpression.I32.Add(
-        node.Position,
-        new WasmExpression.I32.Mul(
-          node.Position,
-          compiledIndex,
-          new WasmExpression.I32.Const(node.Position, 4) // Each element is 4 bytes (i32)
-        ),
-        new WasmExpression.I32.Const(node.Position, 4) // add 4 to skip the length field at the start of the array
-      );
+      var compiledByteIndex = CompileArrayByteIndex(node.Position, compiledIndex);
       // Compile a statement for a bounds check
-      var compiledBoundsCheck = new WasmExpression.If(
-        node.Position,
-        new WasmExpression.I32.LtS(
-          node.Position,
-          CompileImmediate(ctx, node.IndexImm),
-          compiledLength
-        ),
-        // Set the value
-        new WasmExpression.I32.Store(
-          node.Position,
-          compiledRoot, // The base array pointer
-          value,
-          compiledByteIndex // Offset for the index
-        ),
-        // If the index is out of bounds, we currently just throw using `unreachable`
-        // TODO: Use a proper wasm exception
-        new WasmExpression.Unreachable(node.Position)
-      );
-      // Compile a statement to set the value at the index
+      var compiledBoundsCheck = CompileArrayBoundsCheck(node.Position, compiledRoot, compiledIndex);
+      // Compile a statement to set the value
+      var compiledSet = new WasmExpression.I32.Store(node.Position, compiledRoot, value, compiledByteIndex);
+      // Wrap everything up
       return new WasmExpression.Block(
         node.Position,
-        new WasmLabel.UniqueLabel(node.Position, "array_set"),
-        [compiledBoundsCheck]
+        new WasmLabel.UniqueLabel(node.Position, "arr_set"),
+        [compiledBoundsCheck, compiledSet]
       );
     }
     private static WasmExpression CompileLocationGet(
       CodegenContext ctx,
       AnfTree.LocationNode node
     ) {
-      throw new NotImplementedException("Location gets are not yet supported");
+      return node switch {
+        AnfTree.LocationNode.IdentifierAccessNode idNode => CompileLocationIdentifierGet(ctx, idNode),
+        AnfTree.LocationNode.MemberAccessNode memberNode => CompileLocationMemberAccessGet(ctx, memberNode),
+        AnfTree.LocationNode.ArrayAccessNode arrNode => CompileLocationArrayAccessGet(ctx, arrNode),
+        _ => throw new Exception($"Unknown location node kind: {node.Kind}"),
+      };
+    }
+    private static WasmExpression CompileLocationIdentifierGet(
+      CodegenContext ctx,
+      AnfTree.LocationNode.IdentifierAccessNode node
+    ) {
+      // TODO:
+      throw new NotImplementedException("Identifier gets are not yet supported");
+    }
+    private static WasmExpression CompileLocationMemberAccessGet(
+      CodegenContext ctx,
+      AnfTree.LocationNode.MemberAccessNode node
+    ) {
+      // TODO:
+      throw new NotImplementedException("Member access gets are not yet supported");
+    }
+    private static WasmExpression.Block CompileLocationArrayAccessGet(
+      CodegenContext ctx,
+      AnfTree.LocationNode.ArrayAccessNode node
+    ) {
+      // Compile the root get expression
+      var compiledRoot = CompileLocationGet(ctx, node.Root);
+      // Compile a statement to get the index
+      var compiledIndex = CompileImmediate(ctx, node.IndexImm);
+      var compiledByteIndex = CompileArrayByteIndex(node.Position, compiledIndex);
+      // Compile a statement for a bounds check
+      var compiledBoundsCheck = CompileArrayBoundsCheck(node.Position, compiledRoot, compiledIndex);
+      // Compile a statement to get the value
+      var compiledGet = new WasmExpression.I32.Load(node.Position, compiledRoot, compiledByteIndex);
+      // Wrap everything up
+      return new WasmExpression.Block(
+        node.Position,
+        new WasmLabel.UniqueLabel(node.Position, "arr_get"),
+        [compiledBoundsCheck, compiledGet]
+      );
+    }
+    // Array Helper
+    private static WasmExpression CompileArrayByteIndex(
+      Position position,
+      WasmExpression index
+    ) {
+      // Each element is 4 bytes (i32)
+      return new WasmExpression.I32.Add(
+        position,
+        new WasmExpression.I32.Mul(
+          position,
+          index,
+          new WasmExpression.I32.Const(position, 4)
+        ),
+        new WasmExpression.I32.Const(position, 4) // add 4 to skip the length field at the start of the array
+      );
+    }
+    private static WasmExpression CompileArrayBoundsCheck(
+      Position position,
+      WasmExpression pointer,
+      WasmExpression index
+    ) {
+      // Load the length from the start of the array
+      var compiledLength = new WasmExpression.I32.Load(
+        position,
+        pointer,
+        new WasmExpression.I32.Const(position, 0) // length is at offset 0
+      );
+      // Compare the index to the length
+      var compiledBoundsCheck = new WasmExpression.I32.GeS(position, index, compiledLength);
+      // If in bounds, continue with the original expression, otherwise execute the alternative (which should be a trap)
+      return new WasmExpression.If(
+        position,
+        compiledBoundsCheck,
+        // If the index is out of bounds, we currently just throw using `unreachable`
+        // TODO: Use a proper wasm exception
+        new WasmExpression.Unreachable(position),
+        null
+      );
     }
   }
 }
