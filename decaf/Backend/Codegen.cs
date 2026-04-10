@@ -191,10 +191,25 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.ExpressionNode.CallNode node
     ) {
-      // TODO: Resolve the method being called to it's actual qualified name
-      // TODO: Compile the arguments to the call
-      // TODO: Create a `call` expression with the resolved method name and the compiled arguments
-      throw new NotImplementedException("Method calls are not yet supported");
+      // Resolve the method name being called
+      var methodLabel = node.Path switch {
+        // TODO: More robust name resolution here
+        AnfTree.LocationNode.IdentifierAccessNode idNode => new WasmLabel.Label(idNode.Position, idNode.Name),
+        AnfTree.LocationNode.MemberAccessNode memberNode =>
+          new WasmLabel.Label(
+            memberNode.Position,
+            GetMemberGlobalName(memberNode.Root.Name, memberNode.Member)
+          ),
+        // NOTE: This is an enforced restriction due to the fact that we can't have arrays of functions
+        _ => throw new Exception("Impossible, method call with unexpected path type"),
+      };
+      // Compile the arguments to the call
+      var args = new List<WasmExpression>();
+      foreach (var arg in node.Arguments) {
+        args.Add(CompileImmediate(ctx, arg));
+      }
+      // Create the call expression
+      return new WasmExpression.Call(node.Position, methodLabel, args);
     }
     private static WasmExpression CompilePrimitiveNode(
       CodegenContext ctx,
