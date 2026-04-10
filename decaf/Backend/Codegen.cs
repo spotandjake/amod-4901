@@ -15,8 +15,8 @@ namespace Decaf.Backend {
       public Scope<int> Scope;
       // Related to looping
 #nullable enable
-      public string? BreakLabel; // The label to break to when we encounter a `break`
-      public string? ContinueLabel; // The label to break to when we encounter
+      public WasmLabel? BreakLabel; // The label to break to when we encounter a `break`
+      public WasmLabel? ContinueLabel; // The label to break to when we encounter
 #nullable disable
       public static CodegenContext CreateInitialContext() {
         return new CodegenContext {
@@ -27,15 +27,16 @@ namespace Decaf.Backend {
         };
       }
     }
-    public static void CompileProgram(AnfTree.ProgramNode node) {
-      // TODO: Create our wasm module
+    public static WasmModule CompileProgram(AnfTree.ProgramNode node) {
+      // Create our wasm module
+      WasmModule module = new WasmModule(node.Position);
       // Create our initial codegen context
       var ctx = CodegenContext.CreateInitialContext();
       // TODO: Generate code for each module
       foreach (var mod in node.Modules) CompileModule(ctx, mod);
       // TODO: Generate a `_start` function that calls the `<x>.Main` method
       // TODO: Ensure we call `Program.Main` after all static initializers have run
-      // TODO: Document the behavior of static initializers
+      return module;
     }
     // Code Units
     private static void CompileModule(CodegenContext ctx, AnfTree.DeclarationNode.ModuleNode node) {
@@ -133,8 +134,8 @@ namespace Decaf.Backend {
       AnfTree.InstructionNode.LoopNode node
     ) {
       // Properly generate the labels
-      var loop_label = "loop_inner"; // TODO: Properly create a unique label for this loop
-      var block_label = "loop_outer"; // TODO: Properly create a unique label for the breaking block of this loop
+      var loop_label = new WasmLabel.UniqueLabel(node.Position, "loop_inner");
+      var block_label = new WasmLabel.UniqueLabel(node.Position, "loop_outer");
       var newCtx = ctx with {
         BreakLabel = block_label,
         ContinueLabel = loop_label,

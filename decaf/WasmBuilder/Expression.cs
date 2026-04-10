@@ -47,14 +47,14 @@ namespace Decaf.WasmBuilder {
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position);
     }
     // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
-    public record Block(Position Position, string Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position);
+    public record Block(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position);
     // Br - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br
-    public sealed record Br(Position Position, string Label) : WasmExpression(Position);
+    public sealed record Br(Position Position, WasmLabel Label) : WasmExpression(Position);
     // BrIf - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br_if
-    public sealed record BrIf(Position Position, string Label, WasmExpression Condition) : WasmExpression(Position);
+    public sealed record BrIf(Position Position, WasmLabel Label, WasmExpression Condition) : WasmExpression(Position);
     // TODO: BrTable
     // Call - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/call
-    public sealed record Call(Position Position, string FunctionName, IEnumerable<WasmExpression> Arguments) : WasmExpression(Position);
+    public sealed record Call(Position Position, WasmLabel FunctionName, IEnumerable<WasmExpression> Arguments) : WasmExpression(Position);
     // Drop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/drop
     public sealed record Drop(Position Position, WasmExpression Value) : WasmExpression(Position);
     // If - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/if...else
@@ -64,7 +64,7 @@ namespace Decaf.WasmBuilder {
 #nullable disable
     ) : WasmExpression(Position);
     // Loop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/loop
-    public sealed record Loop(Position Position, string Label, IEnumerable<WasmExpression> Body) : WasmExpression(Position);
+    public sealed record Loop(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Body) : WasmExpression(Position);
     // Nop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/nop
     public sealed record Nop(Position Position) : WasmExpression(Position);
     // Return - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/return

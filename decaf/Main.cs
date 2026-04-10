@@ -15,6 +15,7 @@ using Decaf.MiddleEnd;
 using Decaf.MiddleEnd.TypeChecker;
 using Decaf.Backend;
 using Decaf.Utils.Errors;
+using Decaf.WasmBuilder;
 
 namespace Compiler {
   public class Compiler {
@@ -82,13 +83,11 @@ namespace Compiler {
     public static AnfTree.ProgramNode AnfMapping(TypedTree.ProgramNode program) {
       return AnfMapper.FromProgramNode(program);
     }
-    public static bool Codegen(AnfTree.ProgramNode program) {
-      // TODO: This should return a wasm module
-      Decaf.Backend.Codegen.CompileProgram(program);
-      return true;
+    public static WasmModule Codegen(AnfTree.ProgramNode program) {
+      return Decaf.Backend.Codegen.CompileProgram(program);
     }
 #nullable enable
-    public static void CompileString(string source, string? inputFileName) {
+    public static WasmModule CompileString(string source, string? inputFileName) {
 #nullable disable
       // Lexing
       var lexer = LexString(source, inputFileName);
@@ -114,9 +113,8 @@ namespace Compiler {
       var anfProgram = AnfMapping(TypeCheckingProgram);
       // Code Generation
       var wasmModule = Codegen(anfProgram);
-      // TODO: Return the wasm module
-      string json = JsonSerializer.Serialize(anfProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
-      Console.WriteLine(json);
+      // Return the wasm module
+      return wasmModule;
     }
   }
 }
@@ -153,8 +151,10 @@ namespace CLI {
       string source = File.ReadAllText(absPath);
       // Compile
       try {
-        // TODO: Write output to opts.output if specified
-        Compiler.Compiler.CompileString(source, relPath);
+        var wasmModule = Compiler.Compiler.CompileString(source, relPath);
+        // TODO: Write output to opts.output if specified in the format specified
+        string json = JsonSerializer.Serialize(wasmModule, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+        Console.WriteLine(json);
       }
       catch (Exception e) {
         bool rethrow = ErrorHandler.HandleError(opts.Debug, e);
