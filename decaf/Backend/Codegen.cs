@@ -11,6 +11,11 @@ using TypedTree = Decaf.IR.TypedTree;
 // The WasmTree can then independently be transformed directly into a wasm module.
 namespace Decaf.Backend {
   public static class Codegen {
+    // Runtime names for generated code to call into
+    private static readonly string RuntimeModuleName = "Runtime";
+    private static readonly string RuntimeMallocName = GetMemberGlobalName(RuntimeModuleName, "malloc");
+    private static readonly string RuntimeCallocName = GetMemberGlobalName(RuntimeModuleName, "calloc");
+
     private record struct CodegenContext {
       // Related to looping
 #nullable enable
@@ -288,10 +293,51 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.ExpressionNode.AllocateArrayNode node
     ) {
-      // TODO: Call `Runtime.calloc` with the size expression + 4 (for the array length)
-      // TODO: Write the array length to memory
-      // TODO: Return the pointer to the array
-      throw new NotImplementedException("Array allocation is not yet supported");
+      // Compute the size of the array in bytes (length * 4 for i32 elements)
+      var compiledSize = CompileImmediate(ctx, node.SizeImm);
+      // Get an arr_ptr
+      var arr_byte_size = new WasmLabel.UniqueLabel(node.Position, "arr_byte_size");
+      var arr_ptr = new WasmLabel.UniqueLabel(node.Position, "arr_ptr");
+      // Build the block
+      return new WasmExpression.Block(
+        node.Position,
+        null,
+        [
+          // (local.set $arr_byte_size byte_size)
+          new WasmExpression.Local.Set(
+            node.Position,
+            arr_byte_size,
+            new WasmExpression.I32.Add(
+              node.Position,
+              new WasmExpression.I32.Mul(
+                node.Position,
+                compiledSize,
+                new WasmExpression.I32.Const(node.Position, 4)
+              ),
+              new WasmExpression.I32.Const(node.Position, 4) // add 4 to store the length at the start of the array
+            )
+          ),
+          // (local.set $arr_ptr (call Runtime.calloc byte_size))
+          new WasmExpression.Local.Set(
+            node.Position,
+            arr_ptr,
+            new WasmExpression.Call(
+              node.Position,
+              new WasmLabel.Label(node.Position, RuntimeCallocName),
+              [new WasmExpression.Local.Get(node.Position, arr_byte_size)]
+            )
+          ),
+          // (i32.store arr_ptr 0 length)
+          new WasmExpression.I32.Store(
+            node.Position,
+            new WasmExpression.Local.Get(node.Position, arr_ptr),
+            new WasmExpression.Local.Get(node.Position, arr_byte_size),
+            new WasmExpression.I32.Const(node.Position, 0) // length is at offset 0
+          ),
+          // (local.get arr_ptr)
+          new WasmExpression.Local.Get(node.Position, arr_ptr)
+        ]
+      );
     }
     // Immediate Expressions
     private static WasmExpression CompileImmediate(
