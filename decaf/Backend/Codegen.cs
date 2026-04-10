@@ -18,31 +18,57 @@ namespace Decaf.Backend {
       public string? BreakLabel; // The label to break to when we encounter a `break`
       public string? ContinueLabel; // The label to break to when we encounter
 #nullable disable
+      public static CodegenContext CreateInitialContext() {
+        return new CodegenContext {
+          Scope = new Scope<int>(null),
+          // Looping
+          BreakLabel = null,
+          ContinueLabel = null,
+        };
+      }
     }
     public static void CompileProgram(AnfTree.ProgramNode node) {
       // TODO: Create our wasm module
-      // TODO: Generate code for each class
+      // Create our initial codegen context
+      var ctx = CodegenContext.CreateInitialContext();
+      // TODO: Generate code for each module
+      foreach (var mod in node.Modules) CompileModule(ctx, mod);
       // TODO: Generate a `_start` function that calls the `<x>.Main` method
       // TODO: Ensure we call `Program.Main` after all static initializers have run
       // TODO: Document the behavior of static initializers
     }
     // Code Units
-    private static void CompileClass(AnfTree.DeclarationNode.ModuleNode node) {
+    private static void CompileModule(CodegenContext ctx, AnfTree.DeclarationNode.ModuleNode node) {
       // TODO: Create a global for each member
+      foreach (var global in node.Globals) {
+        // TODO: Add a global to the module for this global variable???
+      }
       // TODO: Create a function for each method
+      foreach (var method in node.Methods) {
+        CompileMethod(ctx, method);
+      }
     }
-    private static void CompileMethod(AnfTree.DeclarationNode.MethodNode node) {
+    private static void CompileMethod(CodegenContext ctx, AnfTree.DeclarationNode.MethodNode node) {
       // TODO: Create a wasm function type signature for the method
       // TODO: Compile the body
+      var newCtx = ctx with {
+        Scope = new Scope<int>(ctx.Scope),
+        // Looping
+        BreakLabel = null,
+        ContinueLabel = null,
+      };
+      var compiledBody = CompileBlock(newCtx, node.Body);
+      Console.WriteLine(compiledBody);
       // TODO: Create a wasm function with the compiled body and the signature
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
     // Blocks
-    private static WasmExpression CompileBlock(CodegenContext ctx, AnfTree.BlockNode node) {
-      // TODO: 
-      foreach (var instruction in node.Instructions) { }
-      // TODO: Support block compilation
-      throw new NotImplementedException("Blocks are not yet supported");
+    private static WasmExpression.Block CompileBlock(CodegenContext ctx, AnfTree.BlockNode node) {
+      var instructions = new List<WasmExpression>();
+      foreach (var instruction in node.Instructions) {
+        instructions.Add(CompileInstruction(ctx, instruction));
+      }
+      return new WasmExpression.Block(node.Position, null, instructions);
     }
     // Instructions
     private static WasmExpression CompileInstruction(
@@ -67,8 +93,8 @@ namespace Decaf.Backend {
     ) {
       // Compile the expression
       var compiledExpr = CompileSimpleExpr(ctx, node.Expression);
-      // TODO: Figure out the code to set the bind
-      throw new NotImplementedException("Binds are not yet supported");
+      // Compile the bind to the location
+      return CompileLocationSet(ctx, node.Location, compiledExpr);
     }
     private static WasmExpression CompileAssignmentNode(
       CodegenContext ctx,
@@ -76,8 +102,8 @@ namespace Decaf.Backend {
     ) {
       // Compile the immediate
       var compiledValue = CompileImmediate(ctx, node.Expression);
-      // TODO: Figure out the code to set the location being assigned to
-      throw new NotImplementedException("Assignments are not yet supported");
+      // Compile the assignment to the location
+      return CompileLocationSet(ctx, node.Location, compiledValue);
     }
     private static WasmExpression CompileExprNode(
       CodegenContext ctx,
@@ -89,7 +115,7 @@ namespace Decaf.Backend {
       }
       else return compiledExpr;
     }
-    private static WasmExpression CompileIfNode(
+    private static WasmExpression.If CompileIfNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.IfNode node
     ) {
@@ -102,7 +128,7 @@ namespace Decaf.Backend {
       // Create a wasm `if` expression
       return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }
-    private static WasmExpression CompileLoopNode(
+    private static WasmExpression.Block CompileLoopNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.LoopNode node
     ) {
@@ -122,7 +148,7 @@ namespace Decaf.Backend {
       // Return the block
       return compiledBlock;
     }
-    private static WasmExpression CompileContinueNode(
+    private static WasmExpression.Br CompileContinueNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.ContinueNode node
     ) {
@@ -132,7 +158,7 @@ namespace Decaf.Backend {
       }
       return new WasmExpression.Br(node.Position, ctx.ContinueLabel);
     }
-    private static WasmExpression CompileBreakNode(
+    private static WasmExpression.Br CompileBreakNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.BreakNode node
     ) {
@@ -142,7 +168,7 @@ namespace Decaf.Backend {
       }
       return new WasmExpression.Br(node.Position, ctx.BreakLabel);
     }
-    private static WasmExpression CompileReturnNode(
+    private static WasmExpression.Return CompileReturnNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.ReturnNode node
     ) {
@@ -262,12 +288,12 @@ namespace Decaf.Backend {
         AnfTree.ImmediateNode.ConstantNode constantNode => CompileLiteral(ctx, constantNode.Value),
         // TODO: Implement location access
         AnfTree.ImmediateNode.LocationAccessNode idNode =>
-          throw new NotImplementedException("Location access is not yet supported"),
+          CompileLocationGet(ctx, idNode.Location),
         _ => throw new Exception($"Unknown immediate node kind: {node.Kind}"),
       };
     }
     // Literal Nodes
-    private static WasmExpression CompileLiteral(
+    private static WasmExpression.I32.Const CompileLiteral(
       CodegenContext ctx,
       TypedTree.LiteralNode node
     ) {
@@ -296,6 +322,26 @@ namespace Decaf.Backend {
           new WasmExpression.I32.Const(nullNode.Position, 0),
         _ => throw new Exception($"Unknown literal node kind: {node.Kind}"),
       };
+    }
+    // Locations
+    private static WasmExpression CompileLocationSet(
+      CodegenContext ctx,
+      AnfTree.LocationNode node,
+      WasmExpression value
+    ) {
+      throw node switch {
+        AnfTree.LocationNode.IdentifierAccessNode idNode => new NotImplementedException("Identifier sets are not yet supported"),
+        AnfTree.LocationNode.MemberAccessNode memberNode => new NotImplementedException("Member sets are not yet supported"),
+        AnfTree.LocationNode.ArrayAccessNode arrNode => new NotImplementedException("Array sets are not yet supported"),
+        _ => new Exception($"Unknown location node kind: {node.Kind}"),
+      };
+      throw new NotImplementedException("Location sets are not yet supported");
+    }
+    private static WasmExpression CompileLocationGet(
+      CodegenContext ctx,
+      AnfTree.LocationNode node
+    ) {
+      throw new NotImplementedException("Location gets are not yet supported");
     }
   }
 }

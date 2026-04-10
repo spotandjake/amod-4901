@@ -39,7 +39,7 @@ namespace Decaf.IR.AnfTree {
     // Declarations
     ModuleDeclNode,
     MethodDeclNode,
-    PropertyDeclNode,
+    GlobalDeclNode,
     // Instructions
     BindNode,
     AssignmentInstruction,
@@ -88,7 +88,6 @@ namespace Decaf.IR.AnfTree {
     Scope<TypedTree.Signature> Scope
   ) : Node(Position) {
     public override NodeKind Kind => NodeKind.BlockNode;
-    // TODO: Was dropping the declaration nodes the right decision here???
     public InstructionNode[] Instructions { get; } = Instructions;
     public Scope<TypedTree.Signature> Scope { get; } = Scope;
   }
@@ -96,7 +95,7 @@ namespace Decaf.IR.AnfTree {
   /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
   /// </summary>
   [JsonDerivedType(typeof(ModuleNode), "ModuleDeclNode")]
-  [JsonDerivedType(typeof(PropertyNode), "PropertyNode")]
+  [JsonDerivedType(typeof(GlobalNode), "GlobalDeclNode")]
   [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
@@ -104,38 +103,31 @@ namespace Decaf.IR.AnfTree {
     public record ModuleNode(
       Position Position,
       string Name,
-      PropertyNode[] Globals,
+      // TODO: Get rid of the distinction between globals and methods, they are both just code
+      GlobalNode[] Globals,
       MethodNode[] Methods,
       Scope<TypedTree.Signature> Scope,
       TypedTree.Signature.ClassSignature Signature
     ) : DeclarationNode(Position) {
       public override NodeKind Kind => NodeKind.ModuleDeclNode;
       public string Name { get; } = Name;
-      public PropertyNode[] Globals { get; } = Globals;
+      public GlobalNode[] Globals { get; } = Globals;
       public MethodNode[] Methods { get; } = Methods;
       public Scope<TypedTree.Signature> Scope { get; } = Scope;
       public TypedTree.Signature.ClassSignature Signature { get; } = Signature;
     }
-    /// <summary>A property declaration.</summary>
-    public record PropertyNode(Position Position, string Name, TypedTree.Signature Signature) : DeclarationNode(Position) {
-      public override NodeKind Kind => NodeKind.PropertyDeclNode;
+    /// <summary>A global declaration.</summary>
+    public record GlobalNode(Position Position, string Name, TypedTree.Signature Signature) : DeclarationNode(Position) {
+      public override NodeKind Kind => NodeKind.GlobalDeclNode;
       public string Name { get; } = Name;
       public TypedTree.Signature Signature { get; } = Signature;
     }
     /// <summary>A method declaration.</summary>
     public record MethodNode : DeclarationNode {
-      public record ParameterNode : DeclarationNode {
+      public record ParameterNode(Position Position, string Name, TypedTree.Signature Signature) : DeclarationNode(Position) {
         public override NodeKind Kind => NodeKind.ParameterNode;
-        public string Name { get; }
-        public TypedTree.Signature Signature { get; }
-        public ParameterNode(
-          Position position,
-          string name,
-          TypedTree.Signature signature
-        ) : base(position) {
-          this.Name = name;
-          this.Signature = signature;
-        }
+        public string Name { get; } = Name;
+        public TypedTree.Signature Signature { get; } = Signature;
       }
       public override NodeKind Kind => NodeKind.MethodDeclNode;
       public string Name { get; }
@@ -191,6 +183,7 @@ namespace Decaf.IR.AnfTree {
       LocationNode Location,
       ImmediateNode Expression
     ) : InstructionNode(Position) {
+      // TODO: Merge AssignmentNode with BindNode
       public override NodeKind Kind => NodeKind.AssignmentInstruction;
       public LocationNode Location { get; } = Location;
       public ImmediateNode Expression { get; } = Expression;

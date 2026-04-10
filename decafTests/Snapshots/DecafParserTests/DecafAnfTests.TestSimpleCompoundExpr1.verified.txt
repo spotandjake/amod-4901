@@ -189,9 +189,13 @@
                 }
               }
             ],
-            Scope: {}
+            Scope: {
+              Size: 3
+            }
           },
-          Scope: {},
+          Scope: {
+            Size: 2
+          },
           Signature: {
             ReturnType: {
               Type: Void,
@@ -211,7 +215,9 @@
           }
         }
       ],
-      Scope: {},
+      Scope: {
+        Size: 2
+      },
       Signature: {
         Members: {
           Main: {
@@ -241,5 +247,7 @@
       }
     }
   ],
-  Scope: {}
+  Scope: {
+    Size: 1
+  }
 }

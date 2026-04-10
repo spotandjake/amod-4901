@@ -50,10 +50,10 @@ namespace Decaf.Backend {
       AnfState state, TypedTree.DeclarationNode.ClassNode node
     ) {
       // Map the fields to property nodes (We do this inline because variable declarations are not a part of the anf tree)
-      var fields = new List<AnfTree.DeclarationNode.PropertyNode>();
+      var fields = new List<AnfTree.DeclarationNode.GlobalNode>();
       foreach (var field in node.Fields) {
         foreach (var bind in field.Binds) {
-          fields.Add(new AnfTree.DeclarationNode.PropertyNode(bind.Position, bind.Name, bind.Signature));
+          fields.Add(new AnfTree.DeclarationNode.GlobalNode(bind.Position, bind.Name, bind.Signature));
         }
       }
       var classState = new AnfState(node.Scope, node.Name);

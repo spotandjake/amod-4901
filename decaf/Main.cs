@@ -82,6 +82,11 @@ namespace Compiler {
     public static AnfTree.ProgramNode AnfMapping(TypedTree.ProgramNode program) {
       return AnfMapper.FromProgramNode(program);
     }
+    public static bool Codegen(AnfTree.ProgramNode program) {
+      // TODO: This should return a wasm module
+      Decaf.Backend.Codegen.CompileProgram(program);
+      return true;
+    }
 #nullable enable
     public static void CompileString(string source, string? inputFileName) {
 #nullable disable
@@ -107,7 +112,9 @@ namespace Compiler {
       var TypeCheckingProgram = TypeChecking(scopedProgram);
       // Anf Conversion
       var anfProgram = AnfMapping(TypeCheckingProgram);
-      // TODO: Code Generation
+      // Code Generation
+      var wasmModule = Codegen(anfProgram);
+      // TODO: Return the wasm module
       string json = JsonSerializer.Serialize(anfProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
       Console.WriteLine(json);
     }
