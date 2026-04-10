@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Decaf.Utils;
 
 namespace Decaf.WasmBuilder {

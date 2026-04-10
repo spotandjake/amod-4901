@@ -403,9 +403,20 @@ namespace Decaf.Backend {
       TypedTree.LocationNode.MemberAccessNode node
     ) {
       var (binds, root) = FromLocationNode(state, node.Root);
+      // TODO: I would prefer if we move this resolution up
+      // TODO: This is why we should consider lowering directly to `global.get`, `local.set`, `array.get`, `array.set` at the anf level
+      if (root is not AnfTree.LocationNode.IdentifierAccessNode) {
+        // NOTE: This should be impossible given type checking restrictions
+        throw new Exception("Member access root must be an identifier access");
+      }
       return (
         binds,
-        new AnfTree.LocationNode.MemberAccessNode(node.Position, root, node.Member, node.LocationType)
+        new AnfTree.LocationNode.MemberAccessNode(
+          node.Position,
+          (AnfTree.LocationNode.IdentifierAccessNode)root,
+          node.Member,
+          node.LocationType
+        )
       );
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.ArrayAccessNode) FromArrayAcessLocationNode(

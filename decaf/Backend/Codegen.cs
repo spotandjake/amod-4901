@@ -12,7 +12,6 @@ using TypedTree = Decaf.IR.TypedTree;
 namespace Decaf.Backend {
   public static class Codegen {
     private record struct CodegenContext {
-      public Scope<int> Scope;
       // Related to looping
 #nullable enable
       public WasmLabel? BreakLabel; // The label to break to when we encounter a `break`
@@ -20,7 +19,6 @@ namespace Decaf.Backend {
 #nullable disable
       public static CodegenContext CreateInitialContext() {
         return new CodegenContext {
-          Scope = new Scope<int>(null),
           // Looping
           BreakLabel = null,
           ContinueLabel = null,
@@ -53,7 +51,6 @@ namespace Decaf.Backend {
       // TODO: Create a wasm function type signature for the method
       // TODO: Compile the body
       var newCtx = ctx with {
-        Scope = new Scope<int>(ctx.Scope),
         // Looping
         BreakLabel = null,
         ContinueLabel = null,
@@ -342,16 +339,27 @@ namespace Decaf.Backend {
       AnfTree.LocationNode.IdentifierAccessNode node,
       WasmExpression value
     ) {
-      // TODO:
-      throw new NotImplementedException("Identifier sets are not yet supported");
+      // TODO: We should be smarter about name resolution
+      return new WasmExpression.Local.Set(
+        node.Position,
+        new WasmLabel.Label(node.Position, node.Name),
+        value
+      );
     }
     private static WasmExpression CompileLocationMemberAccessSet(
       CodegenContext ctx,
       AnfTree.LocationNode.MemberAccessNode node,
       WasmExpression value
     ) {
-      // TODO:
-      throw new NotImplementedException("Member access sets are not yet supported");
+      // TODO: We should be smarter about name resolution
+      // Get the mangled name
+      var globalName = GetMemberGlobalName(node.Root.Name, node.Member);
+      // Build the global.set
+      return new WasmExpression.Global.Set(
+        node.Position,
+        new WasmLabel.Label(node.Position, globalName),
+        value
+      );
     }
     private static WasmExpression.Block CompileLocationArrayAccessSet(
       CodegenContext ctx,
@@ -389,15 +397,24 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.LocationNode.IdentifierAccessNode node
     ) {
-      // TODO:
-      throw new NotImplementedException("Identifier gets are not yet supported");
+      // TODO: We should be smarter about name resolution
+      return new WasmExpression.Local.Get(
+        node.Position,
+        new WasmLabel.Label(node.Position, node.Name)
+      );
     }
     private static WasmExpression CompileLocationMemberAccessGet(
       CodegenContext ctx,
       AnfTree.LocationNode.MemberAccessNode node
     ) {
-      // TODO:
-      throw new NotImplementedException("Member access gets are not yet supported");
+      // TODO: We should be smarter about name resolution
+      // Get the mangled name
+      var globalName = GetMemberGlobalName(node.Root.Name, node.Member);
+      // Build the global.get
+      return new WasmExpression.Global.Get(
+        node.Position,
+        new WasmLabel.Label(node.Position, globalName)
+      );
     }
     private static WasmExpression.Block CompileLocationArrayAccessGet(
       CodegenContext ctx,
@@ -418,6 +435,11 @@ namespace Decaf.Backend {
         new WasmLabel.UniqueLabel(node.Position, "arr_get"),
         [compiledBoundsCheck, compiledGet]
       );
+    }
+
+    private static string GetMemberGlobalName(string root, string member) {
+      // NOTE: It would probably be better to mangle the names at the anf level (sync issues here)
+      return $"{root}__{member}";
     }
     // Array Helper
     private static WasmExpression CompileArrayByteIndex(

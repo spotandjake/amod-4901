@@ -56,6 +56,22 @@ namespace Decaf.WasmBuilder {
       public sealed record Grow(Position Position, WasmExpression PageCount) : Memory(Position);
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position);
     }
+    // Global - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global
+    public record Global(Position Position) : WasmExpression(Position) {
+      // Get - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global.get
+      public sealed record Get(Position Position, WasmLabel Name) : Global(Position);
+      // Set - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global.set
+      public sealed record Set(Position Position, WasmLabel Name, WasmExpression Value) : Global(Position);
+    }
+    // Local - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local
+    public record Local(Position Position) : WasmExpression(Position) {
+      // Get - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.get
+      public sealed record Get(Position Position, WasmLabel Name) : Local(Position);
+      // Set - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.set
+      public sealed record Set(Position Position, WasmLabel Name, WasmExpression Value) : Local(Position);
+      // Tee - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.tee
+      public sealed record Tee(Position Position, WasmLabel Name, WasmExpression Value) : Local(Position);
+    }
     // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
     public record Block(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position);
     // Br - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br

@@ -362,12 +362,12 @@ namespace Decaf.IR.AnfTree {
     /// </summary>
     public record MemberAccessNode(
       Position Position,
-      LocationNode Root,
+      LocationNode.IdentifierAccessNode Root,
       string Member,
       TypedTree.Signature LocationType
     ) : LocationNode(Position, LocationType) {
       public override NodeKind Kind => NodeKind.MemberLocation;
-      public LocationNode Root { get; } = Root;
+      public LocationNode.IdentifierAccessNode Root { get; } = Root;
       public string Member { get; } = Member;
     };
     /// <summary>
