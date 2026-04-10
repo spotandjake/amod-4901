@@ -6,6 +6,7 @@ namespace Decaf.IR.ParseTree {
     Int,
     Boolean,
     Void,
+    String,
     Custom
   }
   /// <summary>

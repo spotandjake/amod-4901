@@ -227,25 +227,19 @@ namespace Decaf.Backend {
       AnfState state,
       TypedTree.ExpressionNode node
     ) {
-      switch (node) {
-        case TypedTree.ExpressionNode.CallNode callNode:
-          return FromCallExpressionNode(state, callNode);
-        case TypedTree.ExpressionNode.PrimitiveNode primitiveNode:
-          return FromPrimitiveExpressionNode(state, primitiveNode);
-        case TypedTree.ExpressionNode.BinopNode binopNode:
-          return FromBinopExpressionNode(state, binopNode);
-        case TypedTree.ExpressionNode.PrefixNode prefixNode:
-          return FromPrefixExpressionNode(state, prefixNode);
-        case TypedTree.ExpressionNode.NewClassNode _:
-          throw new NotImplementedException("`new` class nodes are object oriented, as such we don't implement them right now");
-        case TypedTree.ExpressionNode.NewArrayNode newArrayNode:
-          return FromNewArrayExpressionNode(state, newArrayNode);
-        case TypedTree.ExpressionNode.LocationAccessNode locationAccessNode:
-          return FromLocationAccessExpressionNode(state, locationAccessNode, node.ExpressionType);
-        case TypedTree.ExpressionNode.LiteralNode literalNode:
-          return FromLiteralExpressionNode(state, literalNode, node.ExpressionType);
-        default: throw new Exception($"Unknown expression node: {node.Kind}");
-      }
+      return node switch {
+        TypedTree.ExpressionNode.CallNode callNode => FromCallExpressionNode(state, callNode),
+        TypedTree.ExpressionNode.PrimitiveNode primitiveNode => FromPrimitiveExpressionNode(state, primitiveNode),
+        TypedTree.ExpressionNode.BinopNode binopNode => FromBinopExpressionNode(state, binopNode),
+        TypedTree.ExpressionNode.PrefixNode prefixNode => FromPrefixExpressionNode(state, prefixNode),
+        TypedTree.ExpressionNode.NewClassNode _ =>
+          throw new NotImplementedException("`new` class nodes are object oriented, as such we don't implement them right now"),
+        TypedTree.ExpressionNode.NewArrayNode newArrayNode => FromNewArrayExpressionNode(state, newArrayNode),
+        TypedTree.ExpressionNode.LocationAccessNode locationAccessNode =>
+          FromLocationAccessExpressionNode(state, locationAccessNode, node.ExpressionType),
+        TypedTree.ExpressionNode.LiteralNode literalNode => FromLiteralExpressionNode(state, literalNode, node.ExpressionType),
+        _ => throw new Exception($"Unknown expression node: {node.Kind}"),
+      };
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromCallExpressionNode(
       AnfState state,

@@ -25,6 +25,7 @@ type:
   INT # IntType
   | BOOLEAN # BooleanType
   | VOID # VoidType
+  | STRING # StringType
   | ID # CustomType
   ;
 
@@ -55,7 +56,7 @@ call_expr:
 method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
 method_call_args: expr (COMMA expr)*;
 prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
-prim_callout_args: (COMMA (expr | STRINGLIT))*;
+prim_callout_args: (COMMA (expr))*;
 
 expr:
   simple_expr # SimpleExpr
@@ -101,6 +102,7 @@ literal:
   | CHARLIT # CharLit
   | bool_literal # BoolLit
   | NULL # NullLit
+  | STRINGLIT # StringLit
   ;
 
 bool_literal: TRUE | FALSE;

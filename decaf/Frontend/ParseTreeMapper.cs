@@ -87,6 +87,7 @@ namespace Decaf.Frontend {
         DecafParser.VoidTypeContext _ => PrimitiveType.Void,
         DecafParser.IntTypeContext _ => PrimitiveType.Int,
         DecafParser.BooleanTypeContext _ => PrimitiveType.Boolean,
+        DecafParser.StringTypeContext _ => PrimitiveType.String,
         DecafParser.CustomTypeContext _ => PrimitiveType.Custom,
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible type at TypeNode.FromContext")
@@ -260,6 +261,8 @@ namespace Decaf.Frontend {
         DecafParser.BoolLitContext boolLitCtx =>
           new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.bool_literal().TRUE() != null),
         DecafParser.NullLitContext _ => new ParseTree.LiteralNodes.NullNode(position),
+        DecafParser.StringLitContext stringLitCtx =>
+          new ParseTree.LiteralNodes.StringNode(position, stringLitCtx.STRINGLIT().GetText()[1..^1]),
         _ => throw new InvalidProgramException("Impossible literal at LiteralNode.FromContext"),// NOTE: This should be impossible due to grammar restrictions
       };
       return new ExpressionNode.LiteralNode(position, literal);

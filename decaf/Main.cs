@@ -155,9 +155,10 @@ namespace CLI {
       // Compile
       try {
         var wasmModule = Compiler.Compiler.CompileString(source, relPath);
+        Console.WriteLine(wasmModule.ToWat());
         // TODO: Write output to opts.output if specified in the format specified
-        string json = JsonSerializer.Serialize(wasmModule, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
-        Console.WriteLine(json);
+        // string json = JsonSerializer.Serialize(wasmModule, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
+        // Console.WriteLine(json);
       }
       catch (Exception e) {
         bool rethrow = ErrorHandler.HandleError(opts.Debug, e);

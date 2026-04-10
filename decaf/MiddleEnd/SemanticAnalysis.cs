@@ -158,13 +158,6 @@ namespace Decaf.MiddleEnd {
           CheckLocationNode(locationNode.Content, parentContext);
           break;
         case ExpressionNode.LiteralNode literalNode:
-          switch (literalNode.Content) {
-            case ParseTree.LiteralNodes.StringNode:
-              if (!parentContext.InPrimCall) {
-                throw new SemanticException(literalNode.Position, "String literals can only be used as arguments to primitive calls");
-              }
-              break;
-          }
           break;
         default:
           throw new Exception($"Unknown expression node of type {expression.GetType()}");

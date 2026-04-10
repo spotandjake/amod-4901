@@ -53,4 +53,17 @@ class Runtime {
     // Return the block pointer
     return pointer;
   }
+  // --- Primitive Data Type Allocation ---
+  int allocateArray(int length) {
+    int byteSize;
+    int pointer;
+    // Compute the byteSize
+    byteSize = 4 + (4 * length);
+    // Allocate the block
+    pointer = this.calloc(byteSize);
+    // Store the length
+    callout("@wasm.i32.store", pointer, 0, byteSize);
+    // Return the pointer
+    return pointer;
+  }
 }

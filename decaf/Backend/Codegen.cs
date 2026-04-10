@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Decaf.IR.PrimitiveDefinition;
 using Decaf.IR.TypedTree;
 using Decaf.Utils;
@@ -15,15 +16,18 @@ namespace Decaf.Backend {
     private static readonly string RuntimeModuleName = "Runtime";
     private static readonly string RuntimeMallocName = GetMemberGlobalName(RuntimeModuleName, "malloc");
     private static readonly string RuntimeCallocName = GetMemberGlobalName(RuntimeModuleName, "calloc");
+    private static readonly string RuntimeAllocateArray = GetMemberGlobalName(RuntimeModuleName, "allocateArray");
 
     private record struct CodegenContext {
+      public WasmModule WasmModule; // The module we are currently building itself
       // Related to looping
 #nullable enable
       public WasmLabel? BreakLabel; // The label to break to when we encounter a `break`
       public WasmLabel? ContinueLabel; // The label to break to when we encounter
 #nullable disable
-      public static CodegenContext CreateInitialContext() {
+      public static CodegenContext CreateInitialContext(WasmModule WasmModule) {
         return new CodegenContext {
+          WasmModule = WasmModule,
           // Looping
           BreakLabel = null,
           ContinueLabel = null,
@@ -32,20 +36,46 @@ namespace Decaf.Backend {
     }
     public static WasmModule CompileProgram(AnfTree.ProgramNode node) {
       // Create our wasm module
-      WasmModule module = new WasmModule(node.Position);
+      var module = new WasmModule(node.Position);
       // Create our initial codegen context
-      var ctx = CodegenContext.CreateInitialContext();
-      // TODO: Generate code for each module
-      foreach (var mod in node.Modules) CompileModule(ctx, mod);
+      var ctx = CodegenContext.CreateInitialContext(module);
+      // Generate code for each module
+      var startCalls = new List<WasmExpression>();
+      foreach (var mod in node.Modules) {
+        // Compile the module
+        CompileModule(ctx, mod);
+        // Create the start call
+        if (mod.Methods.Any((m) => m.Name == "Main") && mod.Name != "Program") {
+          startCalls.Add(new WasmExpression.Call(
+            mod.Position,
+            new WasmLabel.Label(mod.Position, GetMemberGlobalName(mod.Name, "Main")),
+            []
+          ));
+        }
+      }
+      // Add our call to `Program.Main`
+      startCalls.Add(new WasmExpression.Call(
+        node.Position,
+        new WasmLabel.Label(node.Position, GetMemberGlobalName("Program", "Main")),
+        []
+      ));
       // TODO: Generate a `_start` function that calls the `<x>.Main` method
-      // TODO: Ensure we call `Program.Main` after all static initializers have run
       return module;
     }
     // Code Units
     private static void CompileModule(CodegenContext ctx, AnfTree.DeclarationNode.ModuleNode node) {
-      // TODO: Create a global for each member
+      //Create a global for each member
       foreach (var global in node.Globals) {
-        // TODO: Add a global to the module for this global variable???
+        var wasmGlobal = new WasmGlobal(
+          node.Position,
+          new WasmLabel.Label(node.Position, GetMemberGlobalName(node.Name, global.Name)),
+          // TODO: Map the signature
+          new WasmType.I32(node.Position), // TODO: Support more types
+          true, // TODO: Support immutable globals
+          null // TODO: Support global initializers
+        );
+        // Add the global to the module
+        ctx.WasmModule.AddGlobal(wasmGlobal);
       }
       // TODO: Create a function for each method
       foreach (var method in node.Methods) {
@@ -233,6 +263,14 @@ namespace Decaf.Backend {
             CompileImmediate(ctx, node.Arguments[1]),
             CompileImmediate(ctx, node.Arguments[2])
           ),
+        // I32 sub namespace
+        PrimDefinition.WasmI32Store =>
+          new WasmExpression.I32.Store(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[2]),
+            CompileImmediate(ctx, node.Arguments[1])
+          ),
         // Unknown
         _ => throw new Exception($"Unknown primitive: {node.Primitive}"),
       };
@@ -293,51 +331,10 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.ExpressionNode.AllocateArrayNode node
     ) {
-      // Compute the size of the array in bytes (length * 4 for i32 elements)
-      var compiledSize = CompileImmediate(ctx, node.SizeImm);
-      // Get an arr_ptr
-      var arr_byte_size = new WasmLabel.UniqueLabel(node.Position, "arr_byte_size");
-      var arr_ptr = new WasmLabel.UniqueLabel(node.Position, "arr_ptr");
-      // TODO: Consider moving this into the runtime
-      // Build the block
-      return new WasmExpression.Block(
+      return new WasmExpression.Call(
         node.Position,
-        null,
-        [
-          // (local.set $arr_byte_size byte_size)
-          new WasmExpression.Local.Set(
-            node.Position,
-            arr_byte_size,
-            new WasmExpression.I32.Add(
-              node.Position,
-              new WasmExpression.I32.Mul(
-                node.Position,
-                compiledSize,
-                new WasmExpression.I32.Const(node.Position, 4)
-              ),
-              new WasmExpression.I32.Const(node.Position, 4) // add 4 to store the length at the start of the array
-            )
-          ),
-          // (local.set $arr_ptr (call Runtime.calloc byte_size))
-          new WasmExpression.Local.Set(
-            node.Position,
-            arr_ptr,
-            new WasmExpression.Call(
-              node.Position,
-              new WasmLabel.Label(node.Position, RuntimeCallocName),
-              [new WasmExpression.Local.Get(node.Position, arr_byte_size)]
-            )
-          ),
-          // (i32.store arr_ptr 0 length)
-          new WasmExpression.I32.Store(
-            node.Position,
-            new WasmExpression.Local.Get(node.Position, arr_ptr),
-            new WasmExpression.Local.Get(node.Position, arr_byte_size),
-            new WasmExpression.I32.Const(node.Position, 0) // length is at offset 0
-          ),
-          // (local.get arr_ptr)
-          new WasmExpression.Local.Get(node.Position, arr_ptr)
-        ]
+        new WasmLabel.Label(node.Position, RuntimeAllocateArray),
+        [CompileImmediate(ctx, node.SizeImm)]
       );
     }
     // Immediate Expressions

@@ -18,6 +18,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.PrimitiveType.Int => BuildSimpleSignature(node.Position, PrimitiveType.Int),
         ParseTree.PrimitiveType.Boolean => BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
         ParseTree.PrimitiveType.Void => BuildSimpleSignature(node.Position, PrimitiveType.Void),
+        ParseTree.PrimitiveType.String => BuildSimpleSignature(node.Position, PrimitiveType.String),
         ParseTree.PrimitiveType.Custom => new Signature.CustomSignature(node.Position, node.Content),
         // NOTE: This case can never be hit c# exhaustiveness is just being weird
         _ => throw new Exception("Impossible: unknown primitive type"),

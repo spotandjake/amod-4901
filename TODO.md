@@ -57,9 +57,6 @@
 * Convert primitive callouts to a format like `@<identifier>(params)`
   * i.e `callout("@wasm.memory.size")` becomes `@wasm.memory.size()`
   * This makes primitives just like regular function calls making them a bit more ergonomic
-* Support strings as literals
-  * We might as well just treat strings as regular literals in the compiler we handle all the other stuff about them
-    * NOTE: We choose to just leak memory currently
 * Investigate using wasm gc
   * We should do some simple investigation on how hard it would be to use wasm gc
 * Add an enum to represent operations or use primitive calls
