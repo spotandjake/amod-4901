@@ -298,6 +298,7 @@ namespace Decaf.Backend {
       // Get an arr_ptr
       var arr_byte_size = new WasmLabel.UniqueLabel(node.Position, "arr_byte_size");
       var arr_ptr = new WasmLabel.UniqueLabel(node.Position, "arr_ptr");
+      // TODO: Consider moving this into the runtime
       // Build the block
       return new WasmExpression.Block(
         node.Position,
@@ -346,9 +347,7 @@ namespace Decaf.Backend {
     ) {
       return node switch {
         AnfTree.ImmediateNode.ConstantNode constantNode => CompileLiteral(ctx, constantNode.Value),
-        // TODO: Implement location access
-        AnfTree.ImmediateNode.LocationAccessNode idNode =>
-          CompileLocationGet(ctx, idNode.Location),
+        AnfTree.ImmediateNode.LocationAccessNode idNode => CompileLocationGet(ctx, idNode.Location),
         _ => throw new Exception($"Unknown immediate node kind: {node.Kind}"),
       };
     }
@@ -396,7 +395,7 @@ namespace Decaf.Backend {
         _ => throw new Exception($"Unknown location node kind: {node.Kind}"),
       };
     }
-    private static WasmExpression CompileLocationIdentifierSet(
+    private static WasmExpression.Local.Set CompileLocationIdentifierSet(
       CodegenContext ctx,
       AnfTree.LocationNode.IdentifierAccessNode node,
       WasmExpression value
@@ -408,7 +407,7 @@ namespace Decaf.Backend {
         value
       );
     }
-    private static WasmExpression CompileLocationMemberAccessSet(
+    private static WasmExpression.Global.Set CompileLocationMemberAccessSet(
       CodegenContext ctx,
       AnfTree.LocationNode.MemberAccessNode node,
       WasmExpression value
@@ -428,6 +427,7 @@ namespace Decaf.Backend {
       AnfTree.LocationNode.ArrayAccessNode node,
       WasmExpression value
     ) {
+      // TODO: Consider moving this into the runtime
       // Compile the root get expression
       var compiledRoot = CompileLocationGet(ctx, node.Root);
       // Compile a statement to get the index
@@ -455,7 +455,7 @@ namespace Decaf.Backend {
         _ => throw new Exception($"Unknown location node kind: {node.Kind}"),
       };
     }
-    private static WasmExpression CompileLocationIdentifierGet(
+    private static WasmExpression.Local.Get CompileLocationIdentifierGet(
       CodegenContext ctx,
       AnfTree.LocationNode.IdentifierAccessNode node
     ) {
@@ -465,7 +465,7 @@ namespace Decaf.Backend {
         new WasmLabel.Label(node.Position, node.Name)
       );
     }
-    private static WasmExpression CompileLocationMemberAccessGet(
+    private static WasmExpression.Global.Get CompileLocationMemberAccessGet(
       CodegenContext ctx,
       AnfTree.LocationNode.MemberAccessNode node
     ) {
@@ -482,6 +482,7 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.LocationNode.ArrayAccessNode node
     ) {
+      // TODO: Consider moving this into the runtime
       // Compile the root get expression
       var compiledRoot = CompileLocationGet(ctx, node.Root);
       // Compile a statement to get the index
@@ -504,7 +505,7 @@ namespace Decaf.Backend {
       return $"{root}__{member}";
     }
     // Array Helper
-    private static WasmExpression CompileArrayByteIndex(
+    private static WasmExpression.I32.Add CompileArrayByteIndex(
       Position position,
       WasmExpression index
     ) {
@@ -519,7 +520,7 @@ namespace Decaf.Backend {
         new WasmExpression.I32.Const(position, 4) // add 4 to skip the length field at the start of the array
       );
     }
-    private static WasmExpression CompileArrayBoundsCheck(
+    private static WasmExpression.I32.If CompileArrayBoundsCheck(
       Position position,
       WasmExpression pointer,
       WasmExpression index
