@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Decaf.Utils;
 
 namespace Decaf.WasmBuilder {
@@ -45,17 +46,33 @@ namespace Decaf.WasmBuilder {
       public sealed record Grow(Position Position, WasmExpression PageCount) : Memory(Position);
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position);
     }
+    // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
+    public record Block(Position Position, string Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position);
+    // Br - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br
+    public sealed record Br(Position Position, string Label) : WasmExpression(Position);
+    // BrIf - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br_if
+    public sealed record BrIf(Position Position, string Label, WasmExpression Condition) : WasmExpression(Position);
+    // TODO: BrTable
+    // Call - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/call
+    public sealed record Call(Position Position, string FunctionName, IEnumerable<WasmExpression> Arguments) : WasmExpression(Position);
+    // Drop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/drop
+    public sealed record Drop(Position Position, WasmExpression Value) : WasmExpression(Position);
     // If - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/if...else
     public sealed record If(
 #nullable enable
       Position Position, WasmExpression Condition, WasmExpression TrueBranch, WasmExpression? FalseBranch
 #nullable disable
     ) : WasmExpression(Position);
+    // Loop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/loop
+    public sealed record Loop(Position Position, string Label, IEnumerable<WasmExpression> Body) : WasmExpression(Position);
+    // Nop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/nop
+    public sealed record Nop(Position Position) : WasmExpression(Position);
     // Return - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/return
 #nullable enable
     public sealed record Return(Position Position, WasmExpression? Value) : WasmExpression(Position);
 #nullable disable
-    // Drop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/drop
-    public sealed record Drop(Position Position, WasmExpression Value) : WasmExpression(Position);
+    // TODO: Select
+    // Unreachable - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/unreachable
+    public sealed record Unreachable(Position Position) : WasmExpression(Position);
   }
 }

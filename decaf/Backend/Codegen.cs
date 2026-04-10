@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Decaf.IR.PrimitiveDefinition;
 using Decaf.IR.TypedTree;
 using Decaf.WasmBuilder;
@@ -77,8 +78,17 @@ namespace Decaf.Backend {
       return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }
     private static WasmExpression CompileLoopNode(AnfTree.InstructionNode.LoopNode node) {
-      // TODO:
-      throw new NotImplementedException("Loop statements are not yet supported");
+      // TODO: Properly generate the labels
+      var loop_label = "loop_inner"; // TODO: Properly create a unique label for this loop
+      var block_label = "loop_outer"; // TODO: Properly create a unique label for the breaking block of this loop
+      // Compile the body
+      var compiledBody = CompileBlock(node.Body);
+      // Create the wasm loop
+      var compiledLoop = new WasmExpression.Loop(node.Position, loop_label, [compiledBody]);
+      // Create the outer block
+      var compiledBlock = new WasmExpression.Block(node.Position, block_label, [compiledLoop]);
+      // Return the block
+      return compiledBlock;
     }
     private static WasmExpression CompileContinueNode(AnfTree.InstructionNode.ContinueNode node) {
       // TODO: This should emit a `br` to the appropriate label (The label should be supplied by the compile context)
