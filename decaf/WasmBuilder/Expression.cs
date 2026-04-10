@@ -7,6 +7,7 @@ namespace Decaf.WasmBuilder {
     public record I32(Position Position) : WasmExpression(Position) {
       public sealed record Const(Position Position, int Value) : I32(Position);
       // Comparison - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Numeric#comparison
+      public sealed record Eqz(Position Position, WasmExpression Operand) : I32(Position);
       public sealed record Eq(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position);
       public sealed record Ne(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position);
       public sealed record GtS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position);
