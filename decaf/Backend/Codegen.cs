@@ -56,7 +56,8 @@ namespace Decaf.Backend {
         ContinueLabel = null,
       };
       var compiledBody = CompileBlock(newCtx, node.Body);
-      Console.WriteLine(compiledBody);
+      Console.WriteLine($"Compiled method {node.Name}:");
+      Console.WriteLine(compiledBody.ToWat());
       // TODO: Create a wasm function with the compiled body and the signature
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
