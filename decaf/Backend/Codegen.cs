@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Decaf.IR.PrimitiveDefinition;
 using Decaf.IR.TypedTree;
+using Decaf.Utils;
 using Decaf.WasmBuilder;
 using AnfTree = Decaf.IR.AnfTree;
 using TypedTree = Decaf.IR.TypedTree;
@@ -11,6 +12,7 @@ using TypedTree = Decaf.IR.TypedTree;
 namespace Decaf.Backend {
   public static class Codegen {
     private record struct CodegenContext {
+      public Scope<int> Scope;
       // Related to looping
 #nullable enable
       public string? BreakLabel; // The label to break to when we encounter a `break`
@@ -104,7 +106,7 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.InstructionNode.LoopNode node
     ) {
-      // TODO: Properly generate the labels
+      // Properly generate the labels
       var loop_label = "loop_inner"; // TODO: Properly create a unique label for this loop
       var block_label = "loop_outer"; // TODO: Properly create a unique label for the breaking block of this loop
       var newCtx = ctx with {

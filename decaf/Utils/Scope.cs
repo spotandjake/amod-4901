@@ -23,6 +23,7 @@ namespace Decaf.Utils {
     /// The declarations in this scope, mapping from the declaration name to the value being tracked.
     /// </summary>
     private Dictionary<string, T> Declarations { get; } = [];
+    public int Size => (Parent?.Size ?? 0) + Declarations.Count;
     /// <summary>
     /// Adds a declaration to the current scope. If a declaration with the same name already exists 
     /// in the current scope an exception will be thrown.
