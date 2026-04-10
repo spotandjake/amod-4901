@@ -22,10 +22,10 @@ namespace Compiler {
     /// <summary>
     /// This method bundles the runtime code into the user program.
     /// 
-    /// This is done in a rather naive way we simply take the runtime code, and then append the parsed runtime classes to the 
-    /// user-defined classes. 
+    /// This is done in a rather naive way we simply take the runtime code, and then append the parsed runtime modules to the 
+    /// user-defined modules. 
     /// This is not the most efficient way to do this, but it is simple and works for our purposes.
-    /// One benefit of appending the parsed runtime classes over doing a string append is that we get better error reporting and handling
+    /// One benefit of appending the parsed runtime modules over doing a string append is that we get better error reporting and handling
     /// as locations are right and malformed runtime code will be caught while parsing the runtime, 
     /// so user errors are scoped to their source.
     /// </summary>
@@ -46,9 +46,9 @@ namespace Compiler {
       // Bundle the runtime into the program
       return new ParseTree.ProgramNode(
         program.Position,
-        // Put the runtime classes before the user-defined classes to ensure that the runtime classes are 
-        // available to the user-defined classes
-        [.. runtimeProgram.Classes, .. program.Classes],
+        // Put the runtime modules before the user-defined modules to ensure that the runtime modules are 
+        // available to the user-defined modules
+        [.. runtimeProgram.Modules, .. program.Modules],
         null
       );
     }

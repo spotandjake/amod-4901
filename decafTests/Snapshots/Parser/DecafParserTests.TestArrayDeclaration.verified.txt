@@ -1,7 +1,7 @@
 ﻿{
-  Classes: [
+  Modules: [
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Main,
       Methods: [
         {
@@ -19,8 +19,7 @@
                 Kind: VariableDeclNode,
                 Type: {
                   Kind: TypeNode,
-                  Type: Custom,
-                  Content: T
+                  Content: int
                 },
                 Binds: [
                   {
@@ -42,8 +41,7 @@
                   Kind: NewArrayExpression,
                   Type: {
                     Kind: TypeNode,
-                    Type: Custom,
-                    Content: T
+                    Content: int
                   },
                   SizeExpr: {
                     Kind: LiteralExpression,

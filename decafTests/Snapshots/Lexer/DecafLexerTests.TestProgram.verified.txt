@@ -1,7 +1,5 @@
 ﻿[
-  CLASS,
-  ID,
-  EXTENDS,
+  MODULE,
   ID,
   LBRACE,
   INT,
@@ -64,7 +62,7 @@
   SEMI,
   RBRACE,
   RBRACE,
-  CLASS,
+  MODULE,
   ID,
   LBRACE,
   VOID,

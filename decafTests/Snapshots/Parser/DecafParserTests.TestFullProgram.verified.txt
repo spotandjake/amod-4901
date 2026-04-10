@@ -1,9 +1,8 @@
 ﻿{
-  Classes: [
+  Modules: [
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Main,
-      SuperClassName: Base,
       Fields: [
         {
           Kind: VariableDeclNode,
@@ -193,7 +192,7 @@
       ]
     },
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Base,
       Methods: [
         {

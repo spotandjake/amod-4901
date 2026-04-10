@@ -7,14 +7,7 @@
         {
           Kind: GlobalDeclNode,
           Name: y,
-          Signature: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
+          Signature: {}
         }
       ],
       Methods: [
@@ -29,19 +22,7 @@
           },
           Signature: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           }
         }
@@ -50,35 +31,10 @@
         Members: {
           Main: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           },
-          y: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
-        },
-        Position: {
-          fileName: <unknown file>,
-          line: 2,
-          column: 4,
-          offset: 5
+          y: {}
         }
       }
     }

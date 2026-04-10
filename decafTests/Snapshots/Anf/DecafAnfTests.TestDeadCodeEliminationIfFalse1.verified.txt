@@ -7,14 +7,7 @@
         {
           Kind: GlobalDeclNode,
           Name: y,
-          Signature: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
+          Signature: {}
         }
       ],
       Methods: [
@@ -29,54 +22,22 @@
                 Location: {
                   Kind: IdentifierLocation,
                   Name: y,
-                  LocationType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 3,
-                      column: 6,
-                      offset: 27
-                    }
-                  }
+                  LocationType: {}
                 },
                 Expression: {
                   Kind: ConstantImmediate,
                   Value: {
                     Kind: IntegerLiteral,
-                    Value: 2,
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 8,
-                      column: 14,
-                      offset: 123
-                    }
+                    Value: 2
                   },
-                  Signature: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 8,
-                      column: 14,
-                      offset: 123
-                    }
-                  }
+                  Signature: {}
                 }
               }
             ]
           },
           Signature: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           }
         }
@@ -85,35 +46,10 @@
         Members: {
           Main: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           },
-          y: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
-        },
-        Position: {
-          fileName: <unknown file>,
-          line: 2,
-          column: 4,
-          offset: 5
+          y: {}
         }
       }
     }

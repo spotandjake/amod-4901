@@ -283,10 +283,6 @@ namespace Decaf.Backend {
         // We represent booleans as `(i32.const 1)` for true and `(i32.const 0)` for false
         TypedTree.LiteralNodes.BooleanNode booleanNode =>
           new WasmExpression.I32.Const(booleanNode.Position, booleanNode.Value ? 1 : 0),
-        // For now we represent null as `(i32.const 0)` this means null has falsy semantics by default
-        // NOTE: `Null` isn't very useful without class support, and it's more similar to `undefined`
-        TypedTree.LiteralNodes.NullNode nullNode =>
-          new WasmExpression.I32.Const(nullNode.Position, 0),
         _ => throw new Exception($"Unknown literal node kind: {node.Kind}"),
       };
     }

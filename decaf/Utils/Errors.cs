@@ -81,30 +81,22 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, "A call can only be performed on a method type.")) {
     }
     /// <summary>
-    /// An exception to be thrown when a member access is performed on a non-class type during type checking.
+    /// An exception to be thrown when a member access is performed on a non-module type during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
-    public class MemberAccessOnNonClass(
+    public class MemberAccessOnNonModule(
       Position position
-    ) : Exception(ErrorConstructor.CreateError(position, "A member access can only be performed on a class type.")) {
+    ) : Exception(ErrorConstructor.CreateError(position, "A member access can only be performed on a module.")) {
     }
     /// <summary>
-    /// An exception to be thrown when a member access is performed and the class does not have the member being accessed during type checking.
+    /// An exception to be thrown when a member access is performed and the module does not have the member being accessed during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
     /// <param name="memberName">The name of the member being accessed.</param>
     public class MemberAccessUnknown(
       Position position,
       string memberName
-    ) : Exception(ErrorConstructor.CreateError(position, $"The member `{memberName}` does not exist on the class being accessed.")) {
-    }
-    /// <summary>
-    /// An exception to be thrown when a member access is performed on a non-class type during type checking.
-    /// </summary>
-    /// <param name="position">The position where the error occurred.</param>
-    public class InitializationOfNonClass(
-      Position position
-    ) : Exception(ErrorConstructor.CreateError(position, "A member initialization can only be performed on a class type.")) {
+    ) : Exception(ErrorConstructor.CreateError(position, $"The member `{memberName}` does not exist on the module being accessed.")) {
     }
     /// <summary>
     /// An exception to be thrown when an array access is performed on a non-array type during type checking.
@@ -115,18 +107,18 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, "An array access can only be performed on an array type.")) {
     }
     /// <summary>
-    /// An exception to be thrown when a `this` expression is encountered outside of a class during type checking.
+    /// An exception to be thrown when a `this` expression is encountered outside of a module during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
-    public class ThisAccessOutsideOfClass(
+    public class ThisAccessOutsideOfModule(
       Position position
     ) : Exception(ErrorConstructor.CreateError(position, "`this` statement must be within a method.")) {
     }
     /// <summary>
-    /// An expception to be thrown when a `return` statement is encountered outside of a method during type checking.
+    /// An exception to be thrown when a `return` statement is encountered outside of a method during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
-    public class ReturnUseOutsideOfClass(
+    public class ReturnUseOutsideOfMethod(
       Position position
     ) : Exception(ErrorConstructor.CreateError(position, "`return` statement must be within a method.")) {
     }
@@ -176,22 +168,19 @@ namespace Decaf.Utils.Errors {
         case TypeCheckingErrors.CallOnNonMethod e:
           Console.WriteLine(e.Message);
           break;
-        case TypeCheckingErrors.MemberAccessOnNonClass e:
+        case TypeCheckingErrors.MemberAccessOnNonModule e:
           Console.WriteLine(e.Message);
           break;
         case TypeCheckingErrors.MemberAccessUnknown e:
           Console.WriteLine(e.Message);
           break;
-        case TypeCheckingErrors.InitializationOfNonClass e:
-          Console.WriteLine(e.Message);
-          break;
         case TypeCheckingErrors.ArrayAccessOnNonArray e:
           Console.WriteLine(e.Message);
           break;
-        case TypeCheckingErrors.ThisAccessOutsideOfClass e:
+        case TypeCheckingErrors.ThisAccessOutsideOfModule e:
           Console.WriteLine(e.Message);
           break;
-        case TypeCheckingErrors.ReturnUseOutsideOfClass e:
+        case TypeCheckingErrors.ReturnUseOutsideOfMethod e:
           Console.WriteLine(e.Message);
           break;
         case TypeCheckingErrors.UnknownPrimitiveCall e:

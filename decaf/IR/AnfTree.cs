@@ -89,20 +89,20 @@ namespace Decaf.IR.AnfTree {
   [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
+    /// <summary>A module declaration.</summary>
     public record ModuleNode(
       Position Position,
       string Name,
       // TODO: Get rid of the distinction between globals and methods, they are both just code
       GlobalNode[] Globals,
       MethodNode[] Methods,
-      TypedTree.Signature.ClassSignature Signature
+      TypedTree.Signature.ModuleSignature Signature
     ) : DeclarationNode(Position) {
       public override NodeKind Kind => NodeKind.ModuleDeclNode;
       public string Name { get; } = Name;
       public GlobalNode[] Globals { get; } = Globals;
       public MethodNode[] Methods { get; } = Methods;
-      public TypedTree.Signature.ClassSignature Signature { get; } = Signature;
+      public TypedTree.Signature.ModuleSignature Signature { get; } = Signature;
     }
     /// <summary>A global declaration.</summary>
     public record GlobalNode(Position Position, string Name, TypedTree.Signature Signature) : DeclarationNode(Position) {

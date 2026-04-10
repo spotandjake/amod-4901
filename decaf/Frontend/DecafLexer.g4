@@ -3,25 +3,31 @@ lexer grammar DecafLexer;
 // Disable cSharp CLS compliance warnings
 @lexer::header {#pragma warning disable 3021}
 
-// Keywords
+// Keywords - Type
+INT     : 'i' 'n' 't' ;
 BOOLEAN : 'b' 'o' 'o' 'l' 'e' 'a' 'n' ;
 STRING  : 's' 't' 'r' 'i' 'n' 'g' ;
+VOID    : 'v' 'o' 'i' 'd' ;
+
+// Keywords - Instructions
 BREAK   : 'b' 'r' 'e' 'a' 'k' ;
-CALLOUT : 'c' 'a' 'l' 'l' 'o' 'u' 't' ;
-CLASS   : 'c' 'l' 'a' 's' 's' ;
 CONTINUE: 'c' 'o' 'n' 't' 'i' 'n' 'u' 'e';
-ELSE    : 'e' 'l' 's' 'e' ;
-EXTENDS : 'e' 'x' 't' 'e' 'n' 'd' 's';
-FALSE   : 'f' 'a' 'l' 's' 'e' ;
-IF      : 'i' 'f' ;
-INT     : 'i' 'n' 't' ;
-NEW     : 'n' 'e' 'w' ;
-NULL    : 'n' 'u' 'l' 'l' ;
 RETURN  : 'r' 'e' 't' 'u' 'r' 'n';
+
+// Keywords - Control Flow
+IF      : 'i' 'f' ;
+ELSE    : 'e' 'l' 's' 'e' ;
+WHILE   : 'w' 'h' 'i' 'l' 'e';
+
+// Keywords - other
+MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
 THIS    : 't' 'h' 'i' 's' ;
 TRUE    : 't' 'r' 'u' 'e' ;
-VOID    : 'v' 'o' 'i' 'd' ;
-WHILE   : 'w' 'h' 'i' 'l' 'e';
+FALSE   : 'f' 'a' 'l' 's' 'e' ;
+NEW     : 'n' 'e' 'w' ;
+CALLOUT : 'c' 'a' 'l' 'l' 'o' 'u' 't' ;
+
+
 
 // Attributes
 WSS      : (' ' | '\t' | NEWLINE)+ -> skip;

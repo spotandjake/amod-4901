@@ -1,4 +1,4 @@
-class Program {
+module Program {
   void Main() {
     //string x;
     //x = "test";

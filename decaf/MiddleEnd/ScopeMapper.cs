@@ -8,7 +8,7 @@ using Decaf.Utils.Errors.ScopeErrors;
 namespace Decaf.MiddleEnd {
   // Analyzes the parse tree and attaches scope tables to nodes
   /// <summary>
-  /// The ScopeMapper traverses the parse tree starting from a program node and constructs scope tables for each class, method, and block.
+  /// The ScopeMapper traverses the parse tree starting from a program node and constructs scope tables for each module, method, and block.
   /// </summary>
   public class ScopeMapper {
     private ScopeMapper() { }
@@ -21,41 +21,34 @@ namespace Decaf.MiddleEnd {
     /// <exception cref="DuplicateDeclarationException">When a declaration is found to be a duplicate.</exception>
     /// <exception cref="DeclarationNotDefinedException">When a declaration is being used but not defined.</exception>
     public static ProgramNode MapProgramNode(ProgramNode program, Scope<bool> globalScope) {
-      var classes = program.Classes.Select(decl => MapClassNode(decl, globalScope)).ToArray();
-      return new ProgramNode(program.Position, classes, globalScope);
+      var modules = program.Modules.Select(decl => MapModuleNode(decl, globalScope)).ToArray();
+      return new ProgramNode(program.Position, modules, globalScope);
     }
-    private static DeclarationNode.ClassNode MapClassNode(DeclarationNode.ClassNode decl, Scope<bool> parentScope) {
-      // Add the class declaration to the global scope
+    private static DeclarationNode.ModuleNode MapModuleNode(DeclarationNode.ModuleNode decl, Scope<bool> parentScope) {
+      // Add the module declaration to the global scope
       parentScope.AddDeclaration(decl.Position, decl.Name, false);
-      // Ensure superclass exists, if applicable
-      if (decl.SuperClassName != null) {
-        if (!parentScope.HasDeclaration(decl.SuperClassName)) {
-          throw new DeclarationNotDefinedException(decl.Position, decl.SuperClassName);
-        }
-      }
-      // Create a scope for the class
-      var classScope = new Scope<bool>(parentScope);
+      // Create a scope for the module
+      var moduleScope = new Scope<bool>(parentScope);
       // Map the fields 
-      var fields = decl.Fields.Select(field => MapVariableDeclarationNode(field, classScope)).ToArray();
+      var fields = decl.Fields.Select(field => MapVariableDeclarationNode(field, moduleScope)).ToArray();
       // Map the methods
-      var methods = decl.Methods.Select(method => MapMethodDeclarationNode(method, classScope)).ToArray();
-      // Construct the new scoped class node
-      return new DeclarationNode.ClassNode(
+      var methods = decl.Methods.Select(method => MapMethodDeclarationNode(method, moduleScope)).ToArray();
+      // Construct the new scoped module node
+      return new DeclarationNode.ModuleNode(
         decl.Position,
         decl.Name,
-        decl.SuperClassName,
         fields,
         methods,
-        classScope
+        moduleScope
       );
     }
     private static TypeNode MapTypeNode(TypeNode typeNode, Scope<bool> parentScope) {
-      if (typeNode.Type == PrimitiveType.Custom) {
-        // For custom types, we need to check if the type exists in the scope
-        if (!parentScope.HasDeclaration(typeNode.Content)) {
-          throw new DeclarationNotDefinedException(typeNode.Position, typeNode.Content);
-        }
-      }
+      // if (typeNode.Type == PrimitiveType.Custom) {
+      //   // For custom types, we need to check if the type exists in the scope
+      //   if (!parentScope.HasDeclaration(typeNode.Content)) {
+      //     throw new DeclarationNotDefinedException(typeNode.Position, typeNode.Content);
+      //   }
+      // }
       return typeNode;
     }
     private static DeclarationNode.VariableNode MapVariableDeclarationNode(DeclarationNode.VariableNode decl, Scope<bool> parentScope) {
@@ -159,11 +152,6 @@ namespace Decaf.MiddleEnd {
             prefixExprNode.Position,
             prefixExprNode.Operator,
             MapExpressionNode(prefixExprNode.Operand, false, parentScope)
-          );
-        case ExpressionNode.NewClassNode newClassExprNode:
-          return new ExpressionNode.NewClassNode(
-            newClassExprNode.Position,
-            MapLocationNode(newClassExprNode.Path, false, parentScope)
           );
         case ExpressionNode.NewArrayNode newArrayExprNode:
           return new ExpressionNode.NewArrayNode(

@@ -1,6 +1,6 @@
-// This is the runtime for decaf, it is a simple class that includes,
+// This is the runtime for decaf, it is a simple module that includes,
 // some core functionality required by user programs.
-class Runtime {
+module Runtime {
   // --- Declarations ---
   // The heap pointer.
   int HeapPointer;

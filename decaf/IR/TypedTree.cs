@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 using Decaf.IR.PrimitiveDefinition;
+using System.Reflection;
 
 // This namespace contains the definition for our typed tree.
 // The typed tree is pretty much the exact same as the parse tree except it attaches extra type information to each node.
@@ -19,19 +20,17 @@ namespace Decaf.IR.TypedTree {
     Null
   }
   // A signature represents the type information for a given declaration. This is used for type checking and method resolution.
-  [JsonDerivedType(typeof(ClassSignature), "ClassSignature")]
+  [JsonDerivedType(typeof(ModuleSignature), "ModuleSignature")]
   [JsonDerivedType(typeof(MethodSignature), "MethodSignature")]
   [JsonDerivedType(typeof(ArraySignature), "ArraySignature")]
   [JsonDerivedType(typeof(PrimitiveSignature), "PrimitiveSignature")]
-  [JsonDerivedType(typeof(CustomSignature), "CustomSignature")]
   public abstract record Signature {
     public Position Position { get; }
     private Signature(Position Position) { this.Position = Position; }
-    public record ClassSignature(Position Position, Dictionary<string, Signature> Members) : Signature(Position);
+    public record ModuleSignature(Position Position, Dictionary<string, Signature> Members) : Signature(Position);
     public record MethodSignature(Position Position, Signature ReturnType, Signature[] ParameterTypes) : Signature(Position);
     public record ArraySignature(Position Position, Signature Typ) : Signature(Position);
     public record PrimitiveSignature(Position Position, PrimitiveType Type) : Signature(Position);
-    public record CustomSignature(Position Position, string Name) : Signature(Position);
   }
   /// <summary>
   /// A base typed tree node that all other typed tree nodes inherit from.
@@ -47,9 +46,9 @@ namespace Decaf.IR.TypedTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<Signature> Scope) : Node(Position) {
+  public record ProgramNode(Position Position, DeclarationNode.ModuleNode[] Modules, Scope<Signature> Scope) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
+    public DeclarationNode.ModuleNode[] Modules { get; } = Modules;
     public Scope<Signature> Scope { get; } = Scope;
   };
   public record BlockNode(
@@ -66,33 +65,26 @@ namespace Decaf.IR.TypedTree {
   /// <summary>
   /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
   /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
+  [JsonDerivedType(typeof(Module), "ModuleDeclNode")]
   [JsonDerivedType(typeof(VariableNode), "VarDeclNode")]
   [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
-    public record ClassNode : DeclarationNode {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ClassDeclNode;
-      public string Name { get; }
-      public VariableNode[] Fields { get; }
-      public MethodNode[] Methods { get; }
-      public Scope<Signature> Scope { get; }
-      public Signature.ClassSignature Signature { get; }
-      public ClassNode(
-        Position position,
-        string name,
-        VariableNode[] fields,
-        MethodNode[] methods,
-        Scope<Signature> scope,
-        Signature.ClassSignature signature
-      ) : base(position) {
-        this.Name = name;
-        this.Fields = fields;
-        this.Methods = methods;
-        this.Scope = scope;
-        this.Signature = signature;
-      }
+    /// <summary>A module declaration.</summary>
+    public record ModuleNode(
+      Position Position,
+      string Name,
+      VariableNode[] Fields,
+      MethodNode[] Methods,
+      Scope<Signature> Scope,
+      Signature.ModuleSignature Signature
+    ) : DeclarationNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ModuleDeclNode;
+      public string Name { get; } = Name;
+      public VariableNode[] Fields { get; } = Fields;
+      public MethodNode[] Methods { get; } = Methods;
+      public Scope<Signature> Scope { get; } = Scope;
+      public Signature.ModuleSignature Signature { get; } = Signature;
     }
     /// <summary>A variable declaration.</summary>
     public record VariableNode : DeclarationNode {
@@ -218,7 +210,6 @@ namespace Decaf.IR.TypedTree {
   [JsonDerivedType(typeof(PrimitiveNode), "PrimitiveExpression")]
   [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
-  [JsonDerivedType(typeof(NewClassNode), "NewClassExpression")]
   [JsonDerivedType(typeof(NewArrayNode), "NewArrayExpression")]
   [JsonDerivedType(typeof(LocationAccessNode), "LocationAccessExpression")]
   [JsonDerivedType(typeof(LiteralNode), "LiteralExpression")]
@@ -273,15 +264,6 @@ namespace Decaf.IR.TypedTree {
       public string Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
     };
-    /// <summary>A new class expression.</summary>
-    public record NewClassNode(
-      Position Position,
-      LocationNode Path,
-      Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NewArrayExpression;
-      public LocationNode Path { get; } = Path;
-    };
     /// <summary>A new array expression.</summary>
     public record NewArrayNode(
       Position Position,
@@ -315,7 +297,6 @@ namespace Decaf.IR.TypedTree {
   [JsonDerivedType(typeof(LiteralNodes.CharacterNode), "CharLiteral")]
   [JsonDerivedType(typeof(LiteralNodes.StringNode), "StringLiteral")]
   [JsonDerivedType(typeof(LiteralNodes.BooleanNode), "BoolLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.NullNode), "NullLiteral")]
   public abstract record LiteralNode : Node {
     protected LiteralNode(Position position) : base(position) { }
   };
@@ -339,10 +320,6 @@ namespace Decaf.IR.TypedTree {
     public record BooleanNode(Position Position, bool Value) : LiteralNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BooleanLiteral;
       public bool Value { get; } = Value;
-    };
-    /// <summary>An null literal node.</summary>
-    public record NullNode(Position Position) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NullLiteral;
     };
   }
   /// <summary>

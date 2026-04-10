@@ -14,12 +14,12 @@
   * Validate `ToWat`
   * Implement `ToWasm`
 * Documentation
-  * Document behavior of `<class>.Main`
+  * Document behavior of `<module>.Main`
     * NOTE: We could drop these if we make the module changes in cleanup
-    * `<class>.Main` is called on every class in the order they are defined in the program
-    * `<class>.Main` is called with zero arguments
-    * `<class>.Main` must return void
-    * `<class>.Main` is optional, if not defined, the class is still valid
+    * `<module>.Main` is called on every module in the order they are defined in the program
+    * `<module>.Main` is called with zero arguments
+    * `<module>.Main` must return void
+    * `<module>.Main` is optional, if not defined, the module is still valid
   * Polish a proper compiler walkthrough
     * Break the readme into seperate files under `./docs/compiler_walkthrough`
     * Give a detailed walkthrough of the entire compiler in `./docs/compiler_walkthrough/README.md`
@@ -34,10 +34,6 @@
       * This will normally be done on the WasmTree rather than the output of the wasm tree 
 
 ## Cleanup 
-* We should rename `class` to `module`
-  * Justification: We don't implement OOP so module is more reflective
-  * Drop `new <class>()` syntax for instantiation
-  * Rename `class` to `module` in the source language
 * Drop declaration restrictions
   * Justification: It's more ergonomic to allow declarations to appear anywhere and doesn't really add complexity
 * Implement a statement similar to allow wasm imports to be declared in the source language

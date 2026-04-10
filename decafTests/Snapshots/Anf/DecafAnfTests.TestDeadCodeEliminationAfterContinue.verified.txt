@@ -7,14 +7,7 @@
         {
           Kind: GlobalDeclNode,
           Name: y,
-          Signature: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
+          Signature: {}
         }
       ],
       Methods: [
@@ -35,13 +28,7 @@
                         Kind: IdentifierLocation,
                         Name: __anf_temp_0,
                         LocationType: {
-                          Type: Boolean,
-                          Position: {
-                            fileName: <unknown file>,
-                            line: 5,
-                            column: 15,
-                            offset: 69
-                          }
+                          Type: Boolean
                         }
                       },
                       Expression: {
@@ -51,53 +38,20 @@
                           Location: {
                             Kind: IdentifierLocation,
                             Name: y,
-                            LocationType: {
-                              Position: {
-                                fileName: <unknown file>,
-                                line: 3,
-                                column: 6,
-                                offset: 27
-                              }
-                            }
+                            LocationType: {}
                           },
-                          Signature: {
-                            Position: {
-                              fileName: <unknown file>,
-                              line: 3,
-                              column: 6,
-                              offset: 27
-                            }
-                          }
+                          Signature: {}
                         },
                         Operator: ==,
                         Rhs: {
                           Kind: ConstantImmediate,
                           Value: {
-                            Kind: IntegerLiteral,
-                            Position: {
-                              fileName: <unknown file>,
-                              line: 5,
-                              column: 20,
-                              offset: 74
-                            }
+                            Kind: IntegerLiteral
                           },
-                          Signature: {
-                            Position: {
-                              fileName: <unknown file>,
-                              line: 5,
-                              column: 20,
-                              offset: 74
-                            }
-                          }
+                          Signature: {}
                         },
                         ExpressionType: {
-                          Type: Boolean,
-                          Position: {
-                            fileName: <unknown file>,
-                            line: 5,
-                            column: 15,
-                            offset: 69
-                          }
+                          Type: Boolean
                         }
                       }
                     },
@@ -109,23 +63,11 @@
                           Kind: IdentifierLocation,
                           Name: __anf_temp_0,
                           LocationType: {
-                            Type: Boolean,
-                            Position: {
-                              fileName: <unknown file>,
-                              line: 5,
-                              column: 15,
-                              offset: 69
-                            }
+                            Type: Boolean
                           }
                         },
                         Signature: {
-                          Type: Boolean,
-                          Position: {
-                            fileName: <unknown file>,
-                            line: 5,
-                            column: 15,
-                            offset: 69
-                          }
+                          Type: Boolean
                         }
                       },
                       TrueBranch: {
@@ -136,35 +78,15 @@
                             Location: {
                               Kind: IdentifierLocation,
                               Name: y,
-                              LocationType: {
-                                Position: {
-                                  fileName: <unknown file>,
-                                  line: 3,
-                                  column: 6,
-                                  offset: 27
-                                }
-                              }
+                              LocationType: {}
                             },
                             Expression: {
                               Kind: ConstantImmediate,
                               Value: {
                                 Kind: IntegerLiteral,
-                                Value: 1,
-                                Position: {
-                                  fileName: <unknown file>,
-                                  line: 6,
-                                  column: 14,
-                                  offset: 93
-                                }
+                                Value: 1
                               },
-                              Signature: {
-                                Position: {
-                                  fileName: <unknown file>,
-                                  line: 6,
-                                  column: 14,
-                                  offset: 93
-                                }
-                              }
+                              Signature: {}
                             }
                           },
                           {
@@ -183,19 +105,7 @@
           },
           Signature: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           }
         }
@@ -204,35 +114,10 @@
         Members: {
           Main: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 4,
-                column: 6,
-                offset: 40
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 4,
-              column: 6,
-              offset: 40
+              Type: Void
             }
           },
-          y: {
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
-            }
-          }
-        },
-        Position: {
-          fileName: <unknown file>,
-          line: 2,
-          column: 4,
-          offset: 5
+          y: {}
         }
       }
     }

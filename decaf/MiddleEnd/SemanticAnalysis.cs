@@ -14,23 +14,21 @@ namespace Decaf.MiddleEnd {
     }
     private SemanticChecker() { }
     public static void CheckProgramNode(ProgramNode program) {
-      // Ensure the program contains a class named "Program"
-      if (!program.Classes.Any(m => m.Name == "Program")) {
-        throw new SemanticException(program.Position, "A program must contain a class called 'Program'");
+      // Ensure the program contains a module named "Program"
+      if (!program.Modules.Any(m => m.Name == "Program")) {
+        throw new SemanticException(program.Position, "A program must contain a module called 'Program'");
       }
-      // Check in each class
-      foreach (var _class in program.Classes) {
-        CheckClassNode(_class);
-      }
+      // Check in each module
+      foreach (var mod in program.Modules) CheckModuleNode(mod);
     }
-    private static void CheckClassNode(DeclarationNode.ClassNode _class) {
-      // Ensure the Program class contains a method named Main
-      if (_class.Name == "Program") {
+    private static void CheckModuleNode(DeclarationNode.ModuleNode module) {
+      // Ensure the Program module contains a method named Main
+      if (module.Name == "Program") {
         const string mainName = "Main";
-        // Find the Main method in the Program class
-        var mainMethodCandidates = _class.Methods.Where(m => m.Name == mainName);
+        // Find the Main method in the Program module
+        var mainMethodCandidates = module.Methods.Where(m => m.Name == mainName);
         if (mainMethodCandidates.Count() != 1) {
-          throw new SemanticException(_class.Position, "A main entry point must exist at `Program.Main()`");
+          throw new SemanticException(module.Position, "A main entry point must exist at `Program.Main()`");
         }
         // We get the first, note that the list is guaranteed to have exactly one element due to the previous check
         var mainMethod = mainMethodCandidates.First(m => m.Name == mainName);
@@ -41,10 +39,8 @@ namespace Decaf.MiddleEnd {
           throw new SemanticException(mainMethod.Position, "`Program.Main()` must return void");
         }
       }
-      // Check each method in the class
-      foreach (var method in _class.Methods) {
-        CheckMethodNode(method);
-      }
+      // Check each method in the module
+      foreach (var method in module.Methods) CheckMethodNode(method);
     }
     private static void CheckMethodNode(DeclarationNode.MethodNode _methodDecl) {
       // Create a new context
@@ -141,10 +137,6 @@ namespace Decaf.MiddleEnd {
           // Check Prefix operand
           // NOTE: It might make sense to warn if this were a constant `true` or `false` and we are using a logic not operator
           CheckExpressionNode(prefix.Operand, parentContext);
-          break;
-        case ExpressionNode.NewClassNode _classInit:
-          // Check the path
-          CheckLocationNode(_classInit.Path, parentContext);
           break;
         case ExpressionNode.NewArrayNode arrayInit:
           // Check size expression

@@ -24,10 +24,10 @@ public class DecafSemanticTests : VerifyBase {
   [TestMethod]
   public Task TestBasicProgram() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {}
       }
-      class Second {
+      module Second {
         void Hello() {}
       }
     ");
@@ -38,9 +38,9 @@ public class DecafSemanticTests : VerifyBase {
     return Verify(program.Scope.ToString(), CreateSettings());
   }
   [TestMethod]
-  public Task TestBasicClass() {
+  public Task TestBasicModule() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         int a;
         int b;
         void Main() {}
@@ -50,15 +50,15 @@ public class DecafSemanticTests : VerifyBase {
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
     Assert.IsTrue(program.Scope.HasDeclaration("Program"));
-    Assert.HasCount(1, program.Classes);
-    Assert.IsNotNull(program.Classes[0]);
-    Assert.AreEqual("Program", program.Classes[0].Name);
-    return Verify(program.Classes[0].Scope.ToString(), CreateSettings());
+    Assert.HasCount(1, program.Modules);
+    Assert.IsNotNull(program.Modules[0]);
+    Assert.AreEqual("Program", program.Modules[0].Name);
+    return Verify(program.Modules[0].Scope.ToString(), CreateSettings());
   }
   [TestMethod]
   public Task TestMultipleBinds() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         int a, b, c, d;
         void Main() {}
       }
@@ -66,15 +66,15 @@ public class DecafSemanticTests : VerifyBase {
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
     Assert.IsTrue(program.Scope.HasDeclaration("Program"));
-    Assert.HasCount(1, program.Classes);
-    Assert.IsNotNull(program.Classes[0]);
-    Assert.AreEqual("Program", program.Classes[0].Name);
-    return Verify(program.Classes[0].Scope.ToString(), CreateSettings());
+    Assert.HasCount(1, program.Modules);
+    Assert.IsNotNull(program.Modules[0]);
+    Assert.AreEqual("Program", program.Modules[0].Name);
+    return Verify(program.Modules[0].Scope.ToString(), CreateSettings());
   }
   [TestMethod]
   public Task TestManyFunctions() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {}
         void Main1() {}
         void Main2() {}
@@ -85,15 +85,15 @@ public class DecafSemanticTests : VerifyBase {
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
     Assert.IsTrue(program.Scope.HasDeclaration("Program"));
-    Assert.HasCount(1, program.Classes);
-    Assert.IsNotNull(program.Classes[0]);
-    Assert.AreEqual("Program", program.Classes[0].Name);
-    return Verify(program.Classes[0].Scope.ToString(), CreateSettings());
+    Assert.HasCount(1, program.Modules);
+    Assert.IsNotNull(program.Modules[0]);
+    Assert.AreEqual("Program", program.Modules[0].Name);
+    return Verify(program.Modules[0].Scope.ToString(), CreateSettings());
   }
   [TestMethod]
   public Task TestNestedScopes() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         int a;
         void Main() {
           int b;
@@ -108,13 +108,13 @@ public class DecafSemanticTests : VerifyBase {
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
     Assert.IsTrue(program.Scope.HasDeclaration("Program"));
-    Assert.HasCount(1, program.Classes);
-    var programClass = program.Classes[0];
-    Assert.IsNotNull(programClass);
-    Assert.AreEqual("Program", programClass.Name);
-    Assert.HasCount(1, programClass.Fields);
-    Assert.HasCount(1, programClass.Methods);
-    var mainMethod = programClass.Methods[0];
+    Assert.HasCount(1, program.Modules);
+    var programModule = program.Modules[0];
+    Assert.IsNotNull(programModule);
+    Assert.AreEqual("Program", programModule.Name);
+    Assert.HasCount(1, programModule.Fields);
+    Assert.HasCount(1, programModule.Methods);
+    var mainMethod = programModule.Methods[0];
     Assert.IsNotNull(mainMethod);
     Assert.AreEqual("Main", mainMethod.Name);
     Assert.HasCount(3, mainMethod.Body.Statements);
@@ -128,7 +128,7 @@ public class DecafSemanticTests : VerifyBase {
   [TestMethod]
   public Task TestRedefinitionNested() {
     var program = SemanticAnalysis(@"
-      class Program {
+      module Program {
         int a;
         void Main() {
           int a;
@@ -141,13 +141,13 @@ public class DecafSemanticTests : VerifyBase {
     Assert.IsNotNull(program);
     Assert.IsNotNull(program.Scope);
     Assert.IsTrue(program.Scope.HasDeclaration("Program"));
-    Assert.HasCount(1, program.Classes);
-    var programClass = program.Classes[0];
-    Assert.IsNotNull(programClass);
-    Assert.AreEqual("Program", programClass.Name);
-    Assert.HasCount(1, programClass.Fields);
-    Assert.HasCount(1, programClass.Methods);
-    var mainMethod = programClass.Methods[0];
+    Assert.HasCount(1, program.Modules);
+    var programModule = program.Modules[0];
+    Assert.IsNotNull(programModule);
+    Assert.AreEqual("Program", programModule.Name);
+    Assert.HasCount(1, programModule.Fields);
+    Assert.HasCount(1, programModule.Methods);
+    var mainMethod = programModule.Methods[0];
     Assert.IsNotNull(mainMethod);
     Assert.AreEqual("Main", mainMethod.Name);
     Assert.HasCount(1, mainMethod.Body.Statements);
@@ -156,14 +156,14 @@ public class DecafSemanticTests : VerifyBase {
     return Verify(IfNode.TrueBranch.Scope.ToString(), CreateSettings());
   }
   [TestMethod]
-  public void TestDuplicateClass() {
+  public void TestDuplicateModule() {
     Assert.Throws<DuplicateDeclarationException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {}
         }
-        class Duplicate {}
-        class Duplicate {}
+        module Duplicate {}
+        module Duplicate {}
       ");
     });
   }
@@ -171,7 +171,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestDuplicateVariable1() {
     Assert.Throws<DuplicateDeclarationException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           int a;
           int a;
           void Main() {}
@@ -183,7 +183,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestDuplicateVariable2() {
     Assert.Throws<DuplicateDeclarationException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
             int a;
             int a;
@@ -196,7 +196,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestDuplicateVariable3() {
     Assert.Throws<DuplicateDeclarationException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
             int a, a, b;
           }
@@ -208,7 +208,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestDuplicateMethod() {
     Assert.Throws<DuplicateDeclarationException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {}
           void Foo() {}
           void Foo() {}
@@ -220,7 +220,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestUndefined1() {
     Assert.Throws<DeclarationNotDefinedException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
             x = 1;
           }
@@ -232,7 +232,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestUndefined2() {
     Assert.Throws<DeclarationNotDefinedException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
             int x;
           }
@@ -247,7 +247,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestUndefined3() {
     Assert.Throws<DeclarationNotDefinedException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
             Second.main();
           }
@@ -259,7 +259,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestMutation1() {
     try {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           int x;
           void Main() {
             Program.x = 1;
@@ -275,7 +275,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestMutation2() {
     Assert.Throws<DeclarationNotMutableException>(() => {
       SemanticAnalysis(@"
-        class Program {
+        module Program {
           void Main() {
           }
           void add(int x) {
@@ -292,7 +292,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidSemanticProgramMain() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {}
       }
     ");
@@ -305,7 +305,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticNoProgram() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {}
+      module Main {}
     ");
     });
   }
@@ -313,7 +313,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticNoMain() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Program {}
+      module Program {}
     ");
     });
   }
@@ -321,7 +321,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticMainNoVoid() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         int Main() {}
       }
     ");
@@ -331,7 +331,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticMainArgs() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main(int args) {}
       }
     ");
@@ -342,7 +342,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidSemanticLoops() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {
           while (true) {
             continue;
@@ -360,7 +360,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidSemanticNestedLoops() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {
           while (true) {
             if (true) {
@@ -380,7 +380,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticContinue() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {
+      module Main {
         void Main() {
           continue;
         }
@@ -392,7 +392,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticBreak() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {
+      module Main {
         void Main() {
           break;
         }
@@ -405,7 +405,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidSemanticArithmetic() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {
           int x;
           x = 1 / 2;
@@ -422,7 +422,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticArithmetic() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {
+      module Main {
         void Main() {
           int x;
           x = 1 / 0;
@@ -436,7 +436,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidSemanticArrayInit() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {
           int a[];
           int x;
@@ -455,7 +455,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticArrayInit() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {
+      module Main {
         void Main() {
           int a[];
           a = new int[-1];
@@ -468,7 +468,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestValidArrayIndex() {
     try {
       SemanticAnalysis(@"
-      class Program {
+      module Program {
         void Main() {
           int a[];
           a = new int[5];
@@ -485,7 +485,7 @@ public class DecafSemanticTests : VerifyBase {
   public void TestInValidSemanticArrayIndex() {
     Assert.Throws<SemanticException>(() => {
       SemanticAnalysis(@"
-      class Main {
+      module Main {
         void Main() {
           int a[];
           a = new int[-1];

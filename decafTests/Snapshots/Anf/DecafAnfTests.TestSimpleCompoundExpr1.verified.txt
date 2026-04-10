@@ -15,14 +15,7 @@
                 Location: {
                   Kind: IdentifierLocation,
                   Name: __anf_temp_0,
-                  LocationType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 5,
-                      column: 12,
-                      offset: 68
-                    }
-                  }
+                  LocationType: {}
                 },
                 Expression: {
                   Kind: BinopExpression,
@@ -30,53 +23,20 @@
                     Kind: ConstantImmediate,
                     Value: {
                       Kind: IntegerLiteral,
-                      Value: 1,
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 12,
-                        offset: 68
-                      }
+                      Value: 1
                     },
-                    Signature: {
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 12,
-                        offset: 68
-                      }
-                    }
+                    Signature: {}
                   },
                   Operator: +,
                   Rhs: {
                     Kind: ConstantImmediate,
                     Value: {
                       Kind: IntegerLiteral,
-                      Value: 2,
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 16,
-                        offset: 72
-                      }
+                      Value: 2
                     },
-                    Signature: {
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 16,
-                        offset: 72
-                      }
-                    }
+                    Signature: {}
                   },
-                  ExpressionType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 5,
-                      column: 12,
-                      offset: 68
-                    }
-                  }
+                  ExpressionType: {}
                 }
               },
               {
@@ -84,14 +44,7 @@
                 Location: {
                   Kind: IdentifierLocation,
                   Name: __anf_temp_1,
-                  LocationType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 5,
-                      column: 12,
-                      offset: 68
-                    }
-                  }
+                  LocationType: {}
                 },
                 Expression: {
                   Kind: BinopExpression,
@@ -100,54 +53,20 @@
                     Location: {
                       Kind: IdentifierLocation,
                       Name: __anf_temp_0,
-                      LocationType: {
-                        Position: {
-                          fileName: <unknown file>,
-                          line: 5,
-                          column: 12,
-                          offset: 68
-                        }
-                      }
+                      LocationType: {}
                     },
-                    Signature: {
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 12,
-                        offset: 68
-                      }
-                    }
+                    Signature: {}
                   },
                   Operator: +,
                   Rhs: {
                     Kind: ConstantImmediate,
                     Value: {
                       Kind: IntegerLiteral,
-                      Value: 3,
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 20,
-                        offset: 76
-                      }
+                      Value: 3
                     },
-                    Signature: {
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 20,
-                        offset: 76
-                      }
-                    }
+                    Signature: {}
                   },
-                  ExpressionType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 5,
-                      column: 12,
-                      offset: 68
-                    }
-                  }
+                  ExpressionType: {}
                 }
               },
               {
@@ -155,56 +74,23 @@
                 Location: {
                   Kind: IdentifierLocation,
                   Name: x,
-                  LocationType: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 4,
-                      column: 8,
-                      offset: 49
-                    }
-                  }
+                  LocationType: {}
                 },
                 Expression: {
                   Kind: LocationAccessImmediate,
                   Location: {
                     Kind: IdentifierLocation,
                     Name: __anf_temp_1,
-                    LocationType: {
-                      Position: {
-                        fileName: <unknown file>,
-                        line: 5,
-                        column: 12,
-                        offset: 68
-                      }
-                    }
+                    LocationType: {}
                   },
-                  Signature: {
-                    Position: {
-                      fileName: <unknown file>,
-                      line: 5,
-                      column: 12,
-                      offset: 68
-                    }
-                  }
+                  Signature: {}
                 }
               }
             ]
           },
           Signature: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 3,
-                column: 6,
-                offset: 27
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
+              Type: Void
             }
           }
         }
@@ -213,27 +99,9 @@
         Members: {
           Main: {
             ReturnType: {
-              Type: Void,
-              Position: {
-                fileName: <unknown file>,
-                line: 3,
-                column: 6,
-                offset: 27
-              }
-            },
-            Position: {
-              fileName: <unknown file>,
-              line: 3,
-              column: 6,
-              offset: 27
+              Type: Void
             }
           }
-        },
-        Position: {
-          fileName: <unknown file>,
-          line: 2,
-          column: 4,
-          offset: 5
         }
       }
     }

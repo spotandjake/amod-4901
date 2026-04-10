@@ -1,7 +1,7 @@
 ﻿{
-  Classes: [
+  Modules: [
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Main,
       Methods: [
         {
@@ -9,13 +9,7 @@
           ReturnType: {
             Kind: TypeNode,
             Type: Void,
-            Content: void,
-            Position: {
-              fileName: <unknown file>,
-              line: 1,
-              column: 13,
-              offset: 13
-            }
+            Content: void
           },
           Name: foo,
           Parameters: [
@@ -23,49 +17,17 @@
               Kind: ParameterNode,
               ParamType: {
                 Kind: TypeNode,
-                Content: int,
-                Position: {
-                  fileName: <unknown file>,
-                  line: 1,
-                  column: 22,
-                  offset: 22
-                }
+                Content: int
               },
               Name: x,
-              IsArray: true,
-              Position: {
-                fileName: <unknown file>,
-                line: 1,
-                column: 22,
-                offset: 22
-              }
+              IsArray: true
             }
           ],
           Body: {
-            Kind: BlockNode,
-            Position: {
-              fileName: <unknown file>,
-              line: 1,
-              column: 31,
-              offset: 31
-            }
-          },
-          Position: {
-            fileName: <unknown file>,
-            line: 1,
-            column: 13,
-            offset: 13
+            Kind: BlockNode
           }
         }
-      ],
-      Position: {
-        fileName: <unknown file>,
-        line: 1
-      }
+      ]
     }
-  ],
-  Position: {
-    fileName: <unknown file>,
-    line: 1
-  }
+  ]
 }

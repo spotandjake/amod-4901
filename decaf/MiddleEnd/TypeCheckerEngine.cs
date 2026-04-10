@@ -19,7 +19,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ParseTree.PrimitiveType.Boolean => BuildSimpleSignature(node.Position, PrimitiveType.Boolean),
         ParseTree.PrimitiveType.Void => BuildSimpleSignature(node.Position, PrimitiveType.Void),
         ParseTree.PrimitiveType.String => BuildSimpleSignature(node.Position, PrimitiveType.String),
-        ParseTree.PrimitiveType.Custom => new Signature.CustomSignature(node.Position, node.Content),
+        // ParseTree.PrimitiveType.Custom => new Signature.CustomSignature(node.Position, node.Content),
         // NOTE: This case can never be hit c# exhaustiveness is just being weird
         _ => throw new Exception("Impossible: unknown primitive type"),
       };
@@ -32,10 +32,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
     private static string GetTypeCategoryName(Signature signature) {
       return signature switch {
         Signature.PrimitiveSignature _ => "primitive",
-        Signature.ClassSignature _ => "class",
+        Signature.ModuleSignature _ => "module",
         Signature.MethodSignature _ => "method",
         Signature.ArraySignature _ => "array",
-        Signature.CustomSignature _ => "custom type",
+        // Signature.CustomSignature _ => "custom type",
         // NOTE: This is never possible c# is bad at exhaustiveness checking with records
         _ => throw new Exception($"Unknown signature type {signature.GetType()}"),
       };
@@ -52,26 +52,18 @@ namespace Decaf.MiddleEnd.TypeChecker {
         _ => throw new Exception($"Unknown primitive type {type}"),
       };
     }
-    private static Signature ResolveCustomSignature(Signature.CustomSignature signature, Scope<Signature> scope) {
-      // Look up the custom signature in the scope
-      var resolvedSignature = scope.GetDeclaration(signature.Position, signature.Name);
-      // Ensure that the signature we actually found is a class signature
-      if (resolvedSignature is not Signature.ClassSignature) {
-        throw new LhsNotRhs(signature.Position, $"custom type named {signature.Name}", "no such class");
-      }
-      return resolvedSignature;
-    }
     // Checkers
-    public static void CheckClassSignature(
-      Signature.ClassSignature expected,
-      Signature.ClassSignature received,
+    public static void CheckModuleSignature(
+      Signature.ModuleSignature expected,
+      Signature.ModuleSignature received,
       Scope<Signature> scope
     ) {
+      // TODO: We need to re-think what makes two modules valid (I don't think we will ever actually need to check this given modules are not first class citizens)
       // Check that we have the same number of members on both sides
       if (expected.Members.Count != received.Members.Count) {
         throw new LhsNotRhs(expected.Position, $"{expected.Members.Count} members", $"{received.Members.Count} members");
       }
-      // Check that the members on the classes match
+      // Check that the members on the modules match
       foreach (var expectedMember in expected.Members) {
         if (!received.Members.TryGetValue(expectedMember.Key, out Signature value)) {
           throw new LhsNotRhs(expected.Position, $"member named {expectedMember.Key}", "no such member");
@@ -117,8 +109,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
     public static void CheckType(Signature expected, Signature received, Scope<Signature> scope) {
       switch ((expected, received)) {
         // Valid Cases (lhs == rhs)
-        case (Signature.ClassSignature e, Signature.ClassSignature r):
-          CheckClassSignature(e, r, scope);
+        case (Signature.ModuleSignature e, Signature.ModuleSignature r):
+          CheckModuleSignature(e, r, scope);
           break;
         case (Signature.MethodSignature e, Signature.MethodSignature r):
           CheckMethodSignature(e, r, scope);
@@ -130,12 +122,12 @@ namespace Decaf.MiddleEnd.TypeChecker {
           CheckPrimitiveSignature(e, r, scope);
           break;
         // Custom Cases
-        case (Signature.CustomSignature e, _):
-          CheckType(ResolveCustomSignature(e, scope), received, scope);
-          break;
-        case (_, Signature.CustomSignature r):
-          CheckType(expected, ResolveCustomSignature(r, scope), scope);
-          break;
+        // case (Signature.CustomSignature e, _):
+        //   CheckType(ResolveCustomSignature(e, scope), received, scope);
+        //   break;
+        // case (_, Signature.CustomSignature r):
+        //   CheckType(expected, ResolveCustomSignature(r, scope), scope);
+        //   break;
         // NOTE: I think we want to resolve custom signatures first be they on the `e` or `r` side and then recall CheckType
         // Invalid Cases (lhs != rhs)
         default:

@@ -11,8 +11,8 @@ using Decaf.IR.TypedTree;
 namespace Decaf.Backend {
   public static class AnfMapper {
 #nullable enable
-    private record AnfState(Scope<TypedTree.Signature> CurrentScope, string? CurrentClass = null) {
-      public string? CurrentClass { get; } = CurrentClass;
+    private record AnfState(Scope<TypedTree.Signature> CurrentScope, string? CurrentModule = null) {
+      public string? CurrentModule { get; } = CurrentModule;
 #nullable disable
       public Scope<TypedTree.Signature> CurrentScope { get; } = CurrentScope;
       public int TempCounter { get; set; } = 0;
@@ -41,12 +41,12 @@ namespace Decaf.Backend {
       // No mapping is required on the program node, since it is just a container
       return new AnfTree.ProgramNode(
         node.Position,
-        node.Classes.Select((c) => FromClassNode(new AnfState(node.Scope, null), c)).ToArray()
+        node.Modules.Select((c) => FromModuleNode(new AnfState(node.Scope, null), c)).ToArray()
       );
     }
     // Declarations
-    private static AnfTree.DeclarationNode.ModuleNode FromClassNode(
-      AnfState state, TypedTree.DeclarationNode.ClassNode node
+    private static AnfTree.DeclarationNode.ModuleNode FromModuleNode(
+      AnfState state, TypedTree.DeclarationNode.ModuleNode node
     ) {
       // Map the fields to property nodes (We do this inline because variable declarations are not a part of the anf tree)
       var fields = new List<AnfTree.DeclarationNode.GlobalNode>();
@@ -55,18 +55,18 @@ namespace Decaf.Backend {
           fields.Add(new AnfTree.DeclarationNode.GlobalNode(bind.Position, bind.Name, bind.Signature));
         }
       }
-      var classState = new AnfState(node.Scope, node.Name);
-      // Produce the new class node
+      var moduleState = new AnfState(node.Scope, node.Name);
+      // Produce the new module node
       return new AnfTree.DeclarationNode.ModuleNode(
         node.Position,
         node.Name,
         fields.ToArray(),
-        node.Methods.Select((m) => FromMethodNode(classState, m)).ToArray(),
+        node.Methods.Select((m) => FromMethodNode(moduleState, m)).ToArray(),
         node.Signature
       );
     }
     private static AnfTree.DeclarationNode.MethodNode FromMethodNode(AnfState state, TypedTree.DeclarationNode.MethodNode node) {
-      var newState = new AnfState(node.Scope, state.CurrentClass);
+      var newState = new AnfState(node.Scope, state.CurrentModule);
       return new AnfTree.DeclarationNode.MethodNode(
         node.Position,
         node.Name,
@@ -80,7 +80,7 @@ namespace Decaf.Backend {
     }
     // General
     private static AnfTree.InstructionNode.BlockNode FromBlockNode(AnfState state, TypedTree.BlockNode node) {
-      var newState = new AnfState(node.Scope, state.CurrentClass);
+      var newState = new AnfState(node.Scope, state.CurrentModule);
       // TODO: We probably need to map our declarations into something????
       // Map the statements
       var statements = new List<AnfTree.InstructionNode>();
@@ -232,8 +232,6 @@ namespace Decaf.Backend {
         TypedTree.ExpressionNode.PrimitiveNode primitiveNode => FromPrimitiveExpressionNode(state, primitiveNode),
         TypedTree.ExpressionNode.BinopNode binopNode => FromBinopExpressionNode(state, binopNode),
         TypedTree.ExpressionNode.PrefixNode prefixNode => FromPrefixExpressionNode(state, prefixNode),
-        TypedTree.ExpressionNode.NewClassNode _ =>
-          throw new NotImplementedException("`new` class nodes are object oriented, as such we don't implement them right now"),
         TypedTree.ExpressionNode.NewArrayNode newArrayNode => FromNewArrayExpressionNode(state, newArrayNode),
         TypedTree.ExpressionNode.LocationAccessNode locationAccessNode =>
           FromLocationAccessExpressionNode(state, locationAccessNode, node.ExpressionType),
@@ -364,12 +362,13 @@ namespace Decaf.Backend {
       TypedTree.LocationNode node
     ) {
       switch (node) {
+        // TODO: Resolve `This` nodes in the type checker
         case TypedTree.LocationNode.ThisNode _:
           // We handle the resolution here because it is easier to resolve it
           return ([], new AnfTree.LocationNode.IdentifierAccessNode(
             node.Position,
-            state.CurrentClass,
-            state.CurrentScope.GetDeclaration(node.Position, state.CurrentClass)
+            state.CurrentModule,
+            state.CurrentScope.GetDeclaration(node.Position, state.CurrentModule)
           ));
         case TypedTree.LocationNode.IdentifierAccessNode identNode:
           return FromIdentifierAccessLocationNode(state, identNode);

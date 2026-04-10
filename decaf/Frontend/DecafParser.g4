@@ -2,13 +2,11 @@ parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
 @parser::header {#pragma warning disable 3021}
-options {
-  tokenVocab=DecafLexer;
-}
+options { tokenVocab=DecafLexer; }
 
-program: class_decl+;
+program: module_decl+;
 
-class_decl: CLASS name=ID (EXTENDS superClassName=ID)? LBRACE var_decl* method_decl* RBRACE;
+module_decl: MODULE name=ID LBRACE var_decl* method_decl* RBRACE;
 
 var_decl: typ=type binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
@@ -26,7 +24,6 @@ type:
   | BOOLEAN # BooleanType
   | VOID # VoidType
   | STRING # StringType
-  | ID # CustomType
   ;
 
 statement:
@@ -100,9 +97,6 @@ prefix_op: NOT | BNOT;
 literal:
   INTLIT # IntLit
   | CHARLIT # CharLit
-  | bool_literal # BoolLit
-  | NULL # NullLit
+  | (TRUE | FALSE) # BoolLit
   | STRINGLIT # StringLit
   ;
-
-bool_literal: TRUE | FALSE;

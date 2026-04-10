@@ -55,7 +55,7 @@ The following tokens are implemented:
   * boolean
   * break
   * callout
-  * class
+  * module
   * continue
   * else
   * extends

@@ -1,9 +1,24 @@
 ﻿{
-  Classes: [
+  Modules: [
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Main,
       Fields: [
+        {
+          Kind: VariableDeclNode,
+          Type: {
+            Kind: TypeNode,
+            Type: String,
+            Content: string
+          },
+          Binds: [
+            {
+              Kind: VarBindNode,
+              Name: s,
+              IsArray: false
+            }
+          ]
+        },
         {
           Kind: VariableDeclNode,
           Type: {
@@ -44,21 +59,6 @@
             {
               Kind: VarBindNode,
               Name: z,
-              IsArray: false
-            }
-          ]
-        },
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Type: Custom,
-            Content: t
-          },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: y,
               IsArray: false
             }
           ]

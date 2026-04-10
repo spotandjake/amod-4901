@@ -1,7 +1,7 @@
 ﻿{
-  Classes: [
+  Modules: [
     {
-      Kind: ClassDeclNode,
+      Kind: ModuleDeclNode,
       Name: Main,
       Methods: [
         {

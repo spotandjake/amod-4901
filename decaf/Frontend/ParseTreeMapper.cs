@@ -23,8 +23,8 @@ namespace Decaf.Frontend {
     /// <returns>The corresponding `ProgramNode` in our internal parse tree representation.</returns>
     public static ProgramNode MapProgramContext(DecafParser.ProgramContext context) {
       var position = MapPositionContext(context);
-      var classes = context.class_decl().Select(MapClassDeclContext).ToArray();
-      return new ProgramNode(position, classes, null);
+      var modules = context.module_decl().Select(MapModuleDeclContext).ToArray();
+      return new ProgramNode(position, modules, null);
     }
     // Internal Helpers
     private static Position MapPositionContext(Antlr4.Runtime.ParserRuleContext context) {
@@ -36,13 +36,12 @@ namespace Decaf.Frontend {
       };
     }
     // Declarations
-    private static DeclarationNode.ClassNode MapClassDeclContext(DecafParser.Class_declContext context) {
+    private static DeclarationNode.ModuleNode MapModuleDeclContext(DecafParser.Module_declContext context) {
       var position = MapPositionContext(context);
       var name = context.name.Text;
-      var superClassName = context.superClassName?.Text;
       var varDecls = context.var_decl().Select(MapVarDeclContext).ToArray();
       var methodDecls = context.method_decl().Select(MapMethodDeclContext).ToArray();
-      return new DeclarationNode.ClassNode(position, name, superClassName, varDecls, methodDecls, null);
+      return new DeclarationNode.ModuleNode(position, name, varDecls, methodDecls, null);
     }
     private static DeclarationNode.VariableNode MapVarDeclContext(DecafParser.Var_declContext context) {
       var position = MapPositionContext(context);
@@ -88,7 +87,6 @@ namespace Decaf.Frontend {
         DecafParser.IntTypeContext _ => PrimitiveType.Int,
         DecafParser.BooleanTypeContext _ => PrimitiveType.Boolean,
         DecafParser.StringTypeContext _ => PrimitiveType.String,
-        DecafParser.CustomTypeContext _ => PrimitiveType.Custom,
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible type at TypeNode.FromContext")
       };
@@ -172,7 +170,6 @@ namespace Decaf.Frontend {
           // NOTE: This should be impossible due to grammar restrictions
           _ => throw new InvalidProgramException("Impossible expression at ExpressionNode.FromContext"),
         },
-        DecafParser.NewObjectExprContext newObjExprCtx => MapNewClassExpressionContext(newObjExprCtx),
         DecafParser.NewArrayExprContext newArrExprCtx => MapNewArrayExpressionContext(newArrExprCtx),
         DecafParser.LiteralExprContext literalExprCtx => MapLiteralExpressionContext(literalExprCtx.literal()),
         DecafParser.BinaryOpExprContext binopExprCtx => MapBinopExpressionContext(binopExprCtx),
@@ -239,12 +236,6 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(context);
       return new ExpressionNode.LocationAccessNode(position, new LocationNode.ThisNode(position));
     }
-    private static ExpressionNode.NewClassNode MapNewClassExpressionContext(DecafParser.NewObjectExprContext context) {
-      var position = MapPositionContext(context);
-      var className = context.ID().GetText();
-      var identifier = new LocationNode.IdentifierAccessNode(position, className);
-      return new ExpressionNode.NewClassNode(position, identifier);
-    }
     private static ExpressionNode.NewArrayNode MapNewArrayExpressionContext(DecafParser.NewArrayExprContext context) {
       var position = MapPositionContext(context);
       var identifier = MapTypeContext(context.type());
@@ -259,8 +250,7 @@ namespace Decaf.Frontend {
         DecafParser.CharLitContext charLitCtx =>
           new ParseTree.LiteralNodes.CharacterNode(position, charLitCtx.CHARLIT().GetText()[1]),
         DecafParser.BoolLitContext boolLitCtx =>
-          new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.bool_literal().TRUE() != null),
-        DecafParser.NullLitContext _ => new ParseTree.LiteralNodes.NullNode(position),
+          new ParseTree.LiteralNodes.BooleanNode(position, boolLitCtx.TRUE() != null),
         DecafParser.StringLitContext stringLitCtx =>
           new ParseTree.LiteralNodes.StringNode(position, stringLitCtx.STRINGLIT().GetText()[1..^1]),
         _ => throw new InvalidProgramException("Impossible literal at LiteralNode.FromContext"),// NOTE: This should be impossible due to grammar restrictions
