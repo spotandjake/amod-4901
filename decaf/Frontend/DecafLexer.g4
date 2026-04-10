@@ -55,6 +55,13 @@ NEQ         : '!=' ;
 // Conditional Operators
 AND         : '&&' ;
 OR          : '||' ;
+// Bitwise Operators
+BAND        : '&' ;
+BOR         : '|' ;
+BLSHIFT     : '<<' ;
+BRSHIFT     : '>>' ;
+
+BNOT        : '~' ;
 // Assignment Operator
 ASSIGN      : '=' ;
 

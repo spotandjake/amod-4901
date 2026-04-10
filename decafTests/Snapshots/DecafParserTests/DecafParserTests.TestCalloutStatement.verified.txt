@@ -22,7 +22,7 @@
                   IsPrimitive: true,
                   Path: {
                     Kind: IdentifierLocation,
-                    Name: "Test"
+                    Name: Test
                   },
                   Arguments: [
                     {

@@ -130,12 +130,22 @@ namespace Decaf.Utils.Errors {
       Position position
     ) : Exception(ErrorConstructor.CreateError(position, "`return` statement must be within a method.")) {
     }
+    /// <summary>
+    /// An exception to be thrown when a primitive callout is encountered with an unknown name during type checking.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    /// <param name="name">The name of the unknown primitive callout.</param>
+    public class UnknownPrimitiveCall(
+      Position position,
+      string name
+    ) : Exception(ErrorConstructor.CreateError(position, $"Unknown primitive callout: `{name}`.")) {
+    }
     // Code Generation Errors
   }
 
 
   public static class ErrorHandler {
-    public static void HandleError(bool debug, Exception exn) {
+    public static bool HandleError(bool debug, Exception exn) {
       switch (exn) {
         // Lexer
         case System.Data.SyntaxErrorException e:
@@ -184,12 +194,17 @@ namespace Decaf.Utils.Errors {
         case TypeCheckingErrors.ReturnUseOutsideOfClass e:
           Console.WriteLine(e.Message);
           break;
+        case TypeCheckingErrors.UnknownPrimitiveCall e:
+          Console.WriteLine(e.Message);
+          break;
         // Unknown
         default:
-          if (debug) throw exn;
+          if (debug) return true;
           else Console.WriteLine($"Compilation failed: {exn.Message}");
           break;
       }
+      // By default we don't ever rethrow
+      return false;
     }
   }
 }

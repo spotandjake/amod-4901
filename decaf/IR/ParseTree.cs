@@ -32,6 +32,7 @@ namespace Decaf.IR.ParseTree {
     ReturnStatement,
     // Expressions
     CallExpression,
+    PrimitiveExpression,
     BinopExpression,
     PrefixExpression,
     NewClassExpression,

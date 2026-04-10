@@ -139,7 +139,7 @@ namespace Decaf.MiddleEnd {
           }
         case ExpressionNode.PrefixNode prefix:
           // Check Prefix operand
-          // NOTE: It might make sense to warn if this were a constant `true` or `false`
+          // NOTE: It might make sense to warn if this were a constant `true` or `false` and we are using a logic not operator
           CheckExpressionNode(prefix.Operand, parentContext);
           break;
         case ExpressionNode.NewClassNode _classInit:

@@ -62,10 +62,11 @@ expr:
   | NEW ID LPAREN RPAREN # NewObjectExpr
   | NEW type LBRACK expr RBRACK # NewArrayExpr
   | literal # LiteralExpr
-  | op=NOT operand=expr # NotExpr
+  | op=prefix_op operand=expr # PrefixOpExpr
   | lhs=expr op=bin_op rhs=expr # BinaryOpExpr
   | LPAREN expr RPAREN # ParenExpr
   ;
+
 
 simple_expr:
   location # LocationExpr
@@ -74,12 +75,13 @@ simple_expr:
   ;
 
 // TODO: make root an expr
-location: root=ID (path=location_path | indexExpr=location_array_index)?;
+location: root=location_root (path=location_path | indexExpr=location_array_index)?;
+location_root: ID # ID | THIS # THIS;
 location_path: DOT ID;
 location_array_index: LBRACK expr RBRACK;
 
 bin_op:
-  arith_op | rel_op | eq_op | cond_op;
+  arith_op | rel_op | eq_op | cond_op | bitwise_op;
 
 arith_op: PLUS | MINUS | MULT | DIV;
 
@@ -88,6 +90,10 @@ rel_op: LT | GT | LEQ | GEQ;
 eq_op: EQ | NEQ;
 
 cond_op: AND | OR;
+
+bitwise_op: BAND | BOR | BLSHIFT | BRSHIFT;
+
+prefix_op: NOT | BNOT;
 
 // Literals
 literal:

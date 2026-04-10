@@ -3,6 +3,8 @@ using Decaf.Utils;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
+using Decaf.IR.PrimitiveDefinition;
+
 // This namespace contains the definition for our typed tree.
 // The typed tree is pretty much the exact same as the parse tree except it attaches extra type information to each node.
 // This tree is generated from our typechecker and the typing information can be used later during codegen and analysis.
@@ -213,6 +215,7 @@ namespace Decaf.IR.TypedTree {
   /// The supertype for all expression nodes, we use a supertype to ensure strict type checking.
   /// </summary>
   [JsonDerivedType(typeof(CallNode), "CallExpression")]
+  [JsonDerivedType(typeof(PrimitiveNode), "PrimitiveExpression")]
   [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
   [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
   [JsonDerivedType(typeof(NewClassNode), "NewClassExpression")]
@@ -227,14 +230,23 @@ namespace Decaf.IR.TypedTree {
     /// <summary>A call expression.</summary>
     public record CallNode(
       Position Position,
-      bool IsPrimitive,
       LocationNode Path,
       ExpressionNode[] Arguments,
       Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CallExpression;
-      public bool IsPrimitive { get; } = IsPrimitive;
       public LocationNode Path { get; } = Path;
+      public ExpressionNode[] Arguments { get; } = Arguments;
+    };
+    /// <summary>A primitive expression.</summary>
+    public record PrimitiveNode(
+      Position Position,
+      PrimDefinition Primitive,
+      ExpressionNode[] Arguments,
+      Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.PrimitiveExpression;
+      public PrimDefinition Primitive { get; } = Primitive;
       public ExpressionNode[] Arguments { get; } = Arguments;
     };
     /// <summary>A binop expression.</summary>

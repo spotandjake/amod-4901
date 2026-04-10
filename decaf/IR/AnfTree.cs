@@ -1,3 +1,4 @@
+using Decaf.IR.PrimitiveDefinition;
 using Decaf.Utils;
 using System.Text.Json.Serialization;
 
@@ -35,7 +36,7 @@ namespace Decaf.IR.AnfTree {
     TypeNode,
     ParameterNode,
     // Declarations
-    ClassDeclNode,
+    ModuleDeclNode,
     MethodDeclNode,
     PropertyDeclNode,
     // Instructions
@@ -49,9 +50,10 @@ namespace Decaf.IR.AnfTree {
     ReturnInstruction,
     // Expressions
     CallExpression,
+    PrimitiveExpression,
     BinopExpression,
     PrefixExpression,
-    NewArrayExpression,
+    AllocateArrayExpression,
     // Immediates
     ConstantImmediate,
     LocationAccessImmediate,
@@ -74,9 +76,9 @@ namespace Decaf.IR.AnfTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<TypedTree.Signature> Scope) : Node(Position) {
+  public record ProgramNode(Position Position, DeclarationNode.ModuleNode[] Modules, Scope<TypedTree.Signature> Scope) : Node(Position) {
     public override NodeKind Kind => NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
+    public DeclarationNode.ModuleNode[] Modules { get; } = Modules;
     public Scope<TypedTree.Signature> Scope { get; } = Scope;
   };
   public record BlockNode(
@@ -92,23 +94,23 @@ namespace Decaf.IR.AnfTree {
   /// <summary>
   /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
   /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
+  [JsonDerivedType(typeof(ModuleNode), "ModuleDeclNode")]
   [JsonDerivedType(typeof(PropertyNode), "PropertyNode")]
   [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
   public abstract record DeclarationNode : Node {
     protected DeclarationNode(Position position) : base(position) { }
     /// <summary>A class declaration.</summary>
-    public record ClassNode(
+    public record ModuleNode(
       Position Position,
       string Name,
-      PropertyNode[] Fields,
+      PropertyNode[] Globals,
       MethodNode[] Methods,
       Scope<TypedTree.Signature> Scope,
       TypedTree.Signature.ClassSignature Signature
     ) : DeclarationNode(Position) {
-      public override NodeKind Kind => NodeKind.ClassDeclNode;
+      public override NodeKind Kind => NodeKind.ModuleDeclNode;
       public string Name { get; } = Name;
-      public PropertyNode[] Fields { get; } = Fields;
+      public PropertyNode[] Globals { get; } = Globals;
       public MethodNode[] Methods { get; } = Methods;
       public Scope<TypedTree.Signature> Scope { get; } = Scope;
       public TypedTree.Signature.ClassSignature Signature { get; } = Signature;
@@ -247,9 +249,10 @@ namespace Decaf.IR.AnfTree {
   /// variable by the anf pass.
   /// </summary>
   [JsonDerivedType(typeof(CallNode), "CallSimpleExpression")]
+  [JsonDerivedType(typeof(PrimitiveNode), "PrimitiveSimpleExpression")]
   [JsonDerivedType(typeof(BinopNode), "BinopSimpleExpression")]
   [JsonDerivedType(typeof(PrefixNode), "PrefixSimpleExpression")]
-  [JsonDerivedType(typeof(NewArrayNode), "NewArraySimpleExpression")]
+  [JsonDerivedType(typeof(AllocateArrayNode), "AllocateArraySimpleExpression")]
   public abstract record ExpressionNode : Node {
     public TypedTree.Signature ExpressionType { get; }
     protected ExpressionNode(Position position, TypedTree.Signature expressionType) : base(position) {
@@ -258,14 +261,23 @@ namespace Decaf.IR.AnfTree {
     /// <summary>A call expression.</summary>
     public record CallNode(
       Position Position,
-      bool IsPrimitive,
       LocationNode Path,
       ImmediateNode[] Arguments,
       TypedTree.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
       public override NodeKind Kind => NodeKind.CallExpression;
-      public bool IsPrimitive { get; } = IsPrimitive;
       public LocationNode Path { get; } = Path;
+      public ImmediateNode[] Arguments { get; } = Arguments;
+    };
+    /// <summary>A primitive expression.</summary>
+    public record PrimitiveNode(
+      Position Position,
+      PrimDefinition Primitive,
+      ImmediateNode[] Arguments,
+      TypedTree.Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.PrimitiveExpression;
+      public PrimDefinition Primitive { get; } = Primitive;
       public ImmediateNode[] Arguments { get; } = Arguments;
     };
     /// <summary>A binop expression.</summary>
@@ -293,12 +305,12 @@ namespace Decaf.IR.AnfTree {
       public ImmediateNode Operand { get; } = Operand;
     };
     /// <summary>A new array expression.</summary>
-    public record NewArrayNode(
+    public record AllocateArrayNode(
       Position Position,
       ImmediateNode SizeImm,
       TypedTree.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.NewArrayExpression;
+      public override NodeKind Kind => NodeKind.AllocateArrayExpression;
       public ImmediateNode SizeImm { get; } = SizeImm;
     };
   }
@@ -322,6 +334,7 @@ namespace Decaf.IR.AnfTree {
       public LocationNode Location { get; } = Location;
     };
   };
+  // TODO: Get rid of locations convert them to basic binds at this level
   /// <summary>
   /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
   /// A location node represents any access to a variable, field or array.
