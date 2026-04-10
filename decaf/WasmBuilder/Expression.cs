@@ -39,6 +39,16 @@ namespace Decaf.WasmBuilder {
       public sealed record Clz(Position Position, WasmExpression LHS) : I32(Position);
       public sealed record Ctz(Position Position, WasmExpression LHS) : I32(Position);
       public sealed record Popcnt(Position Position, WasmExpression LHS) : I32(Position);
+      // Load - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/load
+      public sealed record Load(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position);
+      public sealed record Load8S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position);
+      public sealed record Load8U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position);
+      public sealed record Load16S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position);
+      public sealed record Load16U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position);
+      // Store - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/store
+      public sealed record Store(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position);
+      public sealed record Store8(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position);
+      public sealed record Store16(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position);
     }
     // Memory
     public record Memory(Position Position) : WasmExpression(Position) {
