@@ -66,16 +66,16 @@ namespace Decaf.Backend {
       throw new NotImplementedException("Loop statements are not yet supported");
     }
     private static WasmExpression CompileContinueNode(AnfTree.InstructionNode.ContinueNode node) {
-      // TODO:
+      // TODO: This should emit a `br` to the appropriate label (The label should be supplied by the compile context)
       throw new NotImplementedException("Break and continue statements are not yet supported");
     }
     private static WasmExpression CompileBreakNode(AnfTree.InstructionNode.BreakNode node) {
-      // TODO:
+      // TODO: This should emit a `br` to the appropriate label (The label should be supplied by the compile context)
       throw new NotImplementedException("Break and continue statements are not yet supported");
     }
     private static WasmExpression CompileReturnNode(AnfTree.InstructionNode.ReturnNode node) {
-      // TODO:
-      throw new NotImplementedException("Return statements are not yet supported");
+      var compiledValue = node.Value != null ? CompileImmediate(node.Value) : null;
+      return new WasmExpression.Return(node.Position, compiledValue);
     }
     // Simple Expressions
     private static WasmExpression CompileSimpleExpr(AnfTree.ExpressionNode node) {
