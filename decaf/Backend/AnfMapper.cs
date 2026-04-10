@@ -41,8 +41,7 @@ namespace Decaf.Backend {
       // No mapping is required on the program node, since it is just a container
       return new AnfTree.ProgramNode(
         node.Position,
-        node.Classes.Select((c) => FromClassNode(new AnfState(node.Scope, null), c)).ToArray(),
-        node.Scope
+        node.Classes.Select((c) => FromClassNode(new AnfState(node.Scope, null), c)).ToArray()
       );
     }
     // Declarations
@@ -63,7 +62,6 @@ namespace Decaf.Backend {
         node.Name,
         fields.ToArray(),
         node.Methods.Select((m) => FromMethodNode(classState, m)).ToArray(),
-        node.Scope,
         node.Signature
       );
     }
@@ -77,12 +75,11 @@ namespace Decaf.Backend {
         ).ToArray(),
         // NOTE: We generate a new state here because we want to reset the temp counter as it can be scoped per method
         FromBlockNode(newState, node.Body),
-        node.Scope,
         node.Signature
       );
     }
     // General
-    private static AnfTree.BlockNode FromBlockNode(AnfState state, TypedTree.BlockNode node) {
+    private static AnfTree.InstructionNode.BlockNode FromBlockNode(AnfState state, TypedTree.BlockNode node) {
       var newState = new AnfState(node.Scope, state.CurrentClass);
       // TODO: We probably need to map our declarations into something????
       // Map the statements
@@ -93,7 +90,7 @@ namespace Decaf.Backend {
         statements.Add(instr);
       }
       // Produce the new block node
-      return new AnfTree.BlockNode(node.Position, statements.ToArray(), node.Scope);
+      return new AnfTree.InstructionNode.BlockNode(node.Position, statements.ToArray());
     }
     // Statements
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.InstructionNode) FromStatementNode(
@@ -175,7 +172,7 @@ namespace Decaf.Backend {
         // TODO: Consider cleaning up this decomposition
         new AnfTree.InstructionNode.LoopNode(
           node.Position,
-          new AnfTree.BlockNode(
+          new AnfTree.InstructionNode.BlockNode(
             node.Body.Position,
             [
               .. binds,
@@ -183,16 +180,13 @@ namespace Decaf.Backend {
                 node.Condition.Position,
                 imm,
                 body,
-                new AnfTree.BlockNode(
+                new AnfTree.InstructionNode.BlockNode(
                   node.Body.Position,
                   [
                     new AnfTree.InstructionNode.BreakNode(node.Body.Position)
-                  ],
-                  new Utils.Scope<TypedTree.Signature>(node.Body.Scope)
-                )),
-              .. body.Instructions
-            ],
-            body.Scope
+                  ]
+                ))
+            ]
           )
         )
       );

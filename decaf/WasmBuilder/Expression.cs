@@ -5,175 +5,180 @@ using Decaf.Utils;
 namespace Decaf.WasmBuilder {
   public abstract record WasmExpression(Position Position) {
     public Position Position { get; } = Position;
-    public abstract string ToWat();
+    // TODO: We should remove these debug only public versions
+    public string ToWat() => ToWat(new WasmBuildCtx());
+    internal abstract string ToWat(WasmBuildCtx ctx);
     // Wasm Expression subtypes
     public abstract record I32(Position Position) : WasmExpression(Position) {
       public sealed record Const(Position Position, int Value) : I32(Position) {
-        public override string ToWat() => $"(i32.const {Value})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.const {Value})";
       }
       // Comparison - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Numeric#comparison
       public sealed record Eqz(Position Position, WasmExpression Operand) : I32(Position) {
-        public override string ToWat() => $"(i32.eqz {Operand.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.eqz {Operand.ToWat(ctx)})";
       }
       public sealed record Eq(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.eq {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.eq {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Ne(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.ne {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.ne {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record GtS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.gt_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.gt_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record LtS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.lt_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.lt_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record GeS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.ge_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.ge_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record LeS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.le_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.le_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record GtU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.gt_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.gt_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record LtU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.lt_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.lt_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record GeU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.ge_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.ge_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record LeU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.le_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.le_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       // Arithmetic - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Numeric#arithmetic
       public sealed record Add(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.add {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.add {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Sub(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.sub {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.sub {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Mul(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.mul {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.mul {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record DivS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.div_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.div_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record DivU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.div_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.div_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record RemU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.rem_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.rem_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record RemS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.rem_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.rem_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       // Bitwise - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Numeric#bitwise
       public sealed record And(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.and {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.and {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Or(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.or {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.or {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Xor(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.xor {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.xor {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Shl(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.shl {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.shl {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record ShrS(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.shr_s {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.shr_s {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record ShrU(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.shr_u {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.shr_u {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Rotl(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.rotl {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.rotl {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Rotr(Position Position, WasmExpression LHS, WasmExpression RHS) : I32(Position) {
-        public override string ToWat() => $"(i32.rotr {LHS.ToWat()} {RHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.rotr {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
       }
       public sealed record Clz(Position Position, WasmExpression LHS) : I32(Position) {
-        public override string ToWat() => $"(i32.clz {LHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.clz {LHS.ToWat(ctx)})";
       }
       public sealed record Ctz(Position Position, WasmExpression LHS) : I32(Position) {
-        public override string ToWat() => $"(i32.ctz {LHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.ctz {LHS.ToWat(ctx)})";
       }
       public sealed record Popcnt(Position Position, WasmExpression LHS) : I32(Position) {
-        public override string ToWat() => $"(i32.popcnt {LHS.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.popcnt {LHS.ToWat(ctx)})";
       }
       // Load - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/load
       public sealed record Load(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.load {Ptr.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Load8S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.load8_s {Ptr.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load8_s {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Load8U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.load8_u {Ptr.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load8_u {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Load16S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.load16_s {Ptr.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load16_s {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Load16U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.load16_u {Ptr.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load16_u {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       // Store - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/store
       public sealed record Store(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.store {Ptr.ToWat()} {Value.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) =>
+          $"(i32.store {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Store8(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.store8 {Ptr.ToWat()} {Value.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) =>
+          $"(i32.store8 {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
       public sealed record Store16(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        public override string ToWat() => $"(i32.store16 {Ptr.ToWat()} {Value.ToWat()} (offset {Offset.ToWat()}))";
+        internal override string ToWat(WasmBuildCtx ctx) =>
+          $"(i32.store16 {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
       }
     }
     // Memory
     public abstract record Memory(Position Position) : WasmExpression(Position) {
       public sealed record Size(Position Position) : Memory(Position) {
-        public override string ToWat() => $"(memory.size)";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(memory.size)";
       }
       public sealed record Grow(Position Position, WasmExpression PageCount) : Memory(Position) {
-        public override string ToWat() => $"(memory.grow {PageCount.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(memory.grow {PageCount.ToWat(ctx)})";
       }
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position) {
-        public override string ToWat() => $"(memory.fill {Ptr.ToWat()} {Value.ToWat()} {Length.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(memory.fill {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} {Length.ToWat(ctx)})";
       }
     }
     // Global - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global
     public abstract record Global(Position Position) : WasmExpression(Position) {
       // Get - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global.get
       public sealed record Get(Position Position, WasmLabel Name) : Global(Position) {
-        public override string ToWat() => $"(global.get {Name.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(global.get {Name.ToWat(ctx)})";
       }
       // Set - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global.set
       public sealed record Set(Position Position, WasmLabel Name, WasmExpression Value) : Global(Position) {
-        public override string ToWat() => $"(global.set {Name.ToWat()} {Value.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(global.set {Name.ToWat(ctx)} {Value.ToWat(ctx)})";
       }
     }
     // Local - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local
     public abstract record Local(Position Position) : WasmExpression(Position) {
       // Get - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.get
       public sealed record Get(Position Position, WasmLabel Name) : Local(Position) {
-        public override string ToWat() => $"(local.get ${Name.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(local.get {Name.ToWat(ctx)})";
       }
       // Set - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.set
       public sealed record Set(Position Position, WasmLabel Name, WasmExpression Value) : Local(Position) {
-        public override string ToWat() => $"(local.set {Name.ToWat()} {Value.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(local.set {Name.ToWat(ctx)} {Value.ToWat(ctx)})";
       }
       // Tee - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/local.tee
       public sealed record Tee(Position Position, WasmLabel Name, WasmExpression Value) : Local(Position) {
-        public override string ToWat() => $"(local.tee {Name.ToWat()} {Value.ToWat()})";
+        internal override string ToWat(WasmBuildCtx ctx) => $"(local.tee {Name.ToWat(ctx)} {Value.ToWat(ctx)})";
       }
     }
     // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
     public record Block(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position) {
-      public override string ToWat() {
+      internal override string ToWat(WasmBuildCtx ctx) {
         var sb = new StringBuilder();
-        sb.Append($"(block {Label}");
+        sb.Append($"(block {Label?.ToWat(ctx) ?? ""}");
         foreach (var expr in Expressions) {
           sb.AppendLine();
-          sb.Append($"  {expr.ToWat()}");
+          sb.Append($"  {expr.ToWat(ctx)}");
         }
         sb.Append(")");
         return sb.ToString();
@@ -181,20 +186,20 @@ namespace Decaf.WasmBuilder {
     }
     // Br - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br
     public sealed record Br(Position Position, WasmLabel Label) : WasmExpression(Position) {
-      public override string ToWat() => $"(br {Label.ToWat()})";
+      internal override string ToWat(WasmBuildCtx ctx) => $"(br {Label.ToWat(ctx)})";
     }
     // BrIf - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/br_if
     public sealed record BrIf(Position Position, WasmLabel Label, WasmExpression Condition) : WasmExpression(Position) {
-      public override string ToWat() => $"(br_if {Label.ToWat()} {Condition.ToWat()})";
+      internal override string ToWat(WasmBuildCtx ctx) => $"(br_if {Label.ToWat(ctx)} {Condition.ToWat(ctx)})";
     }
     // TODO: BrTable
     // Call - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/call
     public sealed record Call(Position Position, WasmLabel FunctionName, IEnumerable<WasmExpression> Arguments) : WasmExpression(Position) {
-      public override string ToWat() {
+      internal override string ToWat(WasmBuildCtx ctx) {
         var sb = new StringBuilder();
-        sb.Append($"(call {FunctionName.ToWat()}");
+        sb.Append($"(call {FunctionName.ToWat(ctx)}");
         foreach (var arg in Arguments) {
-          sb.Append($" {arg.ToWat()}");
+          sb.Append($" {arg.ToWat(ctx)}");
         }
         sb.Append(")");
         return sb.ToString();
@@ -202,7 +207,7 @@ namespace Decaf.WasmBuilder {
     }
     // Drop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/drop
     public sealed record Drop(Position Position, WasmExpression Value) : WasmExpression(Position) {
-      public override string ToWat() => $"(drop {Value.ToWat()})";
+      internal override string ToWat(WasmBuildCtx ctx) => $"(drop {Value.ToWat(ctx)})";
     }
     // If - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/if...else
     public sealed record If(
@@ -210,14 +215,14 @@ namespace Decaf.WasmBuilder {
       Position Position, WasmExpression Condition, WasmExpression TrueBranch, WasmExpression? FalseBranch
 #nullable disable
     ) : WasmExpression(Position) {
-      public override string ToWat() {
+      internal override string ToWat(WasmBuildCtx ctx) {
         var sb = new StringBuilder();
-        sb.Append($"(if {Condition.ToWat()}");
+        sb.Append($"(if {Condition.ToWat(ctx)}");
         sb.AppendLine();
-        sb.Append($"  (then {TrueBranch.ToWat()})");
+        sb.Append($"  (then {TrueBranch.ToWat(ctx)})");
         if (FalseBranch != null) {
           sb.AppendLine();
-          sb.Append($"  (else {FalseBranch.ToWat()})");
+          sb.Append($"  (else {FalseBranch.ToWat(ctx)})");
         }
         sb.Append(")");
         return sb.ToString();
@@ -225,12 +230,12 @@ namespace Decaf.WasmBuilder {
     }
     // Loop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/loop
     public sealed record Loop(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Body) : WasmExpression(Position) {
-      public override string ToWat() {
+      internal override string ToWat(WasmBuildCtx ctx) {
         var sb = new StringBuilder();
-        sb.Append($"(loop {Label.ToWat()}");
+        sb.Append($"(loop {Label.ToWat(ctx)}");
         foreach (var expr in Body) {
           sb.AppendLine();
-          sb.Append($"  {expr.ToWat()}");
+          sb.Append($"  {expr.ToWat(ctx)}");
         }
         sb.Append(")");
         return sb.ToString();
@@ -238,18 +243,18 @@ namespace Decaf.WasmBuilder {
     }
     // Nop - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/nop
     public sealed record Nop(Position Position) : WasmExpression(Position) {
-      public override string ToWat() => "(nop)";
+      internal override string ToWat(WasmBuildCtx ctx) => "(nop)";
     }
     // Return - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/return
 #nullable enable
     public sealed record Return(Position Position, WasmExpression? Value) : WasmExpression(Position) {
-      public override string ToWat() => $"(return {Value?.ToWat() ?? string.Empty})";
+      internal override string ToWat(WasmBuildCtx ctx) => $"(return {Value?.ToWat(ctx) ?? string.Empty})";
     }
 #nullable disable
     // TODO: Select
     // Unreachable - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/unreachable
     public sealed record Unreachable(Position Position) : WasmExpression(Position) {
-      public override string ToWat() => "(unreachable)";
+      internal override string ToWat(WasmBuildCtx ctx) => "(unreachable)";
     }
   }
 }

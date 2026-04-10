@@ -66,14 +66,6 @@ namespace Decaf.Backend {
       // TODO: Create a wasm function with the compiled body and the signature
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
-    // Blocks
-    private static WasmExpression.Block CompileBlock(CodegenContext ctx, AnfTree.BlockNode node) {
-      var instructions = new List<WasmExpression>();
-      foreach (var instruction in node.Instructions) {
-        instructions.Add(CompileInstruction(ctx, instruction));
-      }
-      return new WasmExpression.Block(node.Position, null, instructions);
-    }
     // Instructions
     private static WasmExpression CompileInstruction(
       CodegenContext ctx,
@@ -82,6 +74,7 @@ namespace Decaf.Backend {
       return node switch {
         AnfTree.InstructionNode.BindNode bindNode => CompileBindNode(ctx, bindNode),
         AnfTree.InstructionNode.AssignmentNode assignmentNode => CompileAssignmentNode(ctx, assignmentNode),
+        AnfTree.InstructionNode.BlockNode blockNode => CompileBlock(ctx, blockNode),
         AnfTree.InstructionNode.ExprNode exprNode => CompileExprNode(ctx, exprNode),
         AnfTree.InstructionNode.IfNode ifNode => CompileIfNode(ctx, ifNode),
         AnfTree.InstructionNode.LoopNode loopNode => CompileLoopNode(ctx, loopNode),
@@ -109,6 +102,13 @@ namespace Decaf.Backend {
       // Compile the assignment to the location
       return CompileLocationSet(ctx, node.Location, compiledValue);
     }
+    private static WasmExpression.Block CompileBlock(CodegenContext ctx, AnfTree.InstructionNode.BlockNode node) {
+      var instructions = new List<WasmExpression>();
+      foreach (var instruction in node.Instructions) {
+        instructions.Add(CompileInstruction(ctx, instruction));
+      }
+      return new WasmExpression.Block(node.Position, null, instructions);
+    }
     private static WasmExpression CompileExprNode(
       CodegenContext ctx,
       AnfTree.InstructionNode.ExprNode node
@@ -126,9 +126,9 @@ namespace Decaf.Backend {
       // Compile the condition
       var compiledCondition = CompileImmediate(ctx, node.Condition);
       // Compile the true branch
-      var compiledTrueBranch = CompileBlock(ctx, node.TrueBranch);
+      var compiledTrueBranch = CompileInstruction(ctx, node.TrueBranch);
       // Compile the false branch
-      var compiledFalseBranch = node.FalseBranch != null ? CompileBlock(ctx, node.FalseBranch) : null;
+      var compiledFalseBranch = node.FalseBranch != null ? CompileInstruction(ctx, node.FalseBranch) : null;
       // Create a wasm `if` expression
       return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }

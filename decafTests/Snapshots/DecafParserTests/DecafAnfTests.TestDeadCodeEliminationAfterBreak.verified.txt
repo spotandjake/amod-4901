@@ -1,0 +1,240 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleDeclNode,
+      Name: Program,
+      Globals: [
+        {
+          Kind: GlobalDeclNode,
+          Name: y,
+          Signature: {
+            Position: {
+              fileName: <unknown file>,
+              line: 3,
+              column: 6,
+              offset: 27
+            }
+          }
+        }
+      ],
+      Methods: [
+        {
+          Kind: MethodDeclNode,
+          Name: Main,
+          Body: {
+            Kind: BlockNode,
+            Instructions: [
+              {
+                Kind: LoopInstruction,
+                Body: {
+                  Kind: BlockNode,
+                  Instructions: [
+                    {
+                      Kind: BindNode,
+                      Location: {
+                        Kind: IdentifierLocation,
+                        Name: __anf_temp_0,
+                        LocationType: {
+                          Type: Boolean,
+                          Position: {
+                            fileName: <unknown file>,
+                            line: 5,
+                            column: 15,
+                            offset: 69
+                          }
+                        }
+                      },
+                      Expression: {
+                        Kind: BinopExpression,
+                        Lhs: {
+                          Kind: LocationAccessImmediate,
+                          Location: {
+                            Kind: IdentifierLocation,
+                            Name: y,
+                            LocationType: {
+                              Position: {
+                                fileName: <unknown file>,
+                                line: 3,
+                                column: 6,
+                                offset: 27
+                              }
+                            }
+                          },
+                          Signature: {
+                            Position: {
+                              fileName: <unknown file>,
+                              line: 3,
+                              column: 6,
+                              offset: 27
+                            }
+                          }
+                        },
+                        Operator: ==,
+                        Rhs: {
+                          Kind: ConstantImmediate,
+                          Value: {
+                            Kind: IntegerLiteral,
+                            Position: {
+                              fileName: <unknown file>,
+                              line: 5,
+                              column: 20,
+                              offset: 74
+                            }
+                          },
+                          Signature: {
+                            Position: {
+                              fileName: <unknown file>,
+                              line: 5,
+                              column: 20,
+                              offset: 74
+                            }
+                          }
+                        },
+                        ExpressionType: {
+                          Type: Boolean,
+                          Position: {
+                            fileName: <unknown file>,
+                            line: 5,
+                            column: 15,
+                            offset: 69
+                          }
+                        }
+                      }
+                    },
+                    {
+                      Kind: IfInstruction,
+                      Condition: {
+                        Kind: LocationAccessImmediate,
+                        Location: {
+                          Kind: IdentifierLocation,
+                          Name: __anf_temp_0,
+                          LocationType: {
+                            Type: Boolean,
+                            Position: {
+                              fileName: <unknown file>,
+                              line: 5,
+                              column: 15,
+                              offset: 69
+                            }
+                          }
+                        },
+                        Signature: {
+                          Type: Boolean,
+                          Position: {
+                            fileName: <unknown file>,
+                            line: 5,
+                            column: 15,
+                            offset: 69
+                          }
+                        }
+                      },
+                      TrueBranch: {
+                        Kind: BlockNode,
+                        Instructions: [
+                          {
+                            Kind: AssignmentInstruction,
+                            Location: {
+                              Kind: IdentifierLocation,
+                              Name: y,
+                              LocationType: {
+                                Position: {
+                                  fileName: <unknown file>,
+                                  line: 3,
+                                  column: 6,
+                                  offset: 27
+                                }
+                              }
+                            },
+                            Expression: {
+                              Kind: ConstantImmediate,
+                              Value: {
+                                Kind: IntegerLiteral,
+                                Value: 1,
+                                Position: {
+                                  fileName: <unknown file>,
+                                  line: 6,
+                                  column: 14,
+                                  offset: 93
+                                }
+                              },
+                              Signature: {
+                                Position: {
+                                  fileName: <unknown file>,
+                                  line: 6,
+                                  column: 14,
+                                  offset: 93
+                                }
+                              }
+                            }
+                          },
+                          {
+                            Kind: BreakInstruction
+                          }
+                        ]
+                      },
+                      FalseBranch: {
+                        Kind: BreakInstruction
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          Signature: {
+            ReturnType: {
+              Type: Void,
+              Position: {
+                fileName: <unknown file>,
+                line: 4,
+                column: 6,
+                offset: 40
+              }
+            },
+            Position: {
+              fileName: <unknown file>,
+              line: 4,
+              column: 6,
+              offset: 40
+            }
+          }
+        }
+      ],
+      Signature: {
+        Members: {
+          Main: {
+            ReturnType: {
+              Type: Void,
+              Position: {
+                fileName: <unknown file>,
+                line: 4,
+                column: 6,
+                offset: 40
+              }
+            },
+            Position: {
+              fileName: <unknown file>,
+              line: 4,
+              column: 6,
+              offset: 40
+            }
+          },
+          y: {
+            Position: {
+              fileName: <unknown file>,
+              line: 3,
+              column: 6,
+              offset: 27
+            }
+          }
+        },
+        Position: {
+          fileName: <unknown file>,
+          line: 2,
+          column: 4,
+          offset: 5
+        }
+      }
+    }
+  ]
+}

@@ -40,4 +40,124 @@ public class DecafAnfTests : VerifyBase {
     ");
     return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
   }
+  // Test Dead Code Elimination
+  [TestMethod]
+  public Task TestDeadCodeEliminationAfterReturn() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        y = 1;
+        return;
+        y = 2;
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationAfterBreak() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        while (y == 0) {
+          y = 1;
+          break;
+          y = 2;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationAfterContinue() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        while (y == 0) {
+          y = 1;
+          continue;
+          y = 2;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationIfTrue1() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        if (true) {
+          y = 1;
+        } else {
+          y = 2;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationIfTrue2() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        if (true) {
+          y = 1;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationIfFalse1() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        if (false) {
+          y = 1;
+        } else {
+          y = 2;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationIfFalse2() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        if (false) {
+          y = 1;
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationWhileFalse() {
+    var result = Anf(@"
+    class Program {
+      int y;
+      void Main() {
+        while (false) {
+        }
+      }
+    }
+    ");
+    return Verify(result, CreateSettings()).IgnoreMembers<Node>(x => x.Position);
+  }
 }

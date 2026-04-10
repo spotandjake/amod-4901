@@ -1,5 +1,5 @@
 using Decaf.IR.PrimitiveDefinition;
-using Decaf.IR.TypedTree;
+using TypedTree = Decaf.IR.TypedTree;
 using Decaf.Utils;
 using System.Text.Json.Serialization;
 
@@ -77,20 +77,10 @@ namespace Decaf.IR.AnfTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-  public record ProgramNode(Position Position, DeclarationNode.ModuleNode[] Modules, Scope<TypedTree.Signature> Scope) : Node(Position) {
+  public record ProgramNode(Position Position, DeclarationNode.ModuleNode[] Modules) : Node(Position) {
     public override NodeKind Kind => NodeKind.ProgramNode;
     public DeclarationNode.ModuleNode[] Modules { get; } = Modules;
-    public Scope<TypedTree.Signature> Scope { get; } = Scope;
   };
-  public record BlockNode(
-    Position Position,
-    InstructionNode[] Instructions,
-    Scope<TypedTree.Signature> Scope
-  ) : Node(Position) {
-    public override NodeKind Kind => NodeKind.BlockNode;
-    public InstructionNode[] Instructions { get; } = Instructions;
-    public Scope<TypedTree.Signature> Scope { get; } = Scope;
-  }
   /// <summary>
   /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
   /// </summary>
@@ -106,14 +96,12 @@ namespace Decaf.IR.AnfTree {
       // TODO: Get rid of the distinction between globals and methods, they are both just code
       GlobalNode[] Globals,
       MethodNode[] Methods,
-      Scope<TypedTree.Signature> Scope,
       TypedTree.Signature.ClassSignature Signature
     ) : DeclarationNode(Position) {
       public override NodeKind Kind => NodeKind.ModuleDeclNode;
       public string Name { get; } = Name;
       public GlobalNode[] Globals { get; } = Globals;
       public MethodNode[] Methods { get; } = Methods;
-      public Scope<TypedTree.Signature> Scope { get; } = Scope;
       public TypedTree.Signature.ClassSignature Signature { get; } = Signature;
     }
     /// <summary>A global declaration.</summary>
@@ -132,21 +120,18 @@ namespace Decaf.IR.AnfTree {
       public override NodeKind Kind => NodeKind.MethodDeclNode;
       public string Name { get; }
       public ParameterNode[] Parameters { get; }
-      public BlockNode Body { get; }
-      public Scope<TypedTree.Signature> Scope { get; }
+      public InstructionNode.BlockNode Body { get; }
       public TypedTree.Signature.MethodSignature Signature { get; }
       public MethodNode(
         Position position,
         string name,
         ParameterNode[] parameters,
-        BlockNode body,
-        Scope<TypedTree.Signature> scope,
+        InstructionNode.BlockNode body,
         TypedTree.Signature.MethodSignature signature
       ) : base(position) {
         this.Name = name;
         this.Parameters = parameters;
         this.Body = body;
-        this.Scope = scope;
         this.Signature = signature;
       }
     }
@@ -160,6 +145,7 @@ namespace Decaf.IR.AnfTree {
   /// </summary>
   [JsonDerivedType(typeof(BindNode), "BindInstruction")]
   [JsonDerivedType(typeof(AssignmentNode), "AssignmentInstruction")]
+  [JsonDerivedType(typeof(BlockNode), "BlockInstruction")]
   [JsonDerivedType(typeof(ExprNode), "ExpressionInstruction")]
   [JsonDerivedType(typeof(IfNode), "IfInstruction")]
   [JsonDerivedType(typeof(LoopNode), "LoopInstruction")]
@@ -188,6 +174,14 @@ namespace Decaf.IR.AnfTree {
       public LocationNode Location { get; } = Location;
       public ImmediateNode Expression { get; } = Expression;
     };
+    /// <summary>A block instruction.</summary>
+    public record BlockNode(
+      Position Position,
+      InstructionNode[] Instructions
+    ) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.BlockNode;
+      public InstructionNode[] Instructions { get; } = Instructions;
+    }
     /// <summary>An expression instruction.</summary>
     public record ExprNode(Position Position, ImmediateNode Content) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.ExprInstruction;
@@ -197,16 +191,16 @@ namespace Decaf.IR.AnfTree {
     public record IfNode(
       Position Position,
       ImmediateNode Condition,
-      BlockNode TrueBranch,
+      InstructionNode TrueBranch,
 #nullable enable
-      BlockNode? FalseBranch
+      InstructionNode? FalseBranch
 #nullable disable
     ) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.IfInstruction;
       public ImmediateNode Condition { get; } = Condition;
-      public BlockNode TrueBranch { get; } = TrueBranch;
+      public InstructionNode TrueBranch { get; } = TrueBranch;
 #nullable enable
-      public BlockNode? FalseBranch { get; } = FalseBranch;
+      public InstructionNode? FalseBranch { get; } = FalseBranch;
 #nullable disable
     };
     /// <summary>A loop instruction.</summary>
@@ -312,15 +306,15 @@ namespace Decaf.IR.AnfTree {
   /// The supertype for all immediate nodes, we use a supertype to ensure strict type checking.
   /// </summary>
   public abstract record ImmediateNode : Node {
-    public Signature Signature { get; }
-    protected ImmediateNode(Position position, Signature signature) : base(position) {
+    public TypedTree.Signature Signature { get; }
+    protected ImmediateNode(Position position, TypedTree.Signature signature) : base(position) {
       this.Signature = signature;
     }
     /// <summary>
     /// A constant node, this is used to represent literals and other constant values in the IR.
     /// </summary>
     public record ConstantNode(
-      Position Position, TypedTree.LiteralNode Value, Signature Signature
+      Position Position, TypedTree.LiteralNode Value, TypedTree.Signature Signature
     ) : ImmediateNode(Position, Signature) {
       public override NodeKind Kind => NodeKind.ConstantImmediate;
       public TypedTree.LiteralNode Value { get; } = Value;
@@ -329,7 +323,7 @@ namespace Decaf.IR.AnfTree {
     /// A variable access node, this is used to represent variable accesses.
     /// </summary>
     public record LocationAccessNode(
-      Position Position, LocationNode Location, Signature Signature
+      Position Position, LocationNode Location, TypedTree.Signature Signature
     ) : ImmediateNode(Position, Signature) {
       public override NodeKind Kind => NodeKind.LocationAccessImmediate;
       public LocationNode Location { get; } = Location;

@@ -1,10 +1,14 @@
-using System.Collections.Generic;
+using System.Threading;
 using Decaf.Utils;
 
 namespace Decaf.WasmBuilder {
+  // A context used when building a module.
+  internal record WasmBuildCtx {
+    // Unique Label Counter - used to generate unique labels across the module.
+    // NOTE: (This is a requirement for getting good wasm-opt performance)
+    private int _uniqueIDCounter = 0;
+    public int GetUniqueID() => Interlocked.Increment(ref _uniqueIDCounter);
+  }
   public record WasmModule(Position Position) {
-    // A unique counter used to generate unique symbols across the module. (This is a requirement for getting good wasm-opt performance)
-    // private int _counter = 0;
-    // public string UniqueSymbol(string name) => name + Interlocked.Increment(ref _counter).ToString();
   }
 }

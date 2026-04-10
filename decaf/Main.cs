@@ -81,7 +81,10 @@ namespace Compiler {
       return TypeChecker.TypeProgramNode(program);
     }
     public static AnfTree.ProgramNode AnfMapping(TypedTree.ProgramNode program) {
-      return AnfMapper.FromProgramNode(program);
+      var anfProgram = AnfMapper.FromProgramNode(program);
+      // Run optimizations
+      var optimizedProgram = Decaf.Backend.Optimizations.Optimizer.Optimize(anfProgram);
+      return optimizedProgram;
     }
     public static WasmModule Codegen(AnfTree.ProgramNode program) {
       return Decaf.Backend.Codegen.CompileProgram(program);
