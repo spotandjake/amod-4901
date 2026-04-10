@@ -352,17 +352,6 @@ public class DecafParserTests : VerifyBase {
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
-  public Task TestThisExpression() {
-    return Verify(Parse(@"
-    module Main { 
-      void testMethod() { 
-        x = this; 
-      } 
-    }
-    "), CreateSettings())
-      .IgnoreMembersWithType<Position>();
-  }
-  [TestMethod]
   public Task TestCallExpression1() {
     return Verify(Parse(@"
     module Main { 

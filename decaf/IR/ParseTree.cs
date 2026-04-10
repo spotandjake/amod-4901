@@ -44,7 +44,6 @@ namespace Decaf.IR.ParseTree {
     StringLiteral,
     BooleanLiteral,
     // Locations
-    ThisLocation,
     IdentifierLocation,
     MemberLocation,
     ArrayLocation
@@ -312,16 +311,11 @@ namespace Decaf.IR.ParseTree {
   /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
   /// A location node represents any access to a variable, field or array.
   /// </summary>
-  [JsonDerivedType(typeof(ThisNode), "ThisLocation")]
   [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
   [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
   [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
   public abstract record LocationNode : Node {
     protected LocationNode(Position position) : base(position) { }
-    /// <summary>A location node representing a `this` access.</summary>
-    public record ThisNode(Position Position) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.ThisLocation;
-    };
     /// <summary>
     /// An identifier node, is used to represent a simple variable access of the form `x`.
     /// </summary>

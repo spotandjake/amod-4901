@@ -28,7 +28,7 @@ public class DecafLexerTests : VerifyBase {
   // Unit Testing
   [TestMethod]
   public void TestKeywords() {
-    DecafLexer lexer = Lex("boolean break callout module continue else false if int new return this true void while");
+    DecafLexer lexer = Lex("boolean break callout module continue else false if int new return true void while");
     Assert.AreEqual(DecafLexer.BOOLEAN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.BREAK, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CALLOUT, lexer.NextToken().Type);
@@ -40,7 +40,6 @@ public class DecafLexerTests : VerifyBase {
     Assert.AreEqual(DecafLexer.INT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.NEW, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.RETURN, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.THIS, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.TRUE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.VOID, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.WHILE, lexer.NextToken().Type);
@@ -165,7 +164,7 @@ public class DecafLexerTests : VerifyBase {
 
   [TestMethod]
   public void TestKeywordIdentifier() {
-    string TestString = "thiswhiletrue";
+    string TestString = "whiletrue";
     DecafLexer lexer = Lex(TestString);
 
     Assert.AreEqual(DecafLexer.ID, lexer.NextToken().Type);

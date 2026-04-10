@@ -157,7 +157,6 @@ namespace Decaf.MiddleEnd {
     }
     private static void CheckLocationNode(LocationNode location, ParentContext parentContext) {
       switch (location) {
-        case LocationNode.ThisNode _:
         case LocationNode.IdentifierAccessNode _:
           // Nothing to check here
           break;

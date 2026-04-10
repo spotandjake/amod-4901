@@ -15,13 +15,13 @@ namespace Decaf.MiddleEnd.TypeChecker {
     private TypeChecker() { }
     private readonly record struct TypeCheckContext(
 #nullable enable
-      Signature.ModuleSignature? CurrentModule,
+      (string name, Signature.ModuleSignature signature)? CurrentModule,
       Signature.MethodSignature? CurrentMethod,
 #nullable disable
       Scope<Signature> CurrentScope
     ) {
 #nullable enable
-      public Signature.ModuleSignature? CurrentModule { get; } = CurrentModule;
+      public (string name, Signature.ModuleSignature Signature)? CurrentModule { get; } = CurrentModule;
       public Signature.MethodSignature? CurrentMethod { get; } = CurrentMethod;
 #nullable disable
       public Scope<Signature> CurrentScope { get; } = CurrentScope;
@@ -66,7 +66,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       parentContext.CurrentScope.AddDeclaration(node.Position, node.Name, moduleSignature);
       // We create a new context for the module
       var context = new TypeCheckContext(
-        moduleSignature,
+        (name: node.Name, signature: moduleSignature),
         null,
         new Scope<Signature>(parentContext.CurrentScope)
       );
@@ -75,10 +75,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
         var typedField = TypeDeclVariableNode(field, context);
         foreach (var bind in typedField.Binds) {
           // After mapping the method we need to update the module signature and the global scope
-          context.CurrentModule.Members[bind.Name] = bind.Signature;
+          context.CurrentModule.Value.Signature.Members[bind.Name] = bind.Signature;
         }
         // Update the global scope with the new partial signature
-        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule);
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule.Value.Signature);
         // Return the mapped field
         return typedField;
       }).ToArray();
@@ -86,9 +86,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var methods = node.Methods.Select(method => {
         var typedMethod = TypeDeclMethodNode(method, context);
         // After mapping the method we need to update the module signature and the global scope
-        context.CurrentModule.Members[typedMethod.Name] = typedMethod.Signature;
+        context.CurrentModule.Value.Signature.Members[typedMethod.Name] = typedMethod.Signature;
         // Update the global scope with the new partial signature
-        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule);
+        parentContext.CurrentScope.SetDeclaration(node.Position, node.Name, context.CurrentModule.Value.Signature);
         // Return the mapped method
         return typedMethod;
       }).ToArray();
@@ -99,7 +99,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         fields,
         methods,
         context.CurrentScope,
-        context.CurrentModule
+        context.CurrentModule.Value.Signature
       );
     }
     private static DeclarationNode.VariableNode TypeDeclVariableNode(
@@ -524,14 +524,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
     // Locations
     private static LocationNode TypeLocationNode(ParseTree.LocationNode node, TypeCheckContext parentContext) {
       switch (node) {
-        case ParseTree.LocationNode.ThisNode: {
-            // Get the current module context and return its partial signature
-            var parentModuleSignature = parentContext.CurrentModule;
-            // NOTE: This could never actually happen due to parsing but it's a future check if we ever allowed top level statements
-            if (parentModuleSignature == null) throw new ThisAccessOutsideOfModule(node.Position);
-            // NOTE: This only works because we require declarations to be defined before use, otherwise we would need to delay t
-            return new LocationNode.ThisNode(node.Position, parentModuleSignature);
-          }
         case ParseTree.LocationNode.IdentifierAccessNode identifierAccess: {
             // Find the signature of the identifier in the current scope
             var signature = parentContext.CurrentScope.GetDeclaration(node.Position, identifierAccess.Name);

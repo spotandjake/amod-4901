@@ -21,7 +21,6 @@ WHILE   : 'w' 'h' 'i' 'l' 'e';
 
 // Keywords - other
 MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
-THIS    : 't' 'h' 'i' 's' ;
 TRUE    : 't' 'r' 'u' 'e' ;
 FALSE   : 'f' 'a' 'l' 's' 'e' ;
 NEW     : 'n' 'e' 'w' ;

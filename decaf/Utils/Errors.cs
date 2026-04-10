@@ -107,14 +107,6 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, "An array access can only be performed on an array type.")) {
     }
     /// <summary>
-    /// An exception to be thrown when a `this` expression is encountered outside of a module during type checking.
-    /// </summary>
-    /// <param name="position">The position where the error occurred.</param>
-    public class ThisAccessOutsideOfModule(
-      Position position
-    ) : Exception(ErrorConstructor.CreateError(position, "`this` statement must be within a method.")) {
-    }
-    /// <summary>
     /// An exception to be thrown when a `return` statement is encountered outside of a method during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
@@ -175,9 +167,6 @@ namespace Decaf.Utils.Errors {
           Console.WriteLine(e.Message);
           break;
         case TypeCheckingErrors.ArrayAccessOnNonArray e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.ThisAccessOutsideOfModule e:
           Console.WriteLine(e.Message);
           break;
         case TypeCheckingErrors.ReturnUseOutsideOfMethod e:

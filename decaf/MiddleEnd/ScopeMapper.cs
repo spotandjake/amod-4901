@@ -176,8 +176,6 @@ namespace Decaf.MiddleEnd {
       Scope<bool> parentScope
     ) {
       switch (node) {
-        case LocationNode.ThisNode thisNode:
-          return thisNode; // No mapping needed for `this` as it contains no children
         case LocationNode.IdentifierAccessNode identifierNode:
           // Check if the identifier exists in the scope
           if (!parentScope.HasDeclaration(identifierNode.Name)) {

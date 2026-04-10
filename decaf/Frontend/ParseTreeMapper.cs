@@ -160,7 +160,6 @@ namespace Decaf.Frontend {
       return context switch {
         DecafParser.SimpleExprContext simpleExprCtx => simpleExprCtx.simple_expr() switch {
           DecafParser.LocationExprContext locationCtx => MapLocationExpressionContext(locationCtx.location()),
-          DecafParser.ThisExprContext thisCtx => MapThisExpressionContext(thisCtx),
           DecafParser.CallExprContext callCtx => callCtx.call_expr() switch {
             DecafParser.MethodCallExprContext methodCallCtx => MapCallExpressionContext(methodCallCtx.method_call()),
             DecafParser.PrimCalloutExprContext primCalloutCtx => MapPrimitiveCallExpressionContext(primCalloutCtx.prim_callout()),
@@ -232,10 +231,6 @@ namespace Decaf.Frontend {
       var location = MapLocationContext(context);
       return new ExpressionNode.LocationAccessNode(position, location);
     }
-    private static ExpressionNode.LocationAccessNode MapThisExpressionContext(DecafParser.ThisExprContext context) {
-      var position = MapPositionContext(context);
-      return new ExpressionNode.LocationAccessNode(position, new LocationNode.ThisNode(position));
-    }
     private static ExpressionNode.NewArrayNode MapNewArrayExpressionContext(DecafParser.NewArrayExprContext context) {
       var position = MapPositionContext(context);
       var identifier = MapTypeContext(context.type());
@@ -260,12 +255,7 @@ namespace Decaf.Frontend {
     // Locations
     private static LocationNode MapLocationContext(DecafParser.LocationContext context) {
       var position = MapPositionContext(context);
-      LocationNode node = context.root switch {
-        DecafParser.THISContext => new LocationNode.ThisNode(position),
-        DecafParser.IDContext ctx => new LocationNode.IdentifierAccessNode(position, ctx.GetText()),
-        // NOTE: This should be impossible due to grammar restrictions
-        _ => throw new InvalidProgramException("Impossible location root at LocationNode.FromContext")
-      };
+      LocationNode node = new LocationNode.IdentifierAccessNode(position, context.root.ID().GetText());
       // If it's a member access then we need to update the node to be a member access node
       if (context.path != null) {
         var member = context.path.ID().GetText();

@@ -361,23 +361,15 @@ namespace Decaf.Backend {
       AnfState state,
       TypedTree.LocationNode node
     ) {
-      switch (node) {
-        // TODO: Resolve `This` nodes in the type checker
-        case TypedTree.LocationNode.ThisNode _:
-          // We handle the resolution here because it is easier to resolve it
-          return ([], new AnfTree.LocationNode.IdentifierAccessNode(
-            node.Position,
-            state.CurrentModule,
-            state.CurrentScope.GetDeclaration(node.Position, state.CurrentModule)
-          ));
-        case TypedTree.LocationNode.IdentifierAccessNode identNode:
-          return FromIdentifierAccessLocationNode(state, identNode);
-        case TypedTree.LocationNode.MemberAccessNode memberNode:
-          return FromMemberAccessLocationNode(state, memberNode);
-        case TypedTree.LocationNode.ArrayAccessNode arrayNode:
-          return FromArrayAcessLocationNode(state, arrayNode);
-        default: throw new Exception($"Unknown location node: {node.Kind}");
-      }
+      return node switch {
+        TypedTree.LocationNode.IdentifierAccessNode identNode =>
+          FromIdentifierAccessLocationNode(state, identNode),
+        TypedTree.LocationNode.MemberAccessNode memberNode =>
+          FromMemberAccessLocationNode(state, memberNode),
+        TypedTree.LocationNode.ArrayAccessNode arrayNode =>
+          FromArrayAccessLocationNode(state, arrayNode),
+        _ => throw new Exception($"Unknown location node: {node.Kind}"),
+      };
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.IdentifierAccessNode) FromIdentifierAccessLocationNode(
       AnfState state,
@@ -390,7 +382,6 @@ namespace Decaf.Backend {
       TypedTree.LocationNode.MemberAccessNode node
     ) {
       var (binds, root) = FromLocationNode(state, node.Root);
-      // TODO: I would prefer if we move this resolution up
       // TODO: This is why we should consider lowering directly to `global.get`, `local.set`, `array.get`, `array.set` at the anf level
       if (root is not AnfTree.LocationNode.IdentifierAccessNode) {
         // NOTE: This should be impossible given type checking restrictions
@@ -406,7 +397,7 @@ namespace Decaf.Backend {
         )
       );
     }
-    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.ArrayAccessNode) FromArrayAcessLocationNode(
+    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.ArrayAccessNode) FromArrayAccessLocationNode(
       AnfState state,
       TypedTree.LocationNode.ArrayAccessNode node
     ) {

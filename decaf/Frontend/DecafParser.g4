@@ -18,7 +18,6 @@ method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
 
 block: LBRACE var_decl* statement* RBRACE;
 
-// NOTE: Because this takes id maybe we should just restrict semantically later
 type: 
   INT # IntType
   | BOOLEAN # BooleanType
@@ -68,13 +67,12 @@ expr:
 
 simple_expr:
   location # LocationExpr
-  | THIS # ThisExpr
   | call_expr # CallExpr
   ;
 
 // TODO: make root an expr
 location: root=location_root (path=location_path | indexExpr=location_array_index)?;
-location_root: ID # ID | THIS # THIS;
+location_root: ID;
 location_path: DOT ID;
 location_array_index: LBRACK expr RBRACK;
 

@@ -8,8 +8,8 @@ module Runtime {
   int PageSize;
   // --- Initialization ---
   void Main() {
-    this.HeapPointer = 0;
-    this.PageSize = 65536;
+    Runtime.HeapPointer = 0;
+    Runtime.PageSize = 65536;
   }
   // --- Allocation ---
   // An extremely simple implementation of malloc using a bump allocator
@@ -27,7 +27,7 @@ module Runtime {
     // Align the byteSize to 4 bytes
     alignedByteSize = (byteSize + 3) & ~3;
     // Set the pointer value to the current heap end
-    pointer = this.HeapPointer;
+    pointer = Runtime.HeapPointer;
     // Determine the end of the block
     end = pointer + alignedByteSize;
     // Fetch the page count
@@ -38,7 +38,7 @@ module Runtime {
       callout("@wasm.memory.grow", 1);
     }
     // Bump the heap pointer
-    this.HeapPointer = end;
+    Runtime.HeapPointer = end;
     // Return the block pointer
     return pointer;
   }
@@ -47,7 +47,7 @@ module Runtime {
     // The block pointer
     int pointer;
     // Malloc the block
-    pointer = this.malloc(byteSize);
+    pointer = Runtime.malloc(byteSize);
     // Zero the region in case we used it before
     callout("@wasm.memory.fill", pointer, 0, byteSize);
     // Return the block pointer
@@ -60,7 +60,7 @@ module Runtime {
     // Compute the byteSize
     byteSize = 4 + (4 * length);
     // Allocate the block
-    pointer = this.calloc(byteSize);
+    pointer = Runtime.calloc(byteSize);
     // Store the length
     callout("@wasm.i32.store", pointer, 0, byteSize);
     // Return the pointer
