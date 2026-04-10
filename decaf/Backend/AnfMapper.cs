@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Decaf.Utils;
+using Decaf.IR.TypedTree;
 
 // The purpose of this file is to map from the typed tree to the ANF tree.
 namespace Decaf.Backend {
@@ -17,7 +18,7 @@ namespace Decaf.Backend {
       public int TempCounter { get; set; } = 0;
     }
     private static (AnfTree.InstructionNode.BindNode, AnfTree.ImmediateNode.LocationAccessNode) GenerateTempBind(
-      AnfState state, AnfTree.ExpressionNode value
+      AnfState state, AnfTree.ExpressionNode value, Signature signature
     ) {
       // Create the binding name
       // TODO: Should we be adding this to the current scope?
@@ -32,7 +33,7 @@ namespace Decaf.Backend {
         value
       );
       // Create the imm
-      var imm = new AnfTree.ImmediateNode.LocationAccessNode(value.Position, tempLocation);
+      var imm = new AnfTree.ImmediateNode.LocationAccessNode(value.Position, tempLocation, signature);
       // Return the bind and the imm
       return (bind, imm);
     }
@@ -246,9 +247,9 @@ namespace Decaf.Backend {
         case TypedTree.ExpressionNode.NewArrayNode newArrayNode:
           return FromNewArrayExpressionNode(state, newArrayNode);
         case TypedTree.ExpressionNode.LocationAccessNode locationAccessNode:
-          return FromLocationAccessExpressionNode(state, locationAccessNode);
+          return FromLocationAccessExpressionNode(state, locationAccessNode, node.ExpressionType);
         case TypedTree.ExpressionNode.LiteralNode literalNode:
-          return FromLiteralExpressionNode(state, literalNode);
+          return FromLiteralExpressionNode(state, literalNode, node.ExpressionType);
         default: throw new Exception($"Unknown expression node: {node.Kind}");
       }
     }
@@ -272,7 +273,7 @@ namespace Decaf.Backend {
         node.Position, locationImm, args.ToArray(), node.ExpressionType
       );
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       binds.Add(setup);
       // Return the binds and the imm
       return (binds, imm);
@@ -294,7 +295,7 @@ namespace Decaf.Backend {
         node.Position, node.Primitive, args.ToArray(), node.ExpressionType
       );
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       binds.Add(setup);
       // Return the binds and the imm
       return (binds, imm);
@@ -309,7 +310,7 @@ namespace Decaf.Backend {
       // Crate the mapped node
       var anfNode = new AnfTree.ExpressionNode.BinopNode(node.Position, leftImm, node.Operator, rightImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(leftBinds);
@@ -327,7 +328,7 @@ namespace Decaf.Backend {
       // Crate the mapped node
       var anfNode = new AnfTree.ExpressionNode.PrefixNode(node.Position, node.Operator, operandImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(operandBinds);
@@ -344,7 +345,7 @@ namespace Decaf.Backend {
       // Crate the mapped node
       var anfNode = new AnfTree.ExpressionNode.AllocateArrayNode(node.Position, sizeImm, node.ExpressionType);
       // Generate an imm for the result
-      var (setup, imm) = GenerateTempBind(state, anfNode);
+      var (setup, imm) = GenerateTempBind(state, anfNode, node.ExpressionType);
       // Construct our binds
       var binds = new List<AnfTree.InstructionNode.BindNode>();
       binds.AddRange(sizeBinds);
@@ -354,18 +355,20 @@ namespace Decaf.Backend {
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromLocationAccessExpressionNode(
       AnfState state,
-      TypedTree.ExpressionNode.LocationAccessNode node
+      TypedTree.ExpressionNode.LocationAccessNode node,
+      Signature signature
     ) {
       var (locationBinds, location) = FromLocationNode(state, node.Content);
-      var imm = new AnfTree.ImmediateNode.LocationAccessNode(node.Position, location);
+      var imm = new AnfTree.ImmediateNode.LocationAccessNode(node.Position, location, signature);
       // Return the binds and the imm
       return (locationBinds, imm);
     }
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.ImmediateNode) FromLiteralExpressionNode(
       AnfState state,
-      TypedTree.ExpressionNode.LiteralNode node
+      TypedTree.ExpressionNode.LiteralNode node,
+      Signature signature
     ) {
-      return ([], new AnfTree.ImmediateNode.ConstantNode(node.Position, node.Content));
+      return ([], new AnfTree.ImmediateNode.ConstantNode(node.Position, node.Content, signature));
     }
     // Locations
     private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode) FromLocationNode(

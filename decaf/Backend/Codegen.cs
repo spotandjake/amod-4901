@@ -1,5 +1,6 @@
 using System;
 using Decaf.IR.PrimitiveDefinition;
+using Decaf.IR.TypedTree;
 using Decaf.WasmBuilder;
 using AnfTree = Decaf.IR.AnfTree;
 using TypedTree = Decaf.IR.TypedTree;
@@ -27,38 +28,57 @@ namespace Decaf.Backend {
       // TODO: This should return the compiled function, the caller is responsible for adding it the module
     }
     // Instructions
-    private static void CompileInstruction(AnfTree.InstructionNode node) {
-      // TODO: This should return the compiled statement
-      switch (node) {
-        case AnfTree.InstructionNode.BindNode bindNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.AssignmentNode assignmentNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.ExprNode exprNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.IfNode ifNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.LoopNode loopNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.ContinueNode continueNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.BreakNode breakNode:
-          // TODO:
-          break;
-        case AnfTree.InstructionNode.ReturnNode returnNode:
-          // TODO:
-          break;
-        default: throw new Exception($"Unknown instruction node kind: {node.Kind}");
+    private static WasmExpression CompileInstruction(AnfTree.InstructionNode node) {
+      return node switch {
+        AnfTree.InstructionNode.BindNode bindNode => CompileBindNode(bindNode),
+        AnfTree.InstructionNode.AssignmentNode assignmentNode => CompileAssignmentNode(assignmentNode),
+        AnfTree.InstructionNode.ExprNode exprNode => CompileExprNode(exprNode),
+        AnfTree.InstructionNode.IfNode ifNode => CompileIfNode(ifNode),
+        AnfTree.InstructionNode.LoopNode loopNode => CompileLoopNode(loopNode),
+        AnfTree.InstructionNode.ContinueNode continueNode => CompileContinueNode(continueNode),
+        AnfTree.InstructionNode.BreakNode breakNode => CompileBreakNode(breakNode),
+        AnfTree.InstructionNode.ReturnNode returnNode => CompileReturnNode(returnNode),
+        _ => throw new Exception($"Unknown instruction node kind: {node.Kind}"),
+      };
+    }
+    private static WasmExpression CompileBindNode(AnfTree.InstructionNode.BindNode node) {
+      // TODO:
+      throw new NotImplementedException("Binds are not yet supported");
+    }
+    private static WasmExpression CompileAssignmentNode(AnfTree.InstructionNode.AssignmentNode node) {
+      // TODO:
+      throw new NotImplementedException("Assignments are not yet supported");
+    }
+    private static WasmExpression CompileExprNode(AnfTree.InstructionNode.ExprNode node
+    ) {
+      var compiledExpr = CompileImmediate(node.Content);
+      if (node.Content.Signature is not Signature.PrimitiveSignature { Type: PrimitiveType.Void }) {
+        return new WasmExpression.Drop(node.Position, compiledExpr);
       }
+      else return compiledExpr;
+    }
+    private static WasmExpression CompileIfNode(AnfTree.InstructionNode.IfNode node) {
+      // TODO:
+      throw new NotImplementedException("If statements are not yet supported");
+    }
+    private static WasmExpression CompileLoopNode(AnfTree.InstructionNode.LoopNode node) {
+      // TODO:
+      throw new NotImplementedException("Loop statements are not yet supported");
+    }
+    private static WasmExpression CompileContinueNode(AnfTree.InstructionNode.ContinueNode node) {
+      // TODO:
+      throw new NotImplementedException("Break and continue statements are not yet supported");
+    }
+    private static WasmExpression CompileBreakNode(AnfTree.InstructionNode.BreakNode node) {
+      // TODO:
+      throw new NotImplementedException("Break and continue statements are not yet supported");
+    }
+    private static WasmExpression CompileReturnNode(AnfTree.InstructionNode.ReturnNode node) {
+      // TODO:
+      throw new NotImplementedException("Return statements are not yet supported");
     }
     // Simple Expressions
-    private static WasmBuilder.WasmExpression CompileSimpleExpr(AnfTree.ExpressionNode node) {
+    private static WasmExpression CompileSimpleExpr(AnfTree.ExpressionNode node) {
       return node switch {
         AnfTree.ExpressionNode.CallNode callNode => CompileCallNode(callNode),
         AnfTree.ExpressionNode.PrimitiveNode primitiveNode => CompilePrimitiveNode(primitiveNode),
@@ -69,7 +89,9 @@ namespace Decaf.Backend {
       };
     }
     private static WasmExpression CompileCallNode(AnfTree.ExpressionNode.CallNode node) {
-      // TODO:
+      // TODO: Resolve the method being called to it's actual qualified name
+      // TODO: Compile the arguments to the call
+      // TODO: Create a `call` expression with the resolved method name and the compiled arguments
       throw new NotImplementedException("Method calls are not yet supported");
     }
     private static WasmExpression CompilePrimitiveNode(AnfTree.ExpressionNode.PrimitiveNode node) {

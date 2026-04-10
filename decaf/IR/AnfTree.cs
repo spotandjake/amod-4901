@@ -1,4 +1,5 @@
 using Decaf.IR.PrimitiveDefinition;
+using Decaf.IR.TypedTree;
 using Decaf.Utils;
 using System.Text.Json.Serialization;
 
@@ -318,18 +319,25 @@ namespace Decaf.IR.AnfTree {
   /// The supertype for all immediate nodes, we use a supertype to ensure strict type checking.
   /// </summary>
   public abstract record ImmediateNode : Node {
-    protected ImmediateNode(Position position) : base(position) { }
+    public Signature Signature { get; }
+    protected ImmediateNode(Position position, Signature signature) : base(position) {
+      this.Signature = signature;
+    }
     /// <summary>
     /// A constant node, this is used to represent literals and other constant values in the IR.
     /// </summary>
-    public record ConstantNode(Position Position, TypedTree.LiteralNode Value) : ImmediateNode(Position) {
+    public record ConstantNode(
+      Position Position, TypedTree.LiteralNode Value, Signature Signature
+    ) : ImmediateNode(Position, Signature) {
       public override NodeKind Kind => NodeKind.ConstantImmediate;
       public TypedTree.LiteralNode Value { get; } = Value;
     };
     /// <summary>
     /// A variable access node, this is used to represent variable accesses.
     /// </summary>
-    public record LocationAccessNode(Position Position, LocationNode Location) : ImmediateNode(Position) {
+    public record LocationAccessNode(
+      Position Position, LocationNode Location, Signature Signature
+    ) : ImmediateNode(Position, Signature) {
       public override NodeKind Kind => NodeKind.LocationAccessImmediate;
       public LocationNode Location { get; } = Location;
     };

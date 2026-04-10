@@ -37,6 +37,14 @@
                         column: 12,
                         offset: 68
                       }
+                    },
+                    Signature: {
+                      Position: {
+                        fileName: <unknown file>,
+                        line: 5,
+                        column: 12,
+                        offset: 68
+                      }
                     }
                   },
                   Operator: +,
@@ -45,6 +53,14 @@
                     Value: {
                       Kind: IntegerLiteral,
                       Value: 2,
+                      Position: {
+                        fileName: <unknown file>,
+                        line: 5,
+                        column: 16,
+                        offset: 72
+                      }
+                    },
+                    Signature: {
                       Position: {
                         fileName: <unknown file>,
                         line: 5,
@@ -92,6 +108,14 @@
                           offset: 68
                         }
                       }
+                    },
+                    Signature: {
+                      Position: {
+                        fileName: <unknown file>,
+                        line: 5,
+                        column: 12,
+                        offset: 68
+                      }
                     }
                   },
                   Operator: +,
@@ -100,6 +124,14 @@
                     Value: {
                       Kind: IntegerLiteral,
                       Value: 3,
+                      Position: {
+                        fileName: <unknown file>,
+                        line: 5,
+                        column: 20,
+                        offset: 76
+                      }
+                    },
+                    Signature: {
                       Position: {
                         fileName: <unknown file>,
                         line: 5,
@@ -144,6 +176,14 @@
                         column: 12,
                         offset: 68
                       }
+                    }
+                  },
+                  Signature: {
+                    Position: {
+                      fileName: <unknown file>,
+                      line: 5,
+                      column: 12,
+                      offset: 68
                     }
                   }
                 }
