@@ -42,28 +42,6 @@ Tests can be run using `task test`, you can use `task test -- --filter <query>` 
 
 ## Walkthrough
 
-### Semantic Analysis
-
-After are done parsing we move on to the next stage of the compiler the middle end which is responsible for scoping, semantic analysis and typechecking.
-
-The first sub stage in our pipeline is scoping, we implement a simple scope system in [`./decaf/MiddleEnd/ScopeMapper.cs`](./decaf/MiddleEnd/ScopeMapper.cs). This is implemented as a simple traversal over the parse tree, where we map the parseTree to itself filling in scope information as we go. While we are doing this we check for any scoping errors such as duplicate declaration or use before declarations. A scope is defined as a hierarchy where each scope contains a list of variables and methods declared in the scope and a reference to its parent scope. When we are looking up an identifier we start at the current scope and check if the identifier is declared if it is not we move to the parent scope and repeat until we either find the declaration or run out of scopes in which case we throw an error. This is implemented in [`./decaf/Utils/Scope.cs`](./decaf/Utils/Scope.cs). As we track a value with scope we use `ScopeMapper` to track very primitive top level use analysis.
-
-After we are done scoping and have a brand new parseTree with scope information we move on to semantic analysis itself, this is implemented in [`./decaf/MiddleEnd/SemanticAnalysis.cs`](./decaf/MiddleEnd/SemanticAnalysis.cs). This is also implemented as a simple traversal over the parse tree, where we do basic property checks of the nodes themselves a list of semantic analysis rules can be found below:
-* `Program.Main()` exists
-  * `Program.Main()` has no parameters
-  * `Program.Main()` returns void
-* Loop Checks
-  * Continue can only be used in a loop
-  * Break can only be used in a loop
-* Arithmetic Checks
-  * No divide by constant zero
-* Array checks
-  * No initialization of arrays with constant negative size
-  * No indexing of arrays with constant negative index
-
-
-Tests can be found in: [`./decafTests/SemanticTests.cs`](./decafTests/SemanticTests.cs) which also uses snapshot testing to capture the output of the semantic analysis traversal.
-
 ### TypeChecking
 
 After we are done semantic analysis we move on to type checking, this is implemented in [`./decaf/MiddleEnd/TypeChecker.cs`](./decaf/MiddleEnd/TypeChecker.cs). This is also implemented as a simple traversal over the parse tree. We produce a brand new tree during this traversal defined in [`./decaf/IR/TypedTree.cs`](./decaf/IR/TypedTree.cs) which is very similar to the parse tree but every expression node is annotated with a type, scopes map to signatures instead of use, and we drop extra property information that has been converted to the nodes signatures. During this traversal we check for type errors and throw if we find any, we don't directly define a list of type checking rules as they are best found in the code themselves but we are essentially trying to ensure a progarm is valid, things like method calls make sense, and array indexing is done on arrays with integers, etc.

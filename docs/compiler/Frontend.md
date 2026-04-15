@@ -100,5 +100,32 @@ We use snapshot testing to test the parser as structural testing isn't overly su
 
 ## Semantic Analysis
 
+Once we have a parse tree we can move on to the next stage which is validation, our parser is implemented in a way that it can parse many programs that are syntactically correct but the programs still may be semantically incorrect. Semantically incorrect could refer to many things a few examples include:
+* Using a variable that hasn't been declared
+* Using a variable that is out of scope
+* Using `break` or `continue` outside of a loop
+* Using `return` outside of a function
+
+In order to catch these mistakes we need to traverse the program and ensure that the parseTree makes sense, this is probably the least formal part of the compiler as there is no clear 1 size fits all approach to doing this. We implement this in two stages `ScopeValidation` and `SemanticValidation`. These stages are further described below.
+
 ### Scope Validation
+
+The first part of semantic validation is scope validation, this is implemented in `decaf/Frontend/ScopeChecker.cs` and takes advantage of our generic `Scope` table. We walk the parseTree by recursively visiting each node and keeping track of the current scope, when visiting we create a new node whenever we enter a `Program`, `Module`, `Function` or `Block` node and we add any variables from the given contexts to the scope. A scope is allowed to capture the parent scope so we can look up variables from the parent scope however the child can also shadow variables from the parent scope. During this traversal whenever we encounter a declaration we add the table to scope, if it already exists in the given scope we throw a `DuplicateDeclarationException`. Whenever we encounter a variable usage we look up the variable to validate that it exists in the current scope or any parent scope, if it doesn't exist we throw an `DeclarationNotDefinedException`. When we are adding to the scope table we also track the mutability of the variable, this allows us to provide better error messages and prevent things such as assignments to `parameters` and `functions` which are immutable by definition, if a mutation occurs we throw a `DeclarationNotMutableException`.
+
+Tests for scope validation can be found in `decafTests/Frontend/ScopeTests.cs` and are implemented by providing a string input and checking weather the validation passes or fails with the expected error. 
+
 ### Semantic Validation
+
+After we have done scope validation we can move onto general semantic validation this includes tests for things such as:
+* Every program should contain a `Program` module which we can use as the program entry point.
+* Ensure that `break` and `continue` are only used within loops.
+* Ensure that `return` is only used within functions.
+* Ensure that `FunctionLiterals` are only bound at the top level and used in the left hand side of the bind.
+  * We validate this in multiple places such as mapping from the parse tree, semantic validation, and type checking to ensure we don't miss an edge case (This is done because we do not track the invariant in the `ParseTree` itself as that would break our type hierarchy)
+  * One benefit of this approach is in the future it would be relatively easy to relax this rule and allow function literals to be used in a first class manner and defined in a first class manner (this is part of why we do it this way).
+* Check for cases of `x / 0` where `x` is any expression.
+  * As a note this test case is only able to catch cases where the `0` is a constant if you do `x / y` and `y` resolves to a `0` at runtime we won't be able to catch that (most compilers won't be able to catch this however).
+* Ensure that arrays are not intialized with a negative size or indexed with a negative index.
+  * This is similar to the divide by zero case where we can only catch constant cases.
+
+In order to catch these mistakes we traverse the program in `decaf/Frontend/SemanticAnalysis.cs` and check pretty explicitly for these cases, if we find one we throw the corresponding error with as much context as possible. Tests for semantic validation can be found in `decafTests/Frontend/SemanticTests.cs` and are implemented by providing a string input and checking weather the validation passes or fails with the expected error.
