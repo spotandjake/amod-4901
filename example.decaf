@@ -1,6 +1,9 @@
 module Program {
-  let x: int = 0;
-  while (x != 1) {
-    break;
-  }
+  let y: int = 0;
+  let test = (): void => {
+    y = 1;
+    return;
+    y = 2;
+  };
+  test();
 }

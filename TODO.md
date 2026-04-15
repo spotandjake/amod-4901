@@ -33,7 +33,7 @@ These are things directly related to deliverables or causing codegen issues that
   * NOTE: This should be semantically restricted to the top level
 * Anf Optimizations
   * Constant folding and propagation
-    * Constant folding is litterally just in cases like a binop if the left and right are constants we can just compute the result
+    * Constant folding is literally just in cases like a binop if the left and right are constants we can just compute the result
     * Constant propagation is just checking the immediate linked by a bind is a constant and if so replace the immediate
     * NOTE: These need to be implemented together because constant folding creates new constants that can then be propagated
   * Unused variable and function detection
@@ -42,18 +42,19 @@ These are things directly related to deliverables or causing codegen issues that
     * NOTE: These passes iterate blocks and modules in reverse
 * Investigate WASM GC
   * It would be nice if we could switch to using wasm gc for our arrays and strings over the current approach of linear memory
-* Replace snapshot tests with more specific test where possible
-  * Justification: It's way to easy to just update snapshots without actually checking the output
 * Testing
-  * Parsing
-    * We should rewrite these tests based of the grammar more accurately
-    * Precedence
-  * Semantic Analysis
-    * Rewrite Semantic checks
-    * Rewrite type checks
-  * AnfTree
-    * Basic optimization tests
-  * CodeGen
-    * Basic codegen tests
+  * FrontEnd
+    * Parsing
+      * We should rewrite these to match the new grammar
+      * Proper precedence tests
+    * Semantic Analysis
+      * We should clean up the semantic analysis tests
+        * We should find each place a semantic error can occur and write a specific test targeting the branch
+        * We should also have related tests for valid programs that are similar
+          * i.e proper `continue`, `break` usage.
+  * MiddleEnd
+    * We should rewrite the type checking tests to be more specific and less snapshot based
+  * Backend
+    * Write tests for codegen (likely just snapshot tests)
   * End to End
     * Everything

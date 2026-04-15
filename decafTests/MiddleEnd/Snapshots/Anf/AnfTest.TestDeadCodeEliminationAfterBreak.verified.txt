@@ -1,0 +1,93 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      Name: Program,
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: LoopInstructionNode,
+            Body: {
+              Kind: BlockInstructionNode,
+              Instructions: [
+                {
+                  Kind: BindInstructionNode,
+                  Name: __anf_temp_0,
+                  SimpleExpression: {
+                    Kind: BinopExpressionNode,
+                    Lhs: {
+                      Kind: ConstantImmediate,
+                      Value: {
+                        Kind: IntegerLiteralNode,
+                        Value: 1,
+                        LiteralType: {}
+                      },
+                      Signature: {}
+                    },
+                    Operator: Equal,
+                    Rhs: {
+                      Kind: ConstantImmediate,
+                      Value: {
+                        Kind: IntegerLiteralNode,
+                        LiteralType: {}
+                      },
+                      Signature: {}
+                    },
+                    ExpressionType: {
+                      Type: Boolean
+                    }
+                  }
+                },
+                {
+                  Kind: IfInstructionNode,
+                  Condition: {
+                    Kind: LocationImmediate,
+                    Location: {
+                      Kind: IdentifierLocationNode,
+                      Name: __anf_temp_0,
+                      LocationType: {
+                        Type: Boolean
+                      }
+                    },
+                    Signature: {
+                      Type: Boolean
+                    }
+                  },
+                  TrueBranch: {
+                    Kind: BlockInstructionNode,
+                    Instructions: [
+                      {
+                        Kind: BindInstructionNode,
+                        Name: y,
+                        SimpleExpression: {
+                          Kind: ImmInstructionNode,
+                          Imm: {
+                            Kind: ConstantImmediate,
+                            Value: {
+                              Kind: IntegerLiteralNode,
+                              LiteralType: {}
+                            },
+                            Signature: {}
+                          },
+                          ExpressionType: {}
+                        }
+                      },
+                      {
+                        Kind: BreakInstructionNode
+                      }
+                    ]
+                  },
+                  FalseBranch: {
+                    Kind: BreakInstructionNode
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      Signature: {}
+    }
+  ]
+}

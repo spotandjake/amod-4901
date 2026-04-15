@@ -77,7 +77,10 @@ namespace Decaf.Compiler {
       // Front end
       var frontEndProgram = FrontEnd(source, inputFileName);
       // Middle end
-      var middleEndProgram = MiddleEnd(frontEndProgram);
+      var middleEndProgram = MiddleEnd(frontEndProgram, new OptimizationConfig {
+        // TODO: It may make sense to allow this to be configured to some degree
+        Passes = Optimizer.GetDefaultPasses(),
+      });
       // Back end
       var wasmModule = Backend(middleEndProgram);
       // Return the compiled wasm module
@@ -173,13 +176,13 @@ namespace Decaf.Compiler {
     /// </summary>
     /// <param name="program">The parsed program to process.</param>
     /// <returns>The processed program.</returns>
-    public static AnfTree.ProgramNode MiddleEnd(ParseTree.ProgramNode program) {
+    public static AnfTree.ProgramNode MiddleEnd(ParseTree.ProgramNode program, OptimizationConfig optimizationConfig) {
       // Type check the program
       var typedProgram = TypeChecker.TypeProgramNode(program);
       // Lower to ANF
       var anfProgram = AnfMapper.FromProgramNode(typedProgram);
       // Run optimizations
-      var optimizedProgram = Optimizer.Optimize(anfProgram);
+      var optimizedProgram = Optimizer.Optimize(anfProgram, optimizationConfig);
       // Return the program after middle end processing
       return optimizedProgram;
     }
@@ -210,9 +213,9 @@ namespace Decaf.Compiler {
     /// </summary>
     /// <param name="program">The anf program to optimize.</param>
     /// <returns>The optimized program.</returns>
-    public static AnfTree.ProgramNode OptimizeAnf(AnfTree.ProgramNode program) {
+    public static AnfTree.ProgramNode OptimizeAnf(AnfTree.ProgramNode program, OptimizationConfig config) {
       // Run optimizations
-      return Optimizer.Optimize(program);
+      return Optimizer.Optimize(program, config);
     }
     // --- Back end ---
 
