@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AnfTree = Decaf.IR.AnfTree;
 
-namespace Decaf.Backend.Optimizations {
+namespace Decaf.MiddleEnd.Optimizations {
   /// <summary>
   /// This class is responsible for performing a variety of dead code elimination optimizations on the ANF tree.
   /// This includes:

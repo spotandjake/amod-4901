@@ -1,17 +1,15 @@
 using VerifyMSTest;
 using VerifyTests;
 
+using Decaf.Compiler;
 using Decaf.IR.TypedTree;
 using Decaf.Utils.Errors.TypeCheckingErrors;
 
 [TestClass]
 public class DecafTypeCheckerTests : VerifyBase {
   private static ProgramNode TypeCheck(string text) {
-    var lexer = Compiler.Compiler.LexString(text, null);
-    var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
-    var scopedProgram = Compiler.Compiler.SemanticAnalysis(program);
-    var typeCheckedProgram = Compiler.Compiler.TypeChecking(scopedProgram);
+    var frontEndProgram = Compiler.FrontEnd(text, null, bundleRuntime: false);
+    var typeCheckedProgram = Compiler.TypeCheck(frontEndProgram);
     return typeCheckedProgram;
   }
   // Simple Checks

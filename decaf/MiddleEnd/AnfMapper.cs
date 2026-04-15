@@ -8,7 +8,7 @@ using Signature = Decaf.IR.Signature;
 using Decaf.Utils;
 
 // The purpose of this file is to map from the typed tree to the ANF tree.
-namespace Decaf.Backend {
+namespace Decaf.MiddleEnd {
   // NOTE: One downside of the recursive approach is theoretically we could blow the stack if we have very nested expressions.
   //       However if this were to ever become an issue we would switch to a work queue based approach.
   public static class AnfMapper {
@@ -137,7 +137,7 @@ namespace Decaf.Backend {
       // NOTE: if falseBranch is null then falseBinds should be 0, but we check both just to be safe
       var falseBranch =
         falseBinds.Count > 0 && _falseBranch != null ?
-        new AnfTree.InstructionNode.BlockNode(node.TrueBranch.Position, [.. trueBinds, _falseBranch]) :
+        new AnfTree.InstructionNode.BlockNode(node.FalseBranch.Position, [.. falseBinds, _falseBranch]) :
         _falseBranch;
       // Emit the anf instruction
       return (

@@ -1,8 +1,7 @@
 using VerifyMSTest;
-using VerifyTests;
 
+using Decaf.Compiler;
 using Decaf.IR.ParseTree;
-using Decaf.Utils.Errors.ScopeErrors;
 using Decaf.Utils.Errors.SemanticErrors;
 
 // TODO: Reimplement these semantic tests
@@ -10,10 +9,10 @@ using Decaf.Utils.Errors.SemanticErrors;
 [TestClass]
 public class DecafSemanticTests : VerifyBase {
   private ProgramNode SemanticAnalysis(string text) {
-    var lexer = Compiler.Compiler.LexString(text, null);
+    var lexer = Compiler.LexSource(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
-    var scopedProgram = Compiler.Compiler.SemanticAnalysis(program);
+    var program = Compiler.ParseSource(tokenStream);
+    var scopedProgram = Compiler.CheckSemantics(program);
     return scopedProgram;
   }
   #region SemanticTests

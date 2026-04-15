@@ -1,8 +1,9 @@
-using Decaf.Utils.Errors.ScopeErrors;
 using VerifyMSTest;
 using VerifyTests;
 
+using Decaf.Compiler;
 using ParseTree = Decaf.IR.ParseTree;
+using Decaf.Utils.Errors.ScopeErrors;
 
 namespace decafTests.FrontEnd;
 
@@ -15,10 +16,10 @@ public class ScopeTest : VerifyBase {
     return settings;
   }
   private static ParseTree.ProgramNode Test(string text) {
-    var lexer = Compiler.Compiler.LexString(text, null);
+    var lexer = Compiler.LexSource(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
-    var scopedProgram = Compiler.Compiler.SemanticAnalysis(program);
+    var program = Compiler.ParseSource(tokenStream);
+    var scopedProgram = Compiler.CheckSemantics(program);
     return scopedProgram;
   }
   // --- Valid Scope ---

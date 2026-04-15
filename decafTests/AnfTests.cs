@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
+using Decaf.Compiler;
 using Signature = Decaf.IR.Signature;
 using Decaf.IR.AnfTree;
 using Decaf.Utils;
@@ -14,20 +15,18 @@ using Decaf.Utils;
 
 [TestClass]
 public class DecafAnfTests : VerifyBase {
-  private VerifySettings CreateSettings() {
+  private static VerifySettings CreateSettings() {
     var settings = new VerifySettings();
     settings.UseDirectory("Snapshots/Anf/");
     return settings;
   }
 #nullable enable
   private static ProgramNode? Anf(string text) {
-    var lexer = Compiler.Compiler.LexString(text, null);
-    var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var parsed = Compiler.Compiler.ParseTokenStream(tokenStream);
-    var scopedProgram = Compiler.Compiler.SemanticAnalysis(parsed);
-    var typeCheckingProgram = Compiler.Compiler.TypeChecking(scopedProgram);
-    var anfProgram = Compiler.Compiler.AnfMapping(typeCheckingProgram);
-    return anfProgram;
+    var frontEndProgram = Compiler.FrontEnd(text, null, bundleRuntime: false);
+    var typeCheckingProgram = Compiler.TypeCheck(frontEndProgram);
+    var anfProgram = Compiler.LowerToAnf(typeCheckingProgram);
+    var optimizedProgram = Compiler.OptimizeAnf(anfProgram);
+    return optimizedProgram;
   }
 #nullable disable
   [TestMethod]

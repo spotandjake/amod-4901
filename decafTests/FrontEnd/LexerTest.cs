@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 
+using Decaf.Compiler;
+
 namespace decafTests.FrontEnd;
 
 // NOTE: This file exists todo basic testing on the lexer,
@@ -19,7 +21,7 @@ public class LexerTest : VerifyBase {
     settings.UseDirectory("Snapshots/Lexer/");
     return settings;
   }
-  private static DecafLexer Lex(string text) => Compiler.Compiler.LexString(text, null);
+  private static DecafLexer Lex(string text) => Compiler.LexSource(text, null);
   [TestMethod]
   public void TestEnsureLexerTestUpdated() {
     // NOTE: This isn't an actual test of the lexer, but if a rule is added or removed 

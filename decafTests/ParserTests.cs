@@ -2,22 +2,23 @@ using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
+using Decaf.Compiler;
 using Decaf.IR.ParseTree;
 using Decaf.Utils;
 
 [TestClass]
 public class DecafParserTests : VerifyBase {
-  private VerifySettings CreateSettings() {
+  private static VerifySettings CreateSettings() {
     var settings = new VerifySettings();
     settings.UseDirectory("Snapshots/Parser/");
     return settings;
   }
-  private ProgramNode Parse(string text) {
+  private static ProgramNode Parse(string text) {
 #nullable enable
-    var lexer = Compiler.Compiler.LexString(text, null);
+    var lexer = Compiler.LexSource(text, null);
 #nullable disable
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
-    var program = Compiler.Compiler.ParseTokenStream(tokenStream);
+    var program = Compiler.ParseSource(tokenStream);
     return program;
   }
   #region ValidTests

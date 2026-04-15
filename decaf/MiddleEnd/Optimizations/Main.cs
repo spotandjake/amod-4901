@@ -1,6 +1,6 @@
 using AnfTree = Decaf.IR.AnfTree;
 
-namespace Decaf.Backend.Optimizations {
+namespace Decaf.MiddleEnd.Optimizations {
   /// <summary>
   /// This is the main entry pointer for running all optimizations on the ANF tree.
   /// </summary>

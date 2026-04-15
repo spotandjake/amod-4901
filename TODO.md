@@ -28,7 +28,6 @@ These are things directly related to deliverables or causing codegen issues that
 * Documentation
   * Split README docs into separate files under `./docs/`
   * Ensure all the docs are to date.
-  * Document the behavior of `<module>.Main` in `./docs/compiler_walkthrough/README.md`
 
 ### Less Critical
 * Add a statement for defining wasm imports
