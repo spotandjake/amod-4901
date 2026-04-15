@@ -42,17 +42,6 @@ Tests can be run using `task test`, you can use `task test -- --filter <query>` 
 
 ## Walkthrough
 
-
-### Parsing
-
-We also use `Antlr` for parsing the grammar can be found in [`./decaf/Frontend/DecafParser.g4`](./decaf/Frontend/DecafParser.g4)
-
-Antlr generates `DecafParser.cs` from this grammar which is programmatic implementation of an LL parser. In [`./decaf/Frontend/ParseTreeMapper.cs`](./decaf/Frontend/ParseTreeMapper.cs) we map the antlr rule contexts to a proper parsetree defined in [`./decaf/IR/ParseTree.cs`](./decaf/IR/ParseTree.cs) which we can use for furthur program analysis and to compile your program.
-
-When constructing our parseTree we ignore a few rules such as `new` expressions as they won't be supported in our language.
-
-Our tests for parsing are implemented in [`./decafTests/ParserTests.cs`](./decafTests/ParserTests.cs), we use snapshot testing and capture the output of the parseTree based on the input program.
-
 ### Semantic Analysis
 
 After are done parsing we move on to the next stage of the compiler the middle end which is responsible for scoping, semantic analysis and typechecking.

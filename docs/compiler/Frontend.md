@@ -90,6 +90,14 @@ Testing for the lexer is done in `decafTests/Frontend/LexerTests.cs` and is done
 
 ## Parsing
 
+ANTLR is also used for parsing, documentation for working with ANTLR parsers can be found [here](https://github.com/antlr/antlr4/blob/master/doc/parser-rules.md). ANTLR generates a parser based on the grammar defined in `decaf/Frontend/DecafParser.g4`, this grammar is based off the provided `expresso` spec with some modifications to make it more suitable for our purposes (Classes switched to modules, drop extends, drop new classes, support string literals, etc). By default ANTLR generates a parser similar to a custom recursive descent parser based off LL-style tables. This allows us to quickly parse the program in `O(1)` time without looking ahead or backtracking, this does come off with the trade off that the grammar needs to be LL(1) in other words we cannot have left recursion in the grammar.
+
+Antlr generates `decaf/Frontend/DecafParser.cs` from the grammar at `decaf/Frontend/DecafParser.g4`, this is a programmatic implementation of an LL parser.
+
+After parsing we map the ANTLR parse contexts to the `ParseTree` format, so we can work with it throughout the rest of the compiler, this is done by `decaf/Frontend/ParseTreeMapper.cs`. During this mapping we also do some basic validation related to functions only being in the top scope. The benefit to doing this validation during the mapping stage rather than in the parser is our grammar can be far simpler and we can provide better error messages with more context.
+
+We use snapshot testing to test the parser as structural testing isn't overly suitable, the downside to snapshot testing is care needs to be taken to ensure the snapshots are correct and capture the correct behavior, tests can be found in `decafTests/Frontend/ParserTests.cs` and are implemented by providing a string input to the parser and checking that the output parse tree matches the expected parse tree. We also test that invalid programs produce the correct errors.
+
 ## Semantic Analysis
 
 ### Scope Validation
