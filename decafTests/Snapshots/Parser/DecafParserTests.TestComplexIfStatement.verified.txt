@@ -1,88 +1,122 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Declarations: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: VariableDeclNode,
-                Type: {
-                  Kind: TypeNode,
-                  Content: int
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: testMethod
                 },
-                Binds: [
-                  {
-                    Kind: VarBindNode,
-                    Name: x,
-                    IsArray: false
-                  }
-                ]
-              }
-            ],
-            Statements: [
-              {
-                Kind: IfStatement,
-                Condition: {
-                  Kind: LiteralExpression,
-                  Content: {
-                    Kind: BooleanLiteral,
-                    Value: true
-                  }
-                },
-                TrueBranch: {
-                  Kind: BlockNode,
-                  Statements: [
-                    {
-                      Kind: AssignmentStatement,
-                      Location: {
-                        Kind: IdentifierLocation,
-                        Name: x
-                      },
-                      Expression: {
-                        Kind: LiteralExpression,
-                        Content: {
-                          Kind: IntegerLiteral,
-                          Value: 1
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: testMethod
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: VariableDeclNode,
+                          Binds: [
+                            {
+                              Kind: BindNode,
+                              Type: {
+                                Kind: TypeNode
+                              },
+                              Name: {
+                                Kind: IdentifierLocationNode,
+                                IsPrimitive: false,
+                                Name: x
+                              },
+                              InitExpr: {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          Kind: IfStatementNode,
+                          Condition: {
+                            Kind: LiteralExpressionNode,
+                            Literal: {
+                              Kind: BooleanLiteralNode,
+                              Value: true
+                            }
+                          },
+                          TrueBranch: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: AssignmentStatementNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: x
+                                },
+                                Expression: {
+                                  Kind: LiteralExpressionNode,
+                                  Literal: {
+                                    Kind: IntegerLiteralNode,
+                                    Value: 1
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          FalseBranch: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: AssignmentStatementNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: x
+                                },
+                                Expression: {
+                                  Kind: LiteralExpressionNode,
+                                  Literal: {
+                                    Kind: IntegerLiteralNode,
+                                    Value: 2
+                                  }
+                                }
+                              }
+                            ]
+                          }
                         }
-                      }
+                      ]
                     }
-                  ]
-                },
-                FalseBranch: {
-                  Kind: BlockNode,
-                  Statements: [
-                    {
-                      Kind: AssignmentStatement,
-                      Location: {
-                        Kind: IdentifierLocation,
-                        Name: x
-                      },
-                      Expression: {
-                        Kind: LiteralExpression,
-                        Content: {
-                          Kind: IntegerLiteral,
-                          Value: 2
-                        }
-                      }
-                    }
-                  ]
+                  }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

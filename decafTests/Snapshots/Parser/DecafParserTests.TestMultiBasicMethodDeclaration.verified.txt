@@ -1,34 +1,79 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: foo
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: foo
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode
+                    }
+                  }
+                }
+              }
+            ]
           },
-          Name: foo,
-          Body: {
-            Kind: BlockNode
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: bar
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: bar
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode
+                    }
+                  }
+                }
+              }
+            ]
           }
-        },
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: bar,
-          Body: {
-            Kind: BlockNode
-          }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

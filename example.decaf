@@ -1,8 +1,7 @@
 module Program {
-  void Main() {
-    //string x;
-    //x = "test";
-    int a[];
-    a = new int[10];
-  }
+  let Main = (): void => {
+    if (true) {
+      return;
+    }
+  };
 }

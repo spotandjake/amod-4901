@@ -1,33 +1,64 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: foo,
-          Parameters: [
-            {
-              Kind: ParameterNode,
-              ParamType: {
-                Kind: TypeNode,
-                Content: int
-              },
-              Name: x,
-              IsArray: true
-            }
-          ],
-          Body: {
-            Kind: BlockNode
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: foo
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: foo
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Parameters: [
+                      {
+                        Kind: ParameterNode,
+                        Type: {
+                          Kind: TypeNode,
+                          ElementType: {
+                            Kind: TypeNode
+                          }
+                        },
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: x
+                        }
+                      }
+                    ],
+                    Body: {
+                      Kind: BlockStatementNode
+                    }
+                  }
+                }
+              }
+            ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

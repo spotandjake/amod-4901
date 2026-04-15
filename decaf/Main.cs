@@ -1,17 +1,18 @@
+// TODO: Clean up this file
+// TODO: Switch the library we are using for the cli
+// TODO: Create a new Compiler.cs file that contains the compiler itself
+
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.IO;
 using Antlr4.Runtime;
 using CommandLine;
-using System.Text.Json;
 
 using ParseTree = Decaf.IR.ParseTree;
 using TypedTree = Decaf.IR.TypedTree;
 using AnfTree = Decaf.IR.AnfTree;
-using Decaf.Utils;
 using Decaf.Frontend;
-using Decaf.MiddleEnd;
 using Decaf.MiddleEnd.TypeChecker;
 using Decaf.Backend;
 using Decaf.Utils.Errors;
@@ -48,8 +49,7 @@ namespace Compiler {
         program.Position,
         // Put the runtime modules before the user-defined modules to ensure that the runtime modules are 
         // available to the user-defined modules
-        [.. runtimeProgram.Modules, .. program.Modules],
-        null
+        [.. runtimeProgram.Modules, .. program.Modules]
       );
     }
 #nullable enable
@@ -73,9 +73,9 @@ namespace Compiler {
       return program;
     }
     public static ParseTree.ProgramNode SemanticAnalysis(ParseTree.ProgramNode program) {
-      var scopedTree = ScopeMapper.MapProgramNode(program, new Scope<bool>(null));
-      SemanticChecker.CheckProgramNode(scopedTree);
-      return scopedTree;
+      ScopeChecker.CheckProgramNode(program);
+      SemanticChecker.CheckProgramNode(program);
+      return program;
     }
     public static TypedTree.ProgramNode TypeChecking(ParseTree.ProgramNode program) {
       return TypeChecker.TypeProgramNode(program);

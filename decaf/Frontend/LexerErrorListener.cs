@@ -2,6 +2,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 using System.Data;
 
+// TODO: Unify this more with `utils/errors.cs`
 public sealed class LexerErrorListener : IAntlrErrorListener<int> {
   public static readonly LexerErrorListener Instance = new();
   private LexerErrorListener() { }

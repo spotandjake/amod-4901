@@ -1,75 +1,105 @@
-// This file contains the type definition for primitive callouts in the language
-using Decaf.IR.PrimitiveDefinition;
-using Decaf.IR.TypedTree;
-using Decaf.Utils;
-using Errors = Decaf.Utils.Errors.TypeCheckingErrors;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-// NOTE: Any primitive added to the typechecker also must be defined in the code generator.
+using ParseTree = Decaf.IR.ParseTree;
+using Signature = Decaf.IR.Signature;
+using Decaf.IR.PrimitiveDefinition;
+using Decaf.Utils.Errors.TypeCheckingErrors;
+using Decaf.Utils;
+
+// This file contains the logic responsible for resolving primitive calls to their signatures and definitions.
 namespace Decaf.MiddleEnd.TypeChecker {
   // A type alias used for the return of a primitive resolution
-  using PrimResolution = (Signature, PrimDefinition);
+  using PrimResolution = (Signature.Signature.MethodSig, PrimDefinition);
   public static class PrimitiveTypes {
-    // The main resolver
-    public static PrimResolution GetPrimitiveCallSignature(string name, Position position) {
-      var path = name.Split('.');
-      return path switch {
-      // @wasm namespace
-      ["@wasm", .. var rest] => GetWasmPrimitiveCallSignature(name, rest ?? [], position),
-        // Unknown
-        _ => throw new Errors.UnknownPrimitiveCall(position, name)
+    // A few helper functions for constructing types
+    private static Signature.Signature.MethodSig MakeSimpleMethod(
+      Position position,
+      Signature.PrimitiveType[] paramTypes,
+      Signature.PrimitiveType returnType
+    ) {
+      return new Signature.Signature.MethodSig(
+        position,
+        paramTypes.Select(t => new Signature.Signature.PrimitiveSig(position, t)).ToArray(),
+        new Signature.Signature.PrimitiveSig(position, returnType)
+      );
+    }
+    // A small helper function to get the path from a location
+    private static List<string> GetLocationPath(Position position, ParseTree.LocationNode node, List<string> acc) {
+      // Very quick way to check if the node is a primitive call
+      if (!node.IsPrimitive) throw new UnknownPrimitiveCall(position, node.ToString());
+      // Get the path
+      return node switch {
+        // We do not support array primitives yet, so we can quickly throw if we encounter one.
+        ParseTree.LocationNode.ArrayNode => throw new UnknownPrimitiveCall(position, node.ToString()),
+        // Build our path by walking the tree
+        // TODO: Validate that this isn't appending backwards
+        ParseTree.LocationNode.MemberNode memberNode => GetLocationPath(position, memberNode.Root, [memberNode.Member, .. acc]),
+        ParseTree.LocationNode.IdentifierNode identifierNode => [identifierNode.Name, .. acc],
+        // NOTE: We can never encounter this case because we are exhausting all possible cases of LocationNode, 
+        // but we need it to satisfy the compiler.
+        _ => throw new Exception("Unreachable code in GetLocationPath"),
       };
     }
-    // A resolver for @wasm primitive calls
-    private static PrimResolution GetWasmPrimitiveCallSignature(string name, string[] path, Position position) {
+    // The main resolver
+    public static PrimResolution ResolvePrimitive(Position position, ParseTree.LocationNode node) {
+      var path = GetLocationPath(position, node, []);
+      return path switch {
+      // We found the wasm namespace, so we can delegate to the wasm resolver
+      ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
+        // Unknown primitive call
+        _ => throw new UnknownPrimitiveCall(position, node.ToString()),
+      };
+    }
+    // --- Wasm Primitives ---
+    // NOTE: This resolver resolves anything in the @wasm namespace, which contains primitives that map to wasm instructions
+    private static PrimResolution ResolveWasmPrimitive(Position position, ParseTree.LocationNode node, List<string> path) {
       return path switch {
       // Memory namespace
       ["memory", .. var subPath] => subPath switch {
       // () => int
       ["size"] =>
-        (new Signature.MethodSignature(
-          position,
-          new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-          []
-        ), PrimDefinition.WasmMemorySize),
+        (
+          MakeSimpleMethod(position, [], Signature.PrimitiveType.Int),
+          PrimDefinition.WasmMemorySize
+        ),
         // (pageCount: int) => int
         ["grow"] =>
-                  (new Signature.MethodSignature(
-                    position,
-                    new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                    [new Signature.PrimitiveSignature(position, PrimitiveType.Int)]
-                  ), PrimDefinition.WasmMemoryGrow),
+                  (
+                    MakeSimpleMethod(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
+                    PrimDefinition.WasmMemoryGrow
+                  ),
                   // (pointer: int, value: int, byteCount: int) => int
                   ["fill"] =>
-                (new Signature.MethodSignature(
-                  position,
-                  new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                  [
-                    new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                new Signature.PrimitiveSignature(position, PrimitiveType.Int)
-                  ]
-                ), PrimDefinition.WasmMemoryFill),
+                (
+                  MakeSimpleMethod(
+                    position,
+                    [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                    Signature.PrimitiveType.Int
+                  ),
+                  PrimDefinition.WasmMemoryFill
+                ),
         // Unknown
-        _ => throw new Errors.UnknownPrimitiveCall(position, name)
+        _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },
       // I32 namespace
       ["i32", .. var subPath] => subPath switch {
       // (ptr: int, offset: int, value: int) => void
       ["store"] =>
-        (new Signature.MethodSignature(
-          position,
-          new Signature.PrimitiveSignature(position, PrimitiveType.Void),
-          [
-            new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-                new Signature.PrimitiveSignature(position, PrimitiveType.Int),
-          ]
-        ), PrimDefinition.WasmI32Store),
+      (
+          MakeSimpleMethod(
+            position,
+            [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+            Signature.PrimitiveType.Void
+          ),
+          PrimDefinition.WasmI32Store
+        ),
         // Unknown
-        _ => throw new Errors.UnknownPrimitiveCall(position, name)
+        _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },
         // Unknown
-        _ => throw new Errors.UnknownPrimitiveCall(position, name)
+        _ => throw new UnknownPrimitiveCall(position, node.ToString())
       };
     }
   }

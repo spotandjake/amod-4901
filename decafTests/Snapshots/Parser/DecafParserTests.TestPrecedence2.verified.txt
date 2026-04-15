@@ -1,60 +1,85 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: AssignmentStatement,
-                Location: {
-                  Kind: IdentifierLocation,
-                  Name: x
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: testMethod
                 },
-                Expression: {
-                  Kind: BinopExpression,
-                  Lhs: {
-                    Kind: BinopExpression,
-                    Lhs: {
-                      Kind: LiteralExpression,
-                      Content: {
-                        Kind: IntegerLiteral,
-                        Value: 1
-                      }
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: testMethod
                     },
-                    Operator: +,
-                    Rhs: {
-                      Kind: LiteralExpression,
-                      Content: {
-                        Kind: IntegerLiteral,
-                        Value: 1
-                      }
-                    }
-                  },
-                  Operator: +,
-                  Rhs: {
-                    Kind: LiteralExpression,
-                    Content: {
-                      Kind: IntegerLiteral,
-                      Value: 2
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: AssignmentStatementNode,
+                          Location: {
+                            Kind: IdentifierLocationNode,
+                            IsPrimitive: false,
+                            Name: x
+                          },
+                          Expression: {
+                            Kind: BinopExpressionNode,
+                            Lhs: {
+                              Kind: BinopExpressionNode,
+                              Lhs: {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode,
+                                  Value: 1
+                                }
+                              },
+                              Rhs: {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode,
+                                  Value: 1
+                                }
+                              }
+                            },
+                            Rhs: {
+                              Kind: LiteralExpressionNode,
+                              Literal: {
+                                Kind: IntegerLiteralNode,
+                                Value: 2
+                              }
+                            }
+                          }
+                        }
+                      ]
                     }
                   }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

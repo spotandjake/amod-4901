@@ -1,38 +1,40 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: AssignmentStatement,
-                Location: {
-                  Kind: IdentifierLocation,
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
                   Name: x
                 },
-                Expression: {
-                  Kind: LiteralExpression,
-                  Content: {
-                    Kind: IntegerLiteral,
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
                     Value: 1
                   }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

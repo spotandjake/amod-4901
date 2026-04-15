@@ -1,38 +1,63 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Fields: [
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Content: int
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: x
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 1
+                  }
+                }
+              }
+            ]
           },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: x,
-              IsArray: false
-            }
-          ]
-        },
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Content: int
-          },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: y,
-              IsArray: false
-            }
-          ]
-        }
-      ]
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: y
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

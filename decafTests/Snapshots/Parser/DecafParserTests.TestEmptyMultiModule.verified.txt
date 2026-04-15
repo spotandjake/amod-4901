@@ -1,12 +1,26 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode
+      }
     },
     {
-      Kind: ModuleDeclNode,
-      Name: Main2
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main2
+      },
+      Body: {
+        Kind: BlockStatementNode
+      }
     }
   ]
 }

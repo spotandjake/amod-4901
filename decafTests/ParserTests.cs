@@ -42,57 +42,57 @@ public class DecafParserTests : VerifyBase {
   // Module Variable Declarations
   [TestMethod]
   public Task TestSingleVariableDeclaration() {
-    var result = Parse("module Main { int x; }");
+    var result = Parse("module Main { let x: int = 1; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiVariableDeclaration() {
-    var result = Parse("module Main { int x; int y; }");
+    var result = Parse("module Main { let x: int = 1; let y: int = 2; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiBindsDeclaration() {
-    var result = Parse("module Main { int x, y, z; }");
+    var result = Parse("module Main { let x: int = 1, y: int = 2, z: int = 3; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestArrayBindsDeclaration() {
-    var result = Parse("module Main { int x[]; }");
+    var result = Parse("module Main { let x: int[] = new int[5]; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   // Module Method Declarations
   [TestMethod]
   public Task TestSingleBasicMethodDeclaration() {
-    var result = Parse("module Main { void foo() {} }");
+    var result = Parse("module Main { let foo = (): void => {}; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMultiBasicMethodDeclaration() {
-    var result = Parse("module Main { void foo() {} void bar() {} }");
+    var result = Parse("module Main { let foo = (): void => {}; let bar = (): void => {}; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   // Method Parameters
   [TestMethod]
   public Task TestMethodSingleParamDeclaration() {
-    var result = Parse("module Main { void foo(int x) {} }");
+    var result = Parse("module Main { let foo = (x: int): void => {}; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestMethodMultiParamDeclaration() {
-    var result = Parse("module Main { void foo(int x, int y) {} }");
+    var result = Parse("module Main { let foo = (x: int, y: int): void => {}; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
   [TestMethod]
   public Task TestArrayMethodParamDeclaration() {
-    var result = Parse("module Main { void foo(int x[]) {} }");
+    var result = Parse("module Main { let foo = (x: int[]): void => {}; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
@@ -101,10 +101,10 @@ public class DecafParserTests : VerifyBase {
   public Task TestBasicBlock() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
-        int x;
+      let testMethod = (): void => {
+        let x: int = 0;
         x = 1 + 1;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -114,9 +114,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestVarOnlyBasicBlock() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
-        int x, y;
-      }
+      let testMethod = (): void => {
+        let x: int = 0, y: int = 1;
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -127,9 +127,9 @@ public class DecafParserTests : VerifyBase {
     // NOTE: Because parsing doesn't do symbol validation this is valid (however it would fail semantically)
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 + 1;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -140,10 +140,8 @@ public class DecafParserTests : VerifyBase {
   public Task TestSimpleAssignmentStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
-        int x;
-        x = 1;
-      }
+      let x: int = 0;
+      x = 1;
     }
     ");
     return Verify(result, CreateSettings())
@@ -153,9 +151,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestComplexAssignmentStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         Base.x = 1;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -165,9 +163,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestSimpleCallStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         foo();
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -177,9 +175,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestComplexCallStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         Base.foo();
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -189,9 +187,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestSingleArgCallStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         foo(1);
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -201,9 +199,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestMultiArgCallStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         foo(1, 2);
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -213,9 +211,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestNestedArgCallStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         foo(foo());
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -223,8 +221,7 @@ public class DecafParserTests : VerifyBase {
   }
   [TestMethod]
   public Task TestCalloutStatement() {
-    // NOTE: We currently do not handle strings in callouts just yet (so the test might not be perfect here)
-    var result = Parse("module Main { void testMethod() { callout(\"Test\", 1, 2, \"y\"); } }");
+    var result = Parse("module Main { let testMethod = (): void => { @test(1, 2, y); }; }");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>();
   }
@@ -232,11 +229,11 @@ public class DecafParserTests : VerifyBase {
   public Task TestSimpleIfStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         if (true) {
           x = 1;
         }
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -246,14 +243,14 @@ public class DecafParserTests : VerifyBase {
   public Task TestComplexIfStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
-        int x;
+      let testMethod = (): void => {
+        let x: int = 0;
         if (true) {
           x = 1;
         } else {
           x = 2;
         }
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -263,11 +260,7 @@ public class DecafParserTests : VerifyBase {
   public Task TestWhileStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
-        int x;
-        while (true) {
-          x = 1;
-        }
+      while (true) {
       }
     }
     ");
@@ -278,9 +271,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestSimpleReturnStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         return;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -290,9 +283,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestComplexReturnStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): int => {
         return 1;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -302,11 +295,11 @@ public class DecafParserTests : VerifyBase {
   public Task TestContinueStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         while (true) {
           continue;
         }
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -316,11 +309,11 @@ public class DecafParserTests : VerifyBase {
   public Task TestBreakStatement() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         while (true) {
           break;
         }
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -332,9 +325,9 @@ public class DecafParserTests : VerifyBase {
     // Testing the assignment of one variable to another (LocationExpr)
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = y;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -344,9 +337,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestDotExpression() {
     return Verify(Parse(@"
     module Main {
-      void testMethod() { 
+      let  testMethod = (): void => { 
         x = Base.y; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -355,9 +348,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestCallExpression1() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = foo(); 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -366,9 +359,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestCallExpression2() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = foo(1); 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -377,9 +370,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestCallExpression3() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = foo(1, 2); 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -388,9 +381,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestCalloutExpression() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
-        x = callout(""test"", 1, 2, ""y""); 
-      } 
+      let testMethod = (): void => {
+        x = @test(1, 2, y);
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -399,10 +392,7 @@ public class DecafParserTests : VerifyBase {
   public Task TestArrayDeclaration() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
-        int x[];
-        x = new int[1];
-      }
+      let x: int[] = new int[1];
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -411,9 +401,7 @@ public class DecafParserTests : VerifyBase {
   public Task TestIntExpression() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
-        x = 1; 
-      }
+      let x: int = 1;
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -422,9 +410,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestCharExpression() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = 'a'; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -433,9 +421,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestBoolExpression1() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = true; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -444,9 +432,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestBoolExpression2() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = false; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -455,10 +443,7 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrefixExpression() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
-        boolean booly;
-        booly = !true; 
-      } 
+      let booly: boolean = !true;
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -467,9 +452,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestBinopExpression1() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = 1 + 1; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -478,9 +463,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestBinopExpression2() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = 1 + 1 + 1; 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -489,9 +474,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestParenExpression() {
     return Verify(Parse(@"
     module Main { 
-      void testMethod() { 
+      let testMethod = (): void => { 
         x = (1 + 1); 
-      } 
+      };
     }
     "), CreateSettings())
       .IgnoreMembersWithType<Position>();
@@ -500,9 +485,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestSimpleExpression() {
     var result = Parse(@"
     module main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 5 * (3 + 2);
-      }
+      };
     } 
     ");
     return Verify(result, CreateSettings())
@@ -515,9 +500,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrecedence1() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 + 1 * 2;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -527,9 +512,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrecedence2() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 + 1 + 2;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -539,9 +524,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrecedence3() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 + 1 - 2;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -551,9 +536,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrecedence4() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 - 1 + 2;
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -563,9 +548,9 @@ public class DecafParserTests : VerifyBase {
   public Task TestPrecedence5() {
     var result = Parse(@"
     module Main {
-      void testMethod() {
+      let testMethod = (): void => {
         x = 1 - (1 + 2);
-      }
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -579,10 +564,10 @@ public class DecafParserTests : VerifyBase {
     // NOTE: Because parsing doesn't do symbol validation this is valid (however it would fail semantically)
     var result = Parse(@"
     module Main {
-      string s;
-      int x;
-      boolean y;
-      void z;
+      let s: string = ""hello"";
+      let x: int = 0;
+      let y: boolean = true;
+      let z: void = 0;
     }
     ");
     return Verify(result, CreateSettings())
@@ -595,24 +580,24 @@ public class DecafParserTests : VerifyBase {
     // NOTE: The purpose of this test is just to ensure a practical program fully parses
     var result = Parse(@"
     module Main {
-      int x, y, z[];
+      let x: int = 0, y: int = 0, z: int[] = new int[5];
 
-      void foo(int a, boolean b, int c[]) {
+      let foo = (a: int, b: boolean, c: int[]): void => {
         if (a < 10 && b) {
           x = x + 1;
         } else {
           x = x - 1;
         }
-      }
+      };
 
-      int bar() {
+      let bar = (): int => {
         return x;
-      }
+      };
     }
 
     module Base {
-      void calloutMethod() {
-      }
+      let calloutMethod = (): void => {
+      };
     }
     ");
     return Verify(result, CreateSettings())
@@ -621,35 +606,10 @@ public class DecafParserTests : VerifyBase {
   #endregion
   // Invalid Tests
   [TestMethod]
-  public void TestInvalidBlock() {
-    // NOTE: This test is invalid because you can only define variables at the top of a block 
-    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    module Main {
-      void testMethod() {
-        int x;
-        x = 1 + 1;
-        int y;
-      }
-    }
-    "));
-  }
-  [TestMethod]
-  public void TestInvalidWhileSemi() {
-    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
-    module Main {
-      void testMethod() {
-        while (true) {};
-      }
-    }
-    "));
-  }
-  [TestMethod]
   public void TestInvalidStmtNoSemi() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
     module Main {
-      void testMethod() {
-        x = 1
-      }
+      let x = 1
     }
     "));
   }
@@ -657,9 +617,7 @@ public class DecafParserTests : VerifyBase {
   public void TestInvalidParenExpression() {
     Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
     module Main { 
-    void testMethod() { 
-      x = (); 
-      } 
+      let x = ();
     }
     "));
   }

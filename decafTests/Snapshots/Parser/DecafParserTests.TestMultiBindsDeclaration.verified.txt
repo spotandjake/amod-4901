@@ -1,34 +1,76 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Fields: [
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Content: int
-          },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: x,
-              IsArray: false
-            },
-            {
-              Kind: VarBindNode,
-              Name: y,
-              IsArray: false
-            },
-            {
-              Kind: VarBindNode,
-              Name: z,
-              IsArray: false
-            }
-          ]
-        }
-      ]
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: x
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 1
+                  }
+                }
+              },
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: y
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 2
+                  }
+                }
+              },
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: z
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

@@ -1,45 +1,71 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: ExprStatement,
-                Content: {
-                  Kind: CallExpression,
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
                   IsPrimitive: false,
-                  Path: {
-                    Kind: IdentifierLocation,
-                    Name: foo
-                  },
-                  Arguments: [
-                    {
-                      Kind: CallExpression,
+                  Name: testMethod
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
                       IsPrimitive: false,
-                      Path: {
-                        Kind: IdentifierLocation,
-                        Name: foo
-                      }
+                      Name: testMethod
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: ExprStatementNode,
+                          Expression: {
+                            Kind: CallExpressionNode,
+                            Callee: {
+                              Kind: IdentifierLocationNode,
+                              IsPrimitive: false,
+                              Name: foo
+                            },
+                            Arguments: [
+                              {
+                                Kind: CallExpressionNode,
+                                Callee: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: foo
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
                     }
-                  ]
+                  }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

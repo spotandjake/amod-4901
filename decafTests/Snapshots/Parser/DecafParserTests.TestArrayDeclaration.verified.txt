@@ -1,52 +1,40 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Declarations: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: VariableDeclNode,
+                Kind: BindNode,
                 Type: {
                   Kind: TypeNode,
-                  Content: int
-                },
-                Binds: [
-                  {
-                    Kind: VarBindNode,
-                    Name: x,
-                    IsArray: true
+                  ElementType: {
+                    Kind: TypeNode
                   }
-                ]
-              }
-            ],
-            Statements: [
-              {
-                Kind: AssignmentStatement,
-                Location: {
-                  Kind: IdentifierLocation,
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
                   Name: x
                 },
-                Expression: {
-                  Kind: NewArrayExpression,
+                InitExpr: {
+                  Kind: ArrayInitExpressionNode,
                   Type: {
-                    Kind: TypeNode,
-                    Content: int
+                    Kind: TypeNode
                   },
                   SizeExpr: {
-                    Kind: LiteralExpression,
-                    Content: {
-                      Kind: IntegerLiteral,
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
                       Value: 1
                     }
                   }
@@ -54,8 +42,8 @@
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

@@ -1,3 +1,5 @@
+// TODO: Clean up the order in this file
+// TODO: Document this file fully
 lexer grammar DecafLexer;
 
 // Disable cSharp CLS compliance warnings
@@ -6,6 +8,7 @@ lexer grammar DecafLexer;
 // Keywords - Type
 INT     : 'i' 'n' 't' ;
 BOOLEAN : 'b' 'o' 'o' 'l' 'e' 'a' 'n' ;
+CHAR    : 'c' 'h' 'a' 'r' ;
 STRING  : 's' 't' 'r' 'i' 'n' 'g' ;
 VOID    : 'v' 'o' 'i' 'd' ;
 
@@ -19,14 +22,14 @@ IF      : 'i' 'f' ;
 ELSE    : 'e' 'l' 's' 'e' ;
 WHILE   : 'w' 'h' 'i' 'l' 'e';
 
+// Keywords - Values
+TRUE     : 't' 'r' 'u' 'e' ;
+FALSE    : 'f' 'a' 'l' 's' 'e' ;
+
 // Keywords - other
 MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
-TRUE    : 't' 'r' 'u' 'e' ;
-FALSE   : 'f' 'a' 'l' 's' 'e' ;
-NEW     : 'n' 'e' 'w' ;
-CALLOUT : 'c' 'a' 'l' 'l' 'o' 'u' 't' ;
-
-
+LET      : 'l' 'e' 't' ;
+NEW      : 'n' 'e' 'w' ;
 
 // Attributes
 WSS      : (' ' | '\t' | NEWLINE)+ -> skip;
@@ -43,8 +46,11 @@ RBRACK      : ']' ;
 SEMI        : ';' ;
 COMMA       : ',' ;
 DOT         : '.' ;
+COLON       : ':' ;
+ARROW       : '=>' ;
 // Prefix Operators
 NOT         : '!' ;
+BNOT        : '~' ;
 // Arithmetic Operators
 PLUS        : '+' ;
 MINUS       : '-' ;
@@ -66,17 +72,16 @@ BAND        : '&' ;
 BOR         : '|' ;
 BLSHIFT     : '<<' ;
 BRSHIFT     : '>>' ;
-
-BNOT        : '~' ;
 // Assignment Operator
 ASSIGN      : '=' ;
 
 
 // Literals
-STRINGLIT   : '"' CHAR* '"';
-CHARLIT     : '\'' CHAR '\'';
+STRINGLIT   : '"' RAWCHAR* '"';
+CHARLIT     : '\'' RAWCHAR '\'';
 INTLIT      : DECLIT | HEXLIT;
 
+PRIMID      : '@' ID; // Primitives are marked with a leading `@`
 ID          : ALPHA (ALPHA | DIGIT)*;
 
 // Helpers
@@ -87,4 +92,4 @@ fragment HEXDIGIT : DIGIT | [a-f];
 fragment HEXLIT : '0x' HEXDIGIT HEXDIGIT*;
 fragment  DECLIT : '-'? DIGIT DIGIT*;
 // Character: (\u0x20 to \u0x7E except for ' and ") | doublequote | singlequote | backslash | tab | newline
-fragment CHAR  : [\u0020-\u0021]|[\u0023-\u0026]|[\u0028-\u007E]|'\\"'|'\\\''|'\\\\'|'\\t'|'\\n';
+fragment RAWCHAR  : [\u0020-\u0021]|[\u0023-\u0026]|[\u0028-\u007E]|'\\"'|'\\\''|'\\\\'|'\\t'|'\\n';

@@ -9,7 +9,8 @@ Below is a list of required software dependencies that must be installed on your
 * .NET SDK 6 (required)
   * The entire compiler is written in cSharp and as such .NET is necessary in order to run and compile any project.
 * [ANTLR Toolkit](https://www.antlr.org/download.html) (semi-required)
-  * This is a parsing and lexing framework equivlant to JLEX and CUP, the tooling is required in order to generate the lexer and parser for building the compiler.
+  * This is a parsing and lexing framework equivlant to JLEX and CUP, the tooling is required in order to generate the lexer and parser for building the compiler. If you do not have ANTLR installed you can still use the pre generated lexer and parser, our task file scripts will check for this and skip generation if possible however if changes are made to the grammar and you do not have the ANTLR tooling installed your changes will not be reflected by the compiler itself.
+  * The grammar files must be up to date when contributing to the project or CI will fail to run.
 * Taskfile (semi-optional)
   * Taskfile is a general language agnostic task system that we use for running shell commands it let's us run simple shell commands such as `task` to build the entire compiler without having to use something like `make` or `.sh` files allowing for better cross platform use. If you do not have taskfile installed the compiler can be build by copying the commands directly and running them in bash, or the corresponding commands on whatever platform your using.
 
@@ -41,10 +42,6 @@ Tests can be run using `task test`, you can use `task test -- --filter <query>` 
 
 ## Walkthrough
 
-### CLI
-
-TODO: Write documentation
-
 ### Lexing
 
 Our language uses [antlr](https://www.antlr.org/) for lexing, we implement the lexing rules according to the `expresso_spec`. The grammar exists in [`./decaf/Frontend/DecafLexer.g4`](./decaf/Frontend/DecafLexer.g4).
@@ -58,7 +55,6 @@ The following tokens are implemented:
   * module
   * continue
   * else
-  * extends
   * false
   * if
   * int
@@ -159,17 +155,5 @@ Tests can be found in: [`./decafTests/SemanticTests.cs`](./decafTests/SemanticTe
 After we are done semantic analysis we move on to type checking, this is implemented in [`./decaf/MiddleEnd/TypeChecker.cs`](./decaf/MiddleEnd/TypeChecker.cs). This is also implemented as a simple traversal over the parse tree. We produce a brand new tree during this traversal defined in [`./decaf/IR/TypedTree.cs`](./decaf/IR/TypedTree.cs) which is very similar to the parse tree but every expression node is annotated with a type, scopes map to signatures instead of use, and we drop extra property information that has been converted to the nodes signatures. During this traversal we check for type errors and throw if we find any, we don't directly define a list of type checking rules as they are best found in the code themselves but we are essentially trying to ensure a progarm is valid, things like method calls make sense, and array indexing is done on arrays with integers, etc.
 
 Tests can be found in: [`./decafTests/TypeCheckerTests.cs`](./decafTests/TypeCheckerTests.cs) which also uses snapshot testing to capture the output of the type checking traversal.
-
-
-### TODO: Code Generation
-
-
-## TODO:
-This section contains a list of general TODO's left on the project:
-* Parsing
-  * Testing
-    * Operator Precedence
-    * Kitchen Soup
-    * Targeted Tests
 
 Copyright ©️ 2025 Jake Follest, Tony Tran

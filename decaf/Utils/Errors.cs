@@ -115,6 +115,16 @@ namespace Decaf.Utils.Errors {
     ) : Exception(ErrorConstructor.CreateError(position, "`return` statement must be within a method.")) {
     }
     /// <summary>
+    /// An exception to be thrown when we are expecting the function to return but we can't find a return statement during type checking.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class NoReturnStatement(
+      Position position,
+      string functionName,
+      string expectedReturnType
+    ) : Exception(ErrorConstructor.CreateError(position, $"This function {functionName} is expected to return a value of type {expectedReturnType} but not all paths end in a return statement.")) {
+    }
+    /// <summary>
     /// An exception to be thrown when a primitive callout is encountered with an unknown name during type checking.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
@@ -124,6 +134,56 @@ namespace Decaf.Utils.Errors {
       string name
     ) : Exception(ErrorConstructor.CreateError(position, $"Unknown primitive callout: `{name}`.")) {
     }
+    /// <summary>
+    /// An exception to be thrown when a primitive is used incorrectly during type checking, 
+    /// as primitives can only be used as function calls.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class InvalidPrimitiveUse(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Primitive used incorrectly, primitives can only be used as function calls.")) {
+    }
+    /// <summary>
+    /// An exception to be thrown when an array is declared with an invalid element type during type checking.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    /// <param name="typeName">The type name of the invalid array element type.</param>
+    public class InvalidArrayType(
+      Position position,
+      string typeName
+    ) : Exception(
+      ErrorConstructor.CreateError(
+        position,
+        $"Invalid array element type: {typeName}, only `int`, `boolean` and `character` are allowed as array element types."
+      )
+    ) { }
+    /// <summary>
+    /// An exception to be thrown when a variable is declared with type void during type checking.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class InvalidVoidBind(
+      Position position
+    ) : Exception(
+      ErrorConstructor.CreateError(
+        position,
+        "Variables cannot be of type void."
+      )
+    ) { }
+    /// <summary>
+    /// An exception to be thrown when a bind is declared without an explicit type annotation 
+    /// and the initializer is not a function literal during type checking, as type inference is only supported for function literals.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    /// <param name="bindName">The name of the bind.</param>
+    public class ExpectedBindToHaveAType(
+      Position position,
+      string bindName
+    ) : Exception(
+      ErrorConstructor.CreateError(
+        position,
+        $"The bind `{bindName}` is expected to have an explicit type annotation, inference is only supported on functions."
+      )
+    ) { }
     // Code Generation Errors
   }
 
@@ -172,7 +232,22 @@ namespace Decaf.Utils.Errors {
         case TypeCheckingErrors.ReturnUseOutsideOfMethod e:
           Console.WriteLine(e.Message);
           break;
+        case TypeCheckingErrors.NoReturnStatement e:
+          Console.WriteLine(e.Message);
+          break;
         case TypeCheckingErrors.UnknownPrimitiveCall e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.InvalidPrimitiveUse e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.InvalidArrayType e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.InvalidVoidBind e:
+          Console.WriteLine(e.Message);
+          break;
+        case TypeCheckingErrors.ExpectedBindToHaveAType e:
           Console.WriteLine(e.Message);
           break;
         // Unknown

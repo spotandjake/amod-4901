@@ -1,100 +1,120 @@
+// TODO: Document this file
 parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
 @parser::header {#pragma warning disable 3021}
 options { tokenVocab=DecafLexer; }
 
+// --- Code Units ---
+
+// A program is a sequence of module declarations
 program: module_decl+;
 
-module_decl: MODULE name=ID LBRACE var_decl* method_decl* RBRACE;
+// A module is a named collection of statements, it serves as a container for functions and variables.
+module_decl: MODULE name=id_location body=block_stmt SEMI?;
 
-var_decl: typ=type binds=var_bind_list SEMI;
+// --- Statements ---
+statement
+  : block_stmt # BlockStmt
+  // Variables
+  | var_decl_stmt # VarDeclStmt
+  | assign_stmt # AssignStmt
+  // Control Flow
+  | if_stmt # IfStmt
+  | while_stmt # WhileStmt
+  // Other statements
+  | return_stmt # ReturnStmt
+  | continue_stmt # ContinueStmt
+  | break_stmt # BreakStmt
+  | expr_stmt # ExprStmt;
+  
+block_stmt: LBRACE statement* RBRACE SEMI?;
+
+// Variables
+// TODO: Add a mechanism for marking variables as public
+var_decl_stmt: LET binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
-var_bind: name=ID (LBRACK INTLIT? RBRACK)?;
-
-method_decl: returnType=type name=ID LPAREN parameters=method_decl_param_list? RPAREN body=block;
-method_decl_param_list: method_decl_param (COMMA method_decl_param)*;
-method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
-
-block: LBRACE var_decl* statement* RBRACE;
-
-type: 
-  INT # IntType
-  | BOOLEAN # BooleanType
-  | VOID # VoidType
-  | STRING # StringType
-  ;
-
-statement:
-  assign_stmt # AssignStatement
-  | expression_stmt # ExpressionStatement
-  | if_stmt # IfStatement
-  | while_stmt # WhileStatement
-  | return_stmt # ReturnStatement
-  | continue_stmt # ContinueStatement
-  | break_stmt # BreakStatement
-  | return_stmt # ReturnStatement
-  | block # BlockStatement
-  ;
+var_bind: name=id_location (COLON typ=type)? (ASSIGN init=expr)?;
 
 assign_stmt: location ASSIGN expr SEMI;
-expression_stmt: call_expr SEMI # CallExpressionStatement;
-if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
-while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
+
+// Control Flow
+if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block_stmt (ELSE falseBranch=block_stmt)? SEMI?;
+while_stmt: WHILE LPAREN condition=expr RPAREN body=block_stmt SEMI?;
+
+// Other
+return_stmt: RETURN value=expr? SEMI;
 continue_stmt: CONTINUE SEMI;
 break_stmt: BREAK SEMI;
-return_stmt: RETURN value=expr? SEMI;
+expr_stmt: expr SEMI;
 
-call_expr: 
-  method_call # MethodCallExpr
-  | prim_callout # PrimCalloutExpr
-  ;
-method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
-method_call_args: expr (COMMA expr)*;
-prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
-prim_callout_args: (COMMA (expr))*;
+// --- Expressions ---
+expr
+  // TODO: Test Precedence
+  // Parenthesized expressions
+  : LPAREN expr RPAREN                 # ParenExpr // NOTE: This is only for grouping, not in the IR
+  // Prefix Expr
+  | op=NOT operand=expr                # PrefixExpr
+  | op=BNOT operand=expr               # PrefixExpr
+  // Binary expressions - Arithmetic
+  | lhs=expr op=(MULT | DIV) rhs=expr          # BinopExpr
+  | lhs=expr op=(PLUS | MINUS) rhs=expr        # BinopExpr
+  // Binary expressions - Relational
+  | lhs=expr op=(LT | GT | LEQ | GEQ) rhs=expr # BinopExpr
+  // Binary expressions - Equality
+  | lhs=expr op=(EQ | NEQ) rhs=expr            # BinopExpr
+  // Binary expressions - Conditional
+  | lhs=expr op=AND rhs=expr                   # BinopExpr
+  | lhs=expr op=OR rhs=expr                    # BinopExpr
+  // Binary expressions - Bitwise
+  | lhs=expr op=(BAND | BOR) rhs=expr          # BinopExpr
+  | lhs=expr op=(BLSHIFT | BRSHIFT) rhs=expr   # BinopExpr
+  // Other expressions
+  | call_expr                          # CallExpr
+  | array_init_expr                    # ArrayInitExpr
+  | location_expr                      # LocationExpr
+  | literal_expr                       # LiteralExpr;
 
-expr:
-  simple_expr # SimpleExpr
-  | NEW ID LPAREN RPAREN # NewObjectExpr
-  | NEW type LBRACK expr RBRACK # NewArrayExpr
-  | literal # LiteralExpr
-  | op=prefix_op operand=expr # PrefixOpExpr
-  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr
-  | LPAREN expr RPAREN # ParenExpr
-  ;
+// NOTE: We treat `@` as a primitive callout, this way we can support callouts without needing special syntax
+call_expr: callee=location LPAREN args=call_expr_args? RPAREN;
+call_expr_args: expr (COMMA expr)*;
 
+array_init_expr: NEW typ=type LBRACK size=expr RBRACK;
 
-simple_expr:
-  location # LocationExpr
-  | call_expr # CallExpr
-  ;
+location_expr: location;
 
-// TODO: make root an expr
-location: root=location_root (path=location_path | indexExpr=location_array_index)?;
-location_root: ID;
-location_path: DOT ID;
-location_array_index: LBRACK expr RBRACK;
+literal_expr: literal;
 
-bin_op:
-  arith_op | rel_op | eq_op | cond_op | bitwise_op;
+// --- Literals ---
+literal
+  : int_literal # IntLit
+  | bool_literal # BoolLit
+  | char_literal # CharLit
+  | string_literal # StringLit
+  | func_literal # FuncLit;
+int_literal: INTLIT;
+bool_literal: TRUE | FALSE;
+char_literal: CHARLIT;
+string_literal: STRINGLIT;
 
-arith_op: PLUS | MINUS | MULT | DIV;
+func_literal: func_literal_params COLON returnType=type ARROW block_stmt;
+func_literal_params: LPAREN func_param_list? RPAREN;
+func_param_list: func_param (COMMA func_param)*;
+func_param: name=id_location COLON typ=type;
 
-rel_op: LT | GT | LEQ | GEQ;
+// --- Types ---
+type: simple_type (LBRACK size=int_literal? RBRACK)?;
+simple_type
+  : INT # IntType
+  | BOOLEAN # BooleanType
+  | CHAR # CharType
+  | STRING # StringType
+  | VOID # VoidType;
 
-eq_op: EQ | NEQ;
-
-cond_op: AND | OR;
-
-bitwise_op: BAND | BOR | BLSHIFT | BRSHIFT;
-
-prefix_op: NOT | BNOT;
-
-// Literals
-literal:
-  INTLIT # IntLit
-  | CHARLIT # CharLit
-  | (TRUE | FALSE) # BoolLit
-  | STRINGLIT # StringLit
-  ;
+// --- Locations ---
+location: array_location;
+array_location: member_location (LBRACK index_expr=expr RBRACK)?;
+member_location: root=id_location member=member_list?;
+member_list: (DOT identifier)+;
+id_location: identifier | PRIMID;
+identifier: ID;

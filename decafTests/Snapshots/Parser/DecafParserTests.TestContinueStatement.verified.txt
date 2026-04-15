@@ -1,42 +1,68 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: WhileStatement,
-                Condition: {
-                  Kind: LiteralExpression,
-                  Content: {
-                    Kind: BooleanLiteral,
-                    Value: true
-                  }
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: testMethod
                 },
-                Body: {
-                  Kind: BlockNode,
-                  Statements: [
-                    {
-                      Kind: ContinueStatement
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: testMethod
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: WhileStatementNode,
+                          Condition: {
+                            Kind: LiteralExpressionNode,
+                            Literal: {
+                              Kind: BooleanLiteralNode,
+                              Value: true
+                            }
+                          },
+                          Body: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: ContinueStatementNode
+                              }
+                            ]
+                          }
+                        }
+                      ]
                     }
-                  ]
+                  }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

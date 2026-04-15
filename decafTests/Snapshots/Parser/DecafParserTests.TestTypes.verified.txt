@@ -1,69 +1,110 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Fields: [
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Type: String,
-            Content: string
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode,
+                  Type: String
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: s
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: StringLiteralNode,
+                    Value: hello
+                  }
+                }
+              }
+            ]
           },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: s,
-              IsArray: false
-            }
-          ]
-        },
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Content: int
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: x
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode
+                  }
+                }
+              }
+            ]
           },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: x,
-              IsArray: false
-            }
-          ]
-        },
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Type: Boolean,
-            Content: boolean
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode,
+                  Type: Boolean
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: y
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: BooleanLiteralNode,
+                    Value: true
+                  }
+                }
+              }
+            ]
           },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: y,
-              IsArray: false
-            }
-          ]
-        },
-        {
-          Kind: VariableDeclNode,
-          Type: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Binds: [
-            {
-              Kind: VarBindNode,
-              Name: z,
-              IsArray: false
-            }
-          ]
-        }
-      ]
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Type: {
+                  Kind: TypeNode,
+                  Type: Void
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: z
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

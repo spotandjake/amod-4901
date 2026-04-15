@@ -9,12 +9,8 @@ These are things directly related to deliverables or causing codegen issues that
   * Modules - Compile Modules
   * Functions - Compile Functions
   * Strings - Compile Strings
+  * We only want to drop an immediate if it's not a void signature
 * ANF
-  * NOTE: Turns out there are a few small oversights in the anf tree that will cause codegen issues
-  * We should merge `BindNode` with `ImmediateNode`
-    * We should introduce a `DeclNode` which is just a `BindNode` but it's the first instance of one.
-  * We only want to emit a drop for an `ExprNode` if it's not a void call.
-    * This requires refactoring to how we map expressions to an imm
   * Perform symbol resolution in the anf tree
     * This means replacing `AnfTree.Location` with more specific instructions like:
       * `AnfTree.Local.Get`
@@ -32,14 +28,9 @@ These are things directly related to deliverables or causing codegen issues that
 * Documentation
   * Split README docs into separate files under `./docs/`
   * Ensure all the docs are to date.
-  * Document the runtime API in `./docs/runtime_api.md`
   * Document the behavior of `<module>.Main` in `./docs/compiler_walkthrough/README.md`
 
 ### Less Critical
-* Allow code at the top level
-* Make declarations regular statements instead of having them in a separate context
-  * NOTE: We should also change declarations to the form of `<type> <id> = <expr>` instead of the current concept
-  * NOTE: Combined with the previous point, this would make properties just regular binds at the top level
 * Add a statement for defining wasm imports
   * NOTE: This should be semantically restricted to the top level
 * Anf Optimizations
@@ -53,7 +44,20 @@ These are things directly related to deliverables or causing codegen issues that
     * NOTE: These passes iterate blocks and modules in reverse
 * Investigate WASM GC
   * It would be nice if we could switch to using wasm gc for our arrays and strings over the current approach of linear memory
-* Convert Primitives to the form of `@wasm.memory.size()`
-* Add an enum representing the binops this ensures we handle them throughout the compiler
 * Replace snapshot tests with more specific test where possible
   * Justification: It's way to easy to just update snapshots without actually checking the output
+* Replace CLI library with https://spectreconsole.net/cli
+* Testing
+  * Parsing
+    * We should rewrite these tests based of the grammar more accurately
+    * Precedence
+  * Semantic Analysis
+    * Rewrite scope checks
+    * Rewrite Semantic checks
+    * Rewrite type checks
+  * AnfTree
+    * Basic optimization tests
+  * CodeGen
+    * Basic codegen tests
+  * End to End
+    * Everything

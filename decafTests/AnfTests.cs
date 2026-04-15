@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
+using Signature = Decaf.IR.Signature;
 using Decaf.IR.AnfTree;
 using Decaf.Utils;
 
@@ -33,150 +34,139 @@ public class DecafAnfTests : VerifyBase {
   public Task TestSimpleCompoundExpr1() {
     var result = Anf(@"
     module Program {
-      void Main() {
-        int x;
-        x = 1 + 2 + 3;
-      }
+      let x: int = 1 + 2 + 3;
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   // Test Dead Code Elimination
   [TestMethod]
   public Task TestDeadCodeEliminationAfterReturn() {
     var result = Anf(@"
     module Program {
-      int y;
-      void Main() {
+      let y: int = 0;
+      let test = (): void => {
         y = 1;
         return;
+        y = 2;
+      };
+      test();
+    }
+    ");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationAfterBreak() {
+    var result = Anf(@"
+    module Program {
+      let y: int = 0;
+      let test = (): void => {
+        while (y == 0) {
+          y = 1;
+          break;
+          y = 2;
+        }
+      };
+      test();
+    }
+    ");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationAfterContinue() {
+    var result = Anf(@"
+    module Program {
+      let y: int = 0;
+      let test = (): void => {
+        while (y == 0) {
+          y = 1;
+          continue;
+          y = 2;
+        }
+      };
+      test();
+    }
+    ");
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
+  }
+  [TestMethod]
+  public Task TestDeadCodeEliminationIfTrue1() {
+    var result = Anf(@"
+    module Program {
+      let y: int = 0;
+      if (true) {
+        y = 1;
+      } else {
         y = 2;
       }
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
-  }
-  [TestMethod]
-  public Task TestDeadCodeEliminationAfterBreak() {
-    var result = Anf(@"
-    module Program {
-      int y;
-      void Main() {
-        while (y == 0) {
-          y = 1;
-          break;
-          y = 2;
-        }
-      }
-    }
-    ");
-    return Verify(result, CreateSettings())
-      .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
-  }
-  [TestMethod]
-  public Task TestDeadCodeEliminationAfterContinue() {
-    var result = Anf(@"
-    module Program {
-      int y;
-      void Main() {
-        while (y == 0) {
-          y = 1;
-          continue;
-          y = 2;
-        }
-      }
-    }
-    ");
-    return Verify(result, CreateSettings())
-      .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
-  }
-  [TestMethod]
-  public Task TestDeadCodeEliminationIfTrue1() {
-    var result = Anf(@"
-    module Program {
-      int y;
-      void Main() {
-        if (true) {
-          y = 1;
-        } else {
-          y = 2;
-        }
-      }
-    }
-    ");
-    return Verify(result, CreateSettings())
-      .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   [TestMethod]
   public Task TestDeadCodeEliminationIfTrue2() {
     var result = Anf(@"
     module Program {
-      int y;
-      void Main() {
-        if (true) {
-          y = 1;
-        }
+      let y: int = 0;
+      if (true) {
+        y = 1;
       }
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   [TestMethod]
   public Task TestDeadCodeEliminationIfFalse1() {
     var result = Anf(@"
     module Program {
-      int y;
-      void Main() {
-        if (false) {
-          y = 1;
-        } else {
-          y = 2;
-        }
+      let y: int = 0;
+      if (false) {
+        y = 1;
+      } else {
+        y = 2;
       }
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   [TestMethod]
   public Task TestDeadCodeEliminationIfFalse2() {
     var result = Anf(@"
     module Program {
-      int y;
-      void Main() {
-        if (false) {
-          y = 1;
-        }
+      let y: int = 0;
+      if (false) {
+        y = 1;
       }
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   [TestMethod]
   public Task TestDeadCodeEliminationWhileFalse() {
     var result = Anf(@"
     module Program {
-      int y;
-      void Main() {
-        while (false) {
-        }
-      }
+      let y: int = 0;
+      while (false) {}
     }
     ");
     return Verify(result, CreateSettings())
       .IgnoreMembersWithType<Position>()
-      .IgnoreInstance<Decaf.IR.TypedTree.Signature>(x => true);
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
 }

@@ -1,38 +1,34 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
+      Kind: ModuleNode,
       Name: Program,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          Name: Main,
-          Body: {
-            Kind: BlockNode,
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BlockInstructionNode,
             Instructions: [
               {
-                Kind: BindNode,
-                Location: {
-                  Kind: IdentifierLocation,
-                  Name: __anf_temp_0,
-                  LocationType: {}
-                },
-                Expression: {
-                  Kind: BinopExpression,
+                Kind: BindInstructionNode,
+                Name: __anf_temp_0,
+                SimpleExpression: {
+                  Kind: BinopExpressionNode,
                   Lhs: {
                     Kind: ConstantImmediate,
                     Value: {
-                      Kind: IntegerLiteral,
-                      Value: 1
+                      Kind: IntegerLiteralNode,
+                      Value: 1,
+                      LiteralType: {}
                     },
                     Signature: {}
                   },
-                  Operator: +,
                   Rhs: {
                     Kind: ConstantImmediate,
                     Value: {
-                      Kind: IntegerLiteral,
-                      Value: 2
+                      Kind: IntegerLiteralNode,
+                      Value: 2,
+                      LiteralType: {}
                     },
                     Signature: {}
                   },
@@ -40,68 +36,38 @@
                 }
               },
               {
-                Kind: BindNode,
-                Location: {
-                  Kind: IdentifierLocation,
-                  Name: __anf_temp_1,
-                  LocationType: {}
-                },
-                Expression: {
-                  Kind: BinopExpression,
+                Kind: BindInstructionNode,
+                Name: x,
+                SimpleExpression: {
+                  Kind: BinopExpressionNode,
                   Lhs: {
-                    Kind: LocationAccessImmediate,
+                    Kind: LocationImmediate,
                     Location: {
-                      Kind: IdentifierLocation,
+                      Kind: IdentifierLocationNode,
                       Name: __anf_temp_0,
                       LocationType: {}
                     },
                     Signature: {}
                   },
-                  Operator: +,
                   Rhs: {
                     Kind: ConstantImmediate,
                     Value: {
-                      Kind: IntegerLiteral,
-                      Value: 3
+                      Kind: IntegerLiteralNode,
+                      Value: 3,
+                      LiteralType: {}
                     },
                     Signature: {}
                   },
                   ExpressionType: {}
                 }
-              },
-              {
-                Kind: AssignmentInstruction,
-                Location: {
-                  Kind: IdentifierLocation,
-                  Name: x,
-                  LocationType: {}
-                },
-                Expression: {
-                  Kind: LocationAccessImmediate,
-                  Location: {
-                    Kind: IdentifierLocation,
-                    Name: __anf_temp_1,
-                    LocationType: {}
-                  },
-                  Signature: {}
-                }
               }
             ]
-          },
-          Signature: {
-            ReturnType: {
-              Type: Void
-            }
           }
-        }
-      ],
+        ]
+      },
       Signature: {
         Members: {
-          Main: {
-            ReturnType: {
-              Type: Void
-            }
-          }
+          x: {}
         }
       }
     }

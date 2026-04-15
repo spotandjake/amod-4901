@@ -1,40 +1,34 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
+      Kind: ModuleNode,
       Name: Program,
-      Globals: [
+      Functions: [
         {
-          Kind: GlobalDeclNode,
-          Name: y,
-          Signature: {}
-        }
-      ],
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          Name: Main,
+          Kind: FunctionNode,
+          Name: test,
           Body: {
-            Kind: BlockNode,
+            Kind: BlockInstructionNode,
             Instructions: [
               {
-                Kind: AssignmentInstruction,
+                Kind: AssignmentInstructionNode,
                 Location: {
-                  Kind: IdentifierLocation,
+                  Kind: IdentifierLocationNode,
                   Name: y,
                   LocationType: {}
                 },
-                Expression: {
+                Imm: {
                   Kind: ConstantImmediate,
                   Value: {
-                    Kind: IntegerLiteral,
-                    Value: 1
+                    Kind: IntegerLiteralNode,
+                    Value: 1,
+                    LiteralType: {}
                   },
                   Signature: {}
                 }
               },
               {
-                Kind: ReturnInstruction
+                Kind: ReturnInstructionNode
               }
             ]
           },
@@ -45,9 +39,94 @@
           }
         }
       ],
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BindInstructionNode,
+            Name: y,
+            SimpleExpression: {
+              Kind: ImmInstructionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  LiteralType: {}
+                },
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
+          },
+          {
+            Kind: BindInstructionNode,
+            Name: test,
+            SimpleExpression: {
+              Kind: ImmInstructionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: FunctionReferenceLiteralNode,
+                  FunctionName: test,
+                  LiteralType: {
+                    ReturnType: {
+                      Type: Void
+                    }
+                  }
+                },
+                Signature: {
+                  ReturnType: {
+                    Type: Void
+                  }
+                }
+              },
+              ExpressionType: {
+                ReturnType: {
+                  Type: Void
+                }
+              }
+            }
+          },
+          {
+            Kind: BindInstructionNode,
+            Name: __anf_temp_0,
+            SimpleExpression: {
+              Kind: CallExpressionNode,
+              Callee: {
+                Kind: IdentifierLocationNode,
+                Name: test,
+                LocationType: {
+                  ReturnType: {
+                    Type: Void
+                  }
+                }
+              },
+              ExpressionType: {
+                Type: Void
+              }
+            }
+          },
+          {
+            Kind: ImmInstructionNode,
+            Imm: {
+              Kind: LocationImmediate,
+              Location: {
+                Kind: IdentifierLocationNode,
+                Name: __anf_temp_0,
+                LocationType: {
+                  Type: Void
+                }
+              },
+              Signature: {
+                Type: Void
+              }
+            }
+          }
+        ]
+      },
       Signature: {
         Members: {
-          Main: {
+          test: {
             ReturnType: {
               Type: Void
             }

@@ -1,53 +1,80 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: IfStatement,
-                Condition: {
-                  Kind: LiteralExpression,
-                  Content: {
-                    Kind: BooleanLiteral,
-                    Value: true
-                  }
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: testMethod
                 },
-                TrueBranch: {
-                  Kind: BlockNode,
-                  Statements: [
-                    {
-                      Kind: AssignmentStatement,
-                      Location: {
-                        Kind: IdentifierLocation,
-                        Name: x
-                      },
-                      Expression: {
-                        Kind: LiteralExpression,
-                        Content: {
-                          Kind: IntegerLiteral,
-                          Value: 1
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: testMethod
+                    },
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: IfStatementNode,
+                          Condition: {
+                            Kind: LiteralExpressionNode,
+                            Literal: {
+                              Kind: BooleanLiteralNode,
+                              Value: true
+                            }
+                          },
+                          TrueBranch: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: AssignmentStatementNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: x
+                                },
+                                Expression: {
+                                  Kind: LiteralExpressionNode,
+                                  Literal: {
+                                    Kind: IntegerLiteralNode,
+                                    Value: 1
+                                  }
+                                }
+                              }
+                            ]
+                          }
                         }
-                      }
+                      ]
                     }
-                  ]
+                  }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

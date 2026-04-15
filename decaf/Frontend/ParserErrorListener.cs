@@ -1,6 +1,7 @@
 using Antlr4.Runtime;
 using System.Data;
 
+// TODO: Unify this more with `utils/errors.cs`
 public sealed class ParserErrorListener : IAntlrErrorListener<IToken> {
   public static readonly ParserErrorListener Instance = new();
   private ParserErrorListener() { }

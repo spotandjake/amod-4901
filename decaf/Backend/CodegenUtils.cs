@@ -10,6 +10,7 @@ namespace Decaf.Backend {
     public static WasmLabel GetMemberLabel(Position position, string moduleName, string memberName) {
       return new WasmLabel.Label(position, GetMemberName(moduleName, memberName));
     }
+    // We need to be able to refer to the runtime module so we can call its functions.
     public static class Runtime {
       public const string RuntimeModuleName = "Runtime";
       // Allocation API

@@ -1,54 +1,48 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
+      Kind: ModuleNode,
       Name: Program,
-      Globals: [
-        {
-          Kind: GlobalDeclNode,
-          Name: y,
-          Signature: {}
-        }
-      ],
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          Name: Main,
-          Body: {
-            Kind: BlockNode,
-            Instructions: [
-              {
-                Kind: AssignmentInstruction,
-                Location: {
-                  Kind: IdentifierLocation,
-                  Name: y,
-                  LocationType: {}
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BindInstructionNode,
+            Name: y,
+            SimpleExpression: {
+              Kind: ImmInstructionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  LiteralType: {}
                 },
-                Expression: {
-                  Kind: ConstantImmediate,
-                  Value: {
-                    Kind: IntegerLiteral,
-                    Value: 1
-                  },
-                  Signature: {}
-                }
-              }
-            ]
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
           },
-          Signature: {
-            ReturnType: {
-              Type: Void
+          {
+            Kind: AssignmentInstructionNode,
+            Location: {
+              Kind: IdentifierLocationNode,
+              Name: y,
+              LocationType: {}
+            },
+            Imm: {
+              Kind: ConstantImmediate,
+              Value: {
+                Kind: IntegerLiteralNode,
+                Value: 1,
+                LiteralType: {}
+              },
+              Signature: {}
             }
           }
-        }
-      ],
+        ]
+      },
       Signature: {
         Members: {
-          Main: {
-            ReturnType: {
-              Type: Void
-            }
-          },
           y: {}
         }
       }

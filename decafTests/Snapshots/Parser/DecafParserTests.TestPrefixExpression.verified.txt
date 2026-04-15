@@ -1,50 +1,35 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Declarations: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: VariableDeclNode,
+                Kind: BindNode,
                 Type: {
                   Kind: TypeNode,
-                  Type: Boolean,
-                  Content: boolean
+                  Type: Boolean
                 },
-                Binds: [
-                  {
-                    Kind: VarBindNode,
-                    Name: booly,
-                    IsArray: false
-                  }
-                ]
-              }
-            ],
-            Statements: [
-              {
-                Kind: AssignmentStatement,
-                Location: {
-                  Kind: IdentifierLocation,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
                   Name: booly
                 },
-                Expression: {
-                  Kind: PrefixExpression,
-                  Operator: !,
+                InitExpr: {
+                  Kind: PrefixExpressionNode,
                   Operand: {
-                    Kind: LiteralExpression,
-                    Content: {
-                      Kind: BooleanLiteral,
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: BooleanLiteralNode,
                       Value: true
                     }
                   }
@@ -52,8 +37,8 @@
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

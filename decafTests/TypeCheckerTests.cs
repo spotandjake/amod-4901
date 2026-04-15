@@ -20,9 +20,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     // Simply testing that we don't throw
     try {
       TypeCheck(@"
-      module Program {
-        void Main() {}
-      }
+      module Program {}
     ");
     }
     catch {
@@ -35,10 +33,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int x;
-          x = true;
-        }
+        let x: int = true;
       }
     ");
     });
@@ -50,13 +45,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        int add(int a, int b) {
+        let add = (a: int, b: int): int => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
+        let x: int = add(1, 2);
       }
     ");
     }
@@ -69,13 +61,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        int add(int a, int b) {
+        let add = (a: int, b: int): int => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1);
-        }
+        };
+        let x: int = add(1);
       }
     ");
     });
@@ -85,13 +74,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        int add(int a, boolean b) {
+        let add = (a: int, b: boolean): int => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
+        let x: int = add(1, 2);
       }
     ");
     });
@@ -101,13 +87,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        boolean add(int a, int b) {
+        let add = (a: int, b: int): boolean => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
+        let x: boolean = add(1, 2);
       }
     ");
     });
@@ -119,31 +102,23 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void add(int a, int b) {
+        let add = (a: int, b: int): void => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
+        let x: void = add(1, 2);
       }
     ");
     });
   }
   [TestMethod]
   public void TestNoReturnUnexpected() {
-    // NOTE: We don't explicitly say that void method can't return a value,
-    //   however void isn't a value so it would be impossible to match the type.
-    Assert.Throws<LhsNotRhs>(() => {
+    Assert.Throws<InvalidVoidBind>(() => {
       TypeCheck(@"
       module Program {
-        int add(int a, int b) {
+        let add = (a: int, b: int): void => {
           return;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
+        let x: void = add(1, 2);
       }
     ");
     });
@@ -152,15 +127,10 @@ public class DecafTypeCheckerTests : VerifyBase {
   public void ReturnExpectedButNoReturn() {
     // NOTE: We don't explicitly say that void method can't return a value,
     //   however void isn't a value so it would be impossible to match the type.
-    Assert.Throws<LhsNotRhs>(() => {
+    Assert.Throws<NoReturnStatement>(() => {
       TypeCheck(@"
       module Program {
-        int add(int a, int b) {
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        let add = (a: int, b: int): int => {};
       }
     ");
     });
@@ -172,13 +142,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void add(int a, int b) {
+        let add = (a: int, b: int): void => {
           return;
-        }
-        void Main() {
-          int x;
-          add(1, 2);
-        }
+        };
+        add(1, 2);
       }
     ");
     }
@@ -188,18 +155,12 @@ public class DecafTypeCheckerTests : VerifyBase {
   }
   [TestMethod]
   public void TestCallHasResult() {
-    // NOTE: We don't explicitly say if an expr we expect a return other than void, 
-    //   however an expr can never be of type void
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void add(int a, int b) {
+        let add = (a: int, b: int): void => {
           return a + b;
-        }
-        void Main() {
-          int x;
-          x = add(1, 2);
-        }
+        };
       }
     ");
     });
@@ -210,13 +171,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a, b, c, d;
-          a = 1 + 1;
-          b = 1 - 1;
-          c = 1 * 1;
-          d = 1 / 1;
-        }
+        let a: int = 1 + 1;
+        let b: int = 1 - 1;
+        let c: int = 1 * 1;
+        let d: int = 1 / 1;
       }
     ");
     }
@@ -229,10 +187,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 + 1 - 1 * 1 /1;
-        }
+        let a: int = 1 + 1 - 1 * 1 /1;
       }
     ");
     }
@@ -245,10 +200,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 + true;
-        }
+        let a: int = 1 + true;
       }
     ");
     });
@@ -258,10 +210,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 - true;
-        }
+        let a: int = 1 - true;
       }
     ");
     });
@@ -271,10 +220,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 * true;
-        }
+        let a: int = 1 * true;
       }
     ");
     });
@@ -284,10 +230,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 / true;
-        }
+        let a: int = 1 / true;
       }
     ");
     });
@@ -297,10 +240,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 + 1 - 1 * 1 / 1;
-        }
+        let a: boolean = 1 + 1 - 1 * 1 / 1;
       }
     ");
     });
@@ -311,13 +251,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a, b, c, d;
-          a = 1 < 1;
-          b = 1 > 1;
-          c = 1 <= 1;
-          d = 1 >= 1;
-        }
+        let a: boolean = 1 < 1;
+        let b: boolean = 1 > 1;
+        let c: boolean = 1 <= 1;
+        let d: boolean = 1 >= 1;
       }
     ");
     }
@@ -330,10 +267,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 < true;
-        }
+        let a: boolean = 1 < true;
       }
     ");
     });
@@ -343,10 +277,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 > true;
-        }
+        let a: boolean = 1 > true;
       }
     ");
     });
@@ -356,10 +287,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 <= true;
-        }
+        let a: boolean = 1 <= true;
       }
     ");
     });
@@ -369,10 +297,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 >= true;
-        }
+        let a: boolean = 1 >= true;
       }
     ");
     });
@@ -382,10 +307,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a;
-          a = 1 < 1;
-        }
+        let a: int = 1 < 1;
       }
     ");
     });
@@ -396,15 +318,12 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 == 1;
-          a = 1 != 1;
-          a = true == true;
-          a = true != true;
-          a = 'c' == 'c';
-          a = 'c' != 'c';
-        }
+        let a: boolean = 1 == 1;
+        let b: boolean = 1 != 1;
+        let c: boolean = true == true;
+        let d: boolean = true != true;
+        let e: boolean = 'c' == 'c';
+        let f: boolean = 'c' != 'c';
       }
     ");
     }
@@ -417,10 +336,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 == true;
-        }
+        let a: boolean = 1 == true;
       }
     ");
     });
@@ -430,10 +346,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 != true;
-        }
+        let a: boolean = 1 != true;
       }
     ");
     });
@@ -443,10 +356,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 != 'c';
-        }
+        let a: boolean = 1 != 'c';
       }
     ");
     });
@@ -457,11 +367,8 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = true && true;
-          a = true || true;
-        }
+        let a: boolean = true && true;
+        let b: boolean = true || true;
       }
     ");
     }
@@ -474,10 +381,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 && 1;
-        }
+        let a: boolean = 1 && 1;
       }
     ");
     });
@@ -487,10 +391,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = 1 || 1;
-        }
+        let a: boolean = 1 || 1;
       }
     ");
     });
@@ -501,10 +402,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = !true;
-        }
+        let a: boolean = !true;
       }
     ");
     }
@@ -517,10 +415,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          boolean a;
-          a = !1;
-        }
+        let a: boolean = !1;
       }
     ");
     });
@@ -531,11 +426,11 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
+        let Main = (): void => {
           if (true) {
             return;
           }
-        }
+        };
       }
     ");
     }
@@ -548,11 +443,11 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
+        let Main = (): void => {
           if (1) {
             return;
           }
-        }
+        };
       }
     ");
     });
@@ -563,11 +458,11 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
+        let Main = (): void => {
           while (true) {
             return;
           }
-        }
+        };
       }
     ");
     }
@@ -580,11 +475,11 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
+        let Main = (): void => {
           while (1) {
             return;
           }
-        }
+        };
       }
     ");
     });
@@ -595,10 +490,8 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void add() {}
-        void Main() {
-          add();
-        }
+        let add = (): void => {};
+        add();
       }
     ");
     }
@@ -611,10 +504,8 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<CallOnNonMethod>(() => {
       TypeCheck(@"
       module Program {
-        int add;
-        void Main() {
-          add();
-        }
+        let add: int = 0;
+        add();
       }
     ");
     });
@@ -624,17 +515,14 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module A {
-        int x;
-        int add() {
+        let x: int = 0;
+        let add = (): int => {
           return 1;
-        }
+        };
       }
       module Program {
-        void Main() {
-          int x, y;
-          x = A.x;
-          y = A.add();
-        }
+        let x: int = A.x;
+        let y: int = A.add();
       }
     ");
     }
@@ -646,14 +534,10 @@ public class DecafTypeCheckerTests : VerifyBase {
   public void TestInvalidComplexLocation() {
     Assert.Throws<MemberAccessUnknown>(() => {
       TypeCheck(@"
-      module A {
-      }
+      module A {}
       module Program {
-        void Main() {
-          int x;
-          x = A.x;
-          A.add();
-        }
+        let x: int = A.x;
+        A.add();
       }
     ");
     });
@@ -663,15 +547,12 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module A {
-        int add() {
+        let add = (): int => {
           return 1;
-        }
+        };
       }
       module Program {
-        void Main() {
-          boolean y;
-          y = A.add();
-        }
+        let y: boolean = A.add();
       }
     ");
     });
@@ -682,11 +563,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        int x[];
-        void Main() {
-          int y;
-          y = x[1];
-        }
+        let x: int[] = new int[1];
+        let Main = (): void => {
+          let y: int = x[1];
+        };
       }
     ");
     }
@@ -699,11 +579,8 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<ArrayAccessOnNonArray>(() => {
       TypeCheck(@"
       module Program {
-        int x;
-        void Main() {
-          int y;
-          y = x[1];
-        }
+        let x: int = 0;
+        let y: int = x[1];
       }
     ");
     });
@@ -713,11 +590,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        int x[];
-        void Main() {
-          int y;
-          y = x[1];
-        }
+        let x: int[] = new int[1];
+        let Main = (): void => {
+          let y: int = x[1];
+        };
       }
     ");
     }
@@ -730,11 +606,10 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        int x[];
-        void Main() {
-          int y;
-          y = x[true];
-        }
+        let x: int[] = new int[1];
+        let Main = (): void => {
+          let y: int = x[true];
+        };
       }
     ");
     });
@@ -746,12 +621,8 @@ public class DecafTypeCheckerTests : VerifyBase {
       TypeCheck(@"
       module A {}
       module Program {
-        void Main() {
-          boolean b[];
-          int c[];
-          b = new boolean[1];
-          c = new int[1];
-        }
+        let b: boolean[] = new boolean[1];
+        let c: int[] = new int[1];
       }
     ");
     }
@@ -764,10 +635,7 @@ public class DecafTypeCheckerTests : VerifyBase {
     Assert.Throws<LhsNotRhs>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-          int a[];
-          a = new int[true];
-        }
+        let a: int[] = new int[true];
       }
     ");
     });
@@ -778,15 +646,13 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-        }
-        int add(int x) {
-          if (true) {
-            return 1;
-          } else {
-            return 2;
-          }
-        }
+        let add = (x: int): int => {
+           if (true) {
+             return 1;
+           } else {
+             return 2;
+           }
+        };
       }
     ");
     }
@@ -799,14 +665,12 @@ public class DecafTypeCheckerTests : VerifyBase {
     try {
       TypeCheck(@"
       module Program {
-        void Main() {
-        }
-        int add(int x) {
+        let add = (x: int): int => {
           if (true) {
             return 1;
           }
           return 2;
-        }
+        };
       }
     ");
     }
@@ -816,45 +680,38 @@ public class DecafTypeCheckerTests : VerifyBase {
   }
   [TestMethod]
   public void TestInvalidReturnStatement1() {
-    Assert.Throws<LhsNotRhs>(() => {
+    Assert.Throws<NoReturnStatement>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-        }
-        int add(int x) {
-        }
+        let add = (x: int): int => {};
       }
     ");
     });
   }
   [TestMethod]
   public void TestInvalidReturnStatement2() {
-    Assert.Throws<LhsNotRhs>(() => {
+    Assert.Throws<NoReturnStatement>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-        }
-        int add(int x) {
+        let add = (x: int): int => {
           if (true) {
             return 1;
           }
-        }
+        };
       }
     ");
     });
   }
   [TestMethod]
   public void TestInvalidReturnStatement3() {
-    Assert.Throws<LhsNotRhs>(() => {
+    Assert.Throws<NoReturnStatement>(() => {
       TypeCheck(@"
       module Program {
-        void Main() {
-        }
-        int add(int x) {
+        let add = (x: int): int => {
           while (true) {
            return 1;
           }
-        }
+        };
       }
     ");
     });

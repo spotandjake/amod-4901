@@ -1,58 +1,85 @@
 ﻿{
   Modules: [
     {
-      Kind: ModuleDeclNode,
-      Name: Main,
-      Methods: [
-        {
-          Kind: MethodDeclNode,
-          ReturnType: {
-            Kind: TypeNode,
-            Type: Void,
-            Content: void
-          },
-          Name: testMethod,
-          Body: {
-            Kind: BlockNode,
-            Statements: [
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
               {
-                Kind: ExprStatement,
-                Content: {
-                  Kind: CallExpression,
-                  IsPrimitive: true,
-                  Path: {
-                    Kind: IdentifierLocation,
-                    Name: Test
-                  },
-                  Arguments: [
-                    {
-                      Kind: LiteralExpression,
-                      Content: {
-                        Kind: IntegerLiteral,
-                        Value: 1
-                      }
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: testMethod
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: testMethod
                     },
-                    {
-                      Kind: LiteralExpression,
-                      Content: {
-                        Kind: IntegerLiteral,
-                        Value: 2
-                      }
+                    ReturnType: {
+                      Kind: TypeNode,
+                      Type: Void
                     },
-                    {
-                      Kind: LiteralExpression,
-                      Content: {
-                        Kind: StringLiteral,
-                        Value: y
-                      }
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: ExprStatementNode,
+                          Expression: {
+                            Kind: CallExpressionNode,
+                            Callee: {
+                              Kind: IdentifierLocationNode,
+                              IsPrimitive: true,
+                              Name: @test
+                            },
+                            Arguments: [
+                              {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode,
+                                  Value: 1
+                                }
+                              },
+                              {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode,
+                                  Value: 2
+                                }
+                              },
+                              {
+                                Kind: LocationExpressionNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: y
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
                     }
-                  ]
+                  }
                 }
               }
             ]
           }
-        }
-      ]
+        ]
+      }
     }
   ]
 }

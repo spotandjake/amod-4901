@@ -6,11 +6,11 @@ using Decaf.IR.PrimitiveDefinition;
 
 namespace Decaf.Backend {
   public static partial class Codegen {
-    private static WasmExpression CompilePrimitiveNode(
+    private static WasmExpression CompilePrimCallSimpleExpr(
       CodegenContext ctx,
-      AnfTree.ExpressionNode.PrimitiveNode node
+      AnfTree.SimpleExpressionNode.PrimCallNode node
     ) {
-      return node.Primitive switch {
+      return node.Callee switch {
         // --- @wasm namespace ---
         // memory sub namespace
         PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
@@ -31,7 +31,7 @@ namespace Decaf.Backend {
             CompileImmediate(ctx, node.Arguments[1])
           ),
         // Unknown
-        _ => throw new Exception($"Unknown primitive: {node.Primitive}"),
+        _ => throw new Exception($"Unknown primitive: {node.Callee}"),
       };
     }
   }
