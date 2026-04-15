@@ -25,7 +25,6 @@ These are things directly related to deliverables or causing codegen issues that
   * Test Result of CodeGen by snapshot testing the generated WasmTree
   * Test the compiler end to end by running the produced modules and capturing the output
 * Documentation
-  * Split README docs into separate files under `./docs/`
   * Ensure all the docs are to date.
 
 ### Less Critical
