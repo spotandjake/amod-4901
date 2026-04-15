@@ -1,9 +1,10 @@
-// TODO: Clean up the order in this file
-// TODO: Document this file fully
 lexer grammar DecafLexer;
 
 // Disable cSharp CLS compliance warnings
 @lexer::header {#pragma warning disable 3021}
+
+// Keywords - code units
+MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
 
 // Keywords - Type
 INT     : 'i' 'n' 't' ;
@@ -16,6 +17,8 @@ VOID    : 'v' 'o' 'i' 'd' ;
 BREAK   : 'b' 'r' 'e' 'a' 'k' ;
 CONTINUE: 'c' 'o' 'n' 't' 'i' 'n' 'u' 'e';
 RETURN  : 'r' 'e' 't' 'u' 'r' 'n';
+NEW      : 'n' 'e' 'w' ;
+LET      : 'l' 'e' 't' ;
 
 // Keywords - Control Flow
 IF      : 'i' 'f' ;
@@ -26,10 +29,6 @@ WHILE   : 'w' 'h' 'i' 'l' 'e';
 TRUE     : 't' 'r' 'u' 'e' ;
 FALSE    : 'f' 'a' 'l' 's' 'e' ;
 
-// Keywords - other
-MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
-LET      : 'l' 'e' 't' ;
-NEW      : 'n' 'e' 'w' ;
 
 // Attributes
 WSS      : (' ' | '\t' | NEWLINE)+ -> skip;
@@ -48,6 +47,7 @@ COMMA       : ',' ;
 DOT         : '.' ;
 COLON       : ':' ;
 ARROW       : '=>' ;
+ASSIGN      : '=' ;
 // Prefix Operators
 NOT         : '!' ;
 BNOT        : '~' ;
@@ -72,8 +72,6 @@ BAND        : '&' ;
 BOR         : '|' ;
 BLSHIFT     : '<<' ;
 BRSHIFT     : '>>' ;
-// Assignment Operator
-ASSIGN      : '=' ;
 
 
 // Literals
