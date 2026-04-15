@@ -1,4 +1,4 @@
-# Frontend
+# Front end
 
 This document exists to provide a high-level overview of the frontend of the compiler. More specific documentation can be found in the source code itself, and in the documentation for the individual components of the frontend.
 
