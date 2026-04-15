@@ -9,7 +9,6 @@ These are things directly related to deliverables or causing codegen issues that
   * Modules - Compile Modules
   * Functions - Compile Functions
   * Strings - Compile Strings
-  * We only want to drop an immediate if it's not a void signature
 * ANF
   * Perform symbol resolution in the anf tree
     * This means replacing `AnfTree.Location` with more specific instructions like:
@@ -45,13 +44,11 @@ These are things directly related to deliverables or causing codegen issues that
   * It would be nice if we could switch to using wasm gc for our arrays and strings over the current approach of linear memory
 * Replace snapshot tests with more specific test where possible
   * Justification: It's way to easy to just update snapshots without actually checking the output
-* Replace CLI library with https://spectreconsole.net/cli
 * Testing
   * Parsing
     * We should rewrite these tests based of the grammar more accurately
     * Precedence
   * Semantic Analysis
-    * Rewrite scope checks
     * Rewrite Semantic checks
     * Rewrite type checks
   * AnfTree

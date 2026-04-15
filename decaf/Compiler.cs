@@ -14,6 +14,16 @@ using TypedTree = Decaf.IR.TypedTree;
 using AnfTree = Decaf.IR.AnfTree;
 using Wasm = Decaf.WasmBuilder;
 
+/// <summary>
+/// This file contains the main API for interacting with the compiler.
+/// 
+/// This is exposed as a library so we can consume it in various ways, such as:
+/// - The Command Line Interface (CLI)
+/// - In the future the Language Server Protocol (LSP)
+/// - In the future, a web-based playground
+/// - In the future, as a library for other tools to consume (e.g. build systems, testing frameworks, etc.)
+/// - In the future, a formatter
+/// </summary>
 namespace Decaf.Compiler {
   public static class Compiler {
     // --- Generic ---
