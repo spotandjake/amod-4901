@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 
+namespace decafTests.FrontEnd;
+
 // NOTE: This file exists todo basic testing on the lexer,
 //       we don't need to do a ton of testing here, we just validate that keywords, operators and literals match correctly
 //       we do more extensive testing of the lexer during parser testing as we will be lexing larger programs and can catch more edge 
 //       cases there.
 [TestClass]
-public class DecafLexerTests : VerifyBase {
+public class LexerTest : VerifyBase {
   private VerifySettings CreateSettings() {
     var settings = new VerifySettings();
     settings.UseDirectory("Snapshots/Lexer/");

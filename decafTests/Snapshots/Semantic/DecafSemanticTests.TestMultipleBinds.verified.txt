@@ -1,8 +1,0 @@
-﻿Scope:
-  a: True
-  b: True
-  c: True
-  d: True
-  Main: False
-  Scope:
-    Program: False

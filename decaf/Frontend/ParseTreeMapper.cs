@@ -6,7 +6,7 @@ using Decaf.IR.Operators;
 using ParseTree = Decaf.IR.ParseTree;
 using Signature = Decaf.IR.Signature;
 using Decaf.Utils;
-using System.ComponentModel;
+using Decaf.Utils.Errors.SemanticErrors;
 
 namespace Decaf.Frontend {
   /// <summary>
@@ -16,7 +16,7 @@ namespace Decaf.Frontend {
   /// The reason we don't want to use the ANTLR parse tree directly is that it is not designed for our specific use case.
   /// This means that it contains a bunch of information such as TOKENS which we don't care about.
   /// 
-  /// Having a seperate parse tree repesentation has many advantages:
+  /// Having a separate parse tree representation has many advantages:
   /// * It allows us to ignore irrelevant parsing semantics.
   /// * It allows us to have a more context aware understanding of the parse tree.
   /// * It makes it easy to move away from ANTLR in the future, if we ever want to.
@@ -24,7 +24,7 @@ namespace Decaf.Frontend {
   /// The exact representation of our parse tree can be found in `decaf/IR/ParseTree.cs` and is designed to be as simple 
   /// and easy to use as possible.
   /// 
-  /// The antlr grammar itself can be found in `decaf/Frontend/DecafParser.g4`..
+  /// The ANTLR grammar itself can be found in `decaf/Frontend/DecafParser.g4`..
   /// 
   /// The mapping process itself is pretty simple we essentially walk the ANTLR parse tree and for each node 
   /// we create the corresponding node in our internal representation.
@@ -264,8 +264,7 @@ namespace Decaf.Frontend {
     ) {
       var position = MapPositionContext(ctx);
       if (name == null) {
-        // TODO: use an error from `utils/error`
-        throw new Exception("Function literals can only appear in variable declarations at the top level");
+        throw new FunctionLiteralMustBeDirectRhsOfVarDecl(position);
       }
       var returnType = MapTypeContext(ctx.returnType);
       var parameters = new List<ParseTree.LiteralNode.FunctionNode.ParameterNode>();

@@ -1,7 +1,6 @@
 module Program {
-  let Main = (): void => {
-    if (true) {
-      return;
-    }
-  };
+  let x: int = 0;
+  while (x != 1) {
+    break;
+  }
 }

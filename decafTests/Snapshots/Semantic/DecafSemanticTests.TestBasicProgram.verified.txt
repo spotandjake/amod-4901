@@ -1,3 +1,0 @@
-﻿Scope:
-  Program: False
-  Second: False

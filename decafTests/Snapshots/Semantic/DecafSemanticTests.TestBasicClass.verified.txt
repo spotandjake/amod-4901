@@ -1,7 +1,0 @@
-﻿Scope:
-  a: True
-  b: True
-  Main: False
-  foo: False
-  Scope:
-    Program: False

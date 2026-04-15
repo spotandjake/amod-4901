@@ -47,14 +47,88 @@ namespace Decaf.Utils.Errors {
   // Semantic Analysis Errors
   namespace SemanticErrors {
     /// <summary>
-    /// An exception to be thrown when a semantic error is encountered during semantic analysis.
+    /// An exception to be thrown when the program module is not found during semantic analysis, as the program module serves as the entry point of the program and is required for execution.
     /// </summary>
     /// <param name="position">The position where the error occurred.</param>
-    /// <param name="message">The error message.</param>
-    public class SemanticException(
-      Position position,
-      string message
-    ) : Exception(ErrorConstructor.CreateError(position, message)) {
+    public class ProgramModuleNotFound(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "The program module was not found. Ensure that there is a module declared with the name `Program` to serve as the entry point.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a function literal is defined in an invalid context during semantic analysis, 
+    /// as function literals can only be defined at the top level of a module.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class FunctionsCanOnlyBeDefinedAtTopLevelOfModule(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Functions can only be defined at the top level of a module.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a function literal is used in an invalid context during semantic analysis,
+    /// as function literals can only be used as the initializer of a variable declaration and cannot be used 
+    /// in other contexts such as being passed as an argument to a function call or being assigned to a
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class FunctionLiteralMustBeDirectRhsOfVarDecl(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Function literals must be the direct right hand side of a variable declaration.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a `return` statement is encountered outside of a 
+    /// function during semantic analysis, as `return` statements can only be used within functions to return values.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class ReturnStatementOutsideOfFunction(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Return statements must be inside a function.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a `continue` statement is encountered outside of a loop 
+    /// during semantic analysis, as `continue` statements can only be used within loops to skip to the next iteration.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class ContinueStatementOutsideOfLoop(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Continue statements must be inside a loop.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a `break` statement is encountered outside of a loop 
+    /// during semantic analysis, as `break` statements can only be used within loops to exit the loop early.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class BreakStatementOutsideOfLoop(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Break statements must be inside a loop.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when a division by zero is encountered during semantic analysis,
+    /// as division by zero is undefined and not allowed in the language.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class DivisionByZero(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Division by zero is not allowed.")) {
+      public Position Position { get; } = position;
+    }
+    /// <summary>
+    /// An exception to be thrown when an array is declared with a non-positive size during semantic analysis,
+    /// as arrays must have a positive integer size to be valid.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class ArraySizeMustBePositive(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Array size must be a positive integer.")) {
+      public Position Position { get; } = position;
+    }
+    public class ArrayIndexMustBeNonNegative(
+      Position position
+    ) : Exception(ErrorConstructor.CreateError(position, "Array index must be a non-negative integer.")) {
       public Position Position { get; } = position;
     }
   }
@@ -210,7 +284,31 @@ namespace Decaf.Utils.Errors {
           Console.WriteLine(e.Message);
           break;
         // Semantic Analysis
-        case SemanticErrors.SemanticException e:
+        case SemanticErrors.ProgramModuleNotFound e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.FunctionsCanOnlyBeDefinedAtTopLevelOfModule e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.FunctionLiteralMustBeDirectRhsOfVarDecl e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.ReturnStatementOutsideOfFunction e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.ContinueStatementOutsideOfLoop e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.BreakStatementOutsideOfLoop e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.DivisionByZero e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.ArraySizeMustBePositive e:
+          Console.WriteLine(e.Message);
+          break;
+        case SemanticErrors.ArrayIndexMustBeNonNegative e:
           Console.WriteLine(e.Message);
           break;
         // Type Checking

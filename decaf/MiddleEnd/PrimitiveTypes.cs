@@ -34,7 +34,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // We do not support array primitives yet, so we can quickly throw if we encounter one.
         ParseTree.LocationNode.ArrayNode => throw new UnknownPrimitiveCall(position, node.ToString()),
         // Build our path by walking the tree
-        // TODO: Validate that this isn't appending backwards
         ParseTree.LocationNode.MemberNode memberNode => GetLocationPath(position, memberNode.Root, [memberNode.Member, .. acc]),
         ParseTree.LocationNode.IdentifierNode identifierNode => [identifierNode.Name, .. acc],
         // NOTE: We can never encounter this case because we are exhausting all possible cases of LocationNode, 
@@ -66,20 +65,20 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ),
         // (pageCount: int) => int
         ["grow"] =>
+                      (
+                        MakeSimpleMethod(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
+                        PrimDefinition.WasmMemoryGrow
+                      ),
+                      // (pointer: int, value: int, byteCount: int) => int
+                      ["fill"] =>
                   (
-                    MakeSimpleMethod(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
-                    PrimDefinition.WasmMemoryGrow
+                    MakeSimpleMethod(
+                      position,
+                      [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                      Signature.PrimitiveType.Int
+                    ),
+                    PrimDefinition.WasmMemoryFill
                   ),
-                  // (pointer: int, value: int, byteCount: int) => int
-                  ["fill"] =>
-                (
-                  MakeSimpleMethod(
-                    position,
-                    [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-                    Signature.PrimitiveType.Int
-                  ),
-                  PrimDefinition.WasmMemoryFill
-                ),
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },

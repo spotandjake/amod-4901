@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-using Decaf.Utils;
 using Decaf.WasmBuilder;
 using AnfTree = Decaf.IR.AnfTree;
-using TypedTree = Decaf.IR.TypedTree;
 using Signature = Decaf.IR.Signature;
 
 // This is the core of the code generation phase. It takes an AnfTree and produces a WasmTree.
@@ -107,6 +104,7 @@ namespace Decaf.Backend {
       var compiledExpr = CompileSimpleExpr(ctx, node.SimpleExpression);
       if (ctx.TopLevel) {
         // If this is a top level bind, we need to create a global variable for it
+        // TODO: Validate this
         // TODO: Create a global variable with the name `node.name`
         // TODO: Emit an instruction to set the global variable to the compiled expression
         throw new NotImplementedException("Top level binds are not yet supported");

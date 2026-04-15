@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using AnfTree = Decaf.IR.AnfTree;
-using TypedTree = Decaf.IR.TypedTree;
 
 namespace Decaf.Backend.Optimizations {
   /// <summary>

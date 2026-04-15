@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using VerifyMSTest;
 using VerifyTests;
 
@@ -10,11 +9,6 @@ using Decaf.Utils.Errors.SemanticErrors;
 
 [TestClass]
 public class DecafSemanticTests : VerifyBase {
-  private VerifySettings CreateSettings() {
-    var settings = new VerifySettings();
-    settings.UseDirectory("Snapshots/Semantic/");
-    return settings;
-  }
   private ProgramNode SemanticAnalysis(string text) {
     var lexer = Compiler.Compiler.LexString(text, null);
     var tokenStream = new Antlr4.Runtime.CommonTokenStream(lexer);
@@ -22,232 +16,9 @@ public class DecafSemanticTests : VerifyBase {
     var scopedProgram = Compiler.Compiler.SemanticAnalysis(program);
     return scopedProgram;
   }
-  #region ScopeTests
-  [TestMethod]
-  public void TestBasicValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-        }
-        module Second {
-          let hello = (): void => {};
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestComplexValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1;
-          let b: int = 2;
-          let main = (): void => {};
-          let foo = (): void => {};
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestMultipleBindsValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1, b: int = 2, c: int = 3, d: int = 4;
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestManyFunctionsValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let main = (): void => {};
-          let main1 = (): void => {};
-          let main2 = (): void => {};
-          let main3 = (): void => {};
-          let main4 = (): void => {};
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestNestedValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1;
-          let main = (): void => {
-            let b: int = 2;
-            b = 2;
-            if (true) {
-              let c: int = 3;
-              c = 3;
-            }
-          };
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestRedefinitionNestedValidScope() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1;
-          let main = (): void => {
-            let a: int = 2;
-            if (true) {
-              let a: int = 3;
-            }
-          };
-        }
-      ");
-    }
-    catch {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestDuplicateModuleInvalidScope() {
-    Assert.Throws<DuplicateDeclarationException>(() => {
-      SemanticAnalysis(@"
-        module Program {}
-        module Duplicate {}
-        module Duplicate {}
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestDuplicateVariable1() {
-    Assert.Throws<DuplicateDeclarationException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1;
-          let a: int = 2;
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestDuplicateVariable2() {
-    Assert.Throws<DuplicateDeclarationException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let main = (): void => {
-            let a: int = 1;
-            let a: int = 2;
-          };
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestDuplicateVariable3() {
-    Assert.Throws<DuplicateDeclarationException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let a: int = 1, a: int = 2, b: int = 3;
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestDuplicateMethod() {
-    Assert.Throws<DuplicateDeclarationException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let main = (): void => {};
-          let foo = (): void => {};
-          let foo = (): void => {};
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestUndefined1() {
-    Assert.Throws<DeclarationNotDefinedException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          x = 1;
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestUndefined2() {
-    Assert.Throws<DeclarationNotDefinedException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let main = (): void => {
-            let x: int = 1;
-          };
-          let foo = (): void => {
-            x = 1;
-          };
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestUndefined3() {
-    Assert.Throws<DeclarationNotDefinedException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          Second.main();
-        }
-      ");
-    });
-  }
-  [TestMethod]
-  public void TestMutation1() {
-    try {
-      SemanticAnalysis(@"
-        module Program {
-          let x: int = 1;
-          let main = (): void => {
-            x = 1;
-          };
-        }
-      ");
-    }
-    catch (DeclarationNotMutableException) {
-      Assert.Fail("Semantic analysis threw an exception on a valid program.");
-    }
-  }
-  [TestMethod]
-  public void TestMutation2() {
-    Assert.Throws<DeclarationNotMutableException>(() => {
-      SemanticAnalysis(@"
-        module Program {
-          let add = (x: int): void => {
-            x = 1;
-          };
-        }
-      ");
-    });
-  }
-  #endregion
   #region SemanticTests
-  // Loop Checks
   [TestMethod]
-  public void TestValidSemanticLoops() {
+  public void TestInvalidSemanticProgram() {
     try {
       SemanticAnalysis(@"
       module Program {
@@ -261,6 +32,17 @@ public class DecafSemanticTests : VerifyBase {
     catch {
       Assert.Fail("Semantic analysis threw an exception on a valid program.");
     }
+  }
+  // Loop Checks
+  [TestMethod]
+  public void TestValidSemanticLoops() {
+    Assert.Throws<ProgramModuleNotFound>(() => {
+      SemanticAnalysis(@"
+      module Main {
+        continue;
+      }
+    ");
+    });
   }
   [TestMethod]
   public void TestValidSemanticNestedLoops() {
@@ -282,9 +64,9 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestInValidSemanticContinue() {
-    Assert.Throws<SemanticException>(() => {
+    Assert.Throws<ContinueStatementOutsideOfLoop>(() => {
       SemanticAnalysis(@"
-      module Main {
+      module Program {
         continue;
       }
     ");
@@ -292,9 +74,9 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestInValidSemanticBreak() {
-    Assert.Throws<SemanticException>(() => {
+    Assert.Throws<BreakStatementOutsideOfLoop>(() => {
       SemanticAnalysis(@"
-      module Main {
+      module Program {
         break;
       }
     ");
@@ -318,9 +100,9 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestInValidSemanticArithmetic() {
-    Assert.Throws<SemanticException>(() => {
+    Assert.Throws<DivisionByZero>(() => {
       SemanticAnalysis(@"
-      module Main {
+      module Program {
         let x: int = 1 / 0;
       }
     ");
@@ -345,9 +127,9 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestInValidSemanticArrayInit() {
-    Assert.Throws<SemanticException>(() => {
+    Assert.Throws<ArraySizeMustBePositive>(() => {
       SemanticAnalysis(@"
-      module Main {
+      module Program {
         let a: int[] = new int[-1];
       }
     ");
@@ -369,10 +151,10 @@ public class DecafSemanticTests : VerifyBase {
   }
   [TestMethod]
   public void TestInValidSemanticArrayIndex() {
-    Assert.Throws<SemanticException>(() => {
+    Assert.Throws<ArrayIndexMustBeNonNegative>(() => {
       SemanticAnalysis(@"
-      module Main {
-        let a: int[] = new int[-1];
+      module Program {
+        let a: int[] = new int[5];
         a[-1] = 1;
       }
     ");

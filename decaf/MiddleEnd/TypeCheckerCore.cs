@@ -12,26 +12,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
   /// This module isn't overly decaf specific and could be easily re-used in other contexts.
   /// </summary>
   internal static class TypeCheckerCore {
-    // TODO: Figure out if we actually need these?
-    // // Builders
-    // public static TypedTree.Signature.PrimitiveSignature BuildSimpleSignature(Position position, TypedTree.PrimitiveType type) {
-    //   return new TypedTree.Signature.PrimitiveSignature(position, type);
-    // }
-    // public static TypedTree.Signature BuildSimpleCompoundSignature(bool IsArray, ParseTree.TypeNode node) {
-    //   TypedTree.Signature baseType = node.Type switch {
-    //     ParseTree.PrimitiveType.Int => BuildSimpleSignature(node.Position, TypedTree.PrimitiveType.Int),
-    //     ParseTree.PrimitiveType.Boolean => BuildSimpleSignature(node.Position, TypedTree.PrimitiveType.Boolean),
-    //     ParseTree.PrimitiveType.Void => BuildSimpleSignature(node.Position, TypedTree.PrimitiveType.Void),
-    //     ParseTree.PrimitiveType.String => BuildSimpleSignature(node.Position, TypedTree.PrimitiveType.String),
-    //     // ParseTree.PrimitiveType.Custom => new Signature.CustomSignature(node.Position, node.Content),
-    //     // NOTE: This case can never be hit c# exhaustiveness is just being weird
-    //     _ => throw new Exception("Impossible: unknown primitive type"),
-    //   };
-    //   return IsArray switch {
-    //     true => new Signature.ArraySignature(node.Position, baseType),
-    //     false => baseType,
-    //   };
-    // }
     // Internal Helpers
     // TODO: Maybe we just convert this to `toString` overrides on the signatures?
     private static string GetTypeCategoryName(Signature.Signature signature) {
@@ -94,13 +74,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
 
       // Check that we have the same number of members on both sides
       if (expected.Members.Count != received.Members.Count) {
-        // TODO: Throw a more specific error from `utils/errors` here
         throw new LhsNotRhs(received.Position, $"{expected.Members.Count} members", $"{received.Members.Count} members");
       }
       // Check that the members on the modules match
       foreach (var expectedMember in expected.Members) {
         if (!received.Members.TryGetValue(expectedMember.Key, out Signature.Signature value)) {
-          // TODO: Throw a more specific error from `utils/errors` here
           throw new LhsNotRhs(received.Position, $"member named {expectedMember.Key}", "no such member");
         }
         // Check that the types are the same
@@ -118,7 +96,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
 
       // Check that we have the same number of parameters on both sides
       if (expected.ParameterTypes.Length != received.ParameterTypes.Length) {
-        // TODO: Throw a more specific error from `utils/errors` here
         throw new LhsNotRhs(
           received.Position,
           $"method with {expected.ParameterTypes.Length} parameters",

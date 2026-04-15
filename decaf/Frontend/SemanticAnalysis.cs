@@ -39,10 +39,8 @@ namespace Decaf.Frontend {
     #region CodeUnits
     public static void CheckProgramNode(ParseTree.ProgramNode node) {
       // Ensure the program contains a module names `Program`
-      if (!node.Modules.Any(m => m.Name.Name == "Program")) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "A program must contain a module called 'Program'");
-      }
+      if (!node.Modules.Any(m => m.Name.Name == "Program"))
+        throw new ProgramModuleNotFound(node.Position);
       // Check each module
       foreach (var mod in node.Modules) {
         // Create a context for each module
@@ -110,10 +108,7 @@ namespace Decaf.Frontend {
         if (
           bind.InitExpr is ParseTree.ExpressionNode.LiteralExprNode { Literal: ParseTree.LiteralNode.FunctionNode } &&
           parentCtx.ParentNode is not ParseTree.ModuleNode
-        ) {
-          // TODO: Give this a unique error from `utils/errors`
-          throw new SemanticException(bind.InitExpr.Position, "Functions can only be defined at the top level of a module");
-        }
+        ) throw new FunctionsCanOnlyBeDefinedAtTopLevelOfModule(bind.InitExpr.Position);
       }
     }
     private static void CheckAssignmentStatementNode(Context parentCtx, ParseTree.StatementNode.AssignmentNode node) {
@@ -134,25 +129,16 @@ namespace Decaf.Frontend {
     }
     private static void CheckReturnStatementNode(Context parentCtx, ParseTree.StatementNode.ReturnNode node) {
       // Ensure that return statements only appear inside of functions
-      if (!parentCtx.InFunction) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "Return statements must be inside a function");
-      }
+      if (!parentCtx.InFunction) throw new ReturnStatementOutsideOfFunction(node.Position);
       if (node.Value != null) CheckExpressionNode(parentCtx, node.Value);
     }
     private static void CheckContinueStatementNode(Context parentCtx, ParseTree.StatementNode.ContinueNode node) {
       // Ensure `continue` statements only appear inside of loops
-      if (!parentCtx.InLoop) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "Continue statements must be inside a loop");
-      }
+      if (!parentCtx.InLoop) throw new ContinueStatementOutsideOfLoop(node.Position);
     }
     private static void CheckBreakStatementNode(Context parentCtx, ParseTree.StatementNode.BreakNode node) {
       // Ensure `break` statements only appear inside of loops
-      if (!parentCtx.InLoop) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "Break statements must be inside a loop");
-      }
+      if (!parentCtx.InLoop) throw new BreakStatementOutsideOfLoop(node.Position);
     }
     private static void CheckExpressionStatementNode(Context parentCtx, ParseTree.StatementNode.ExprStatementNode node) {
       // NOTE: We don't update the parentNode here as we know it's an expression (weather its a statement or not doesn't matter)
@@ -197,10 +183,7 @@ namespace Decaf.Frontend {
       if (
         node.Operator == IR.Operators.BinaryOperator.Divide &&
         node.Rhs is ParseTree.ExpressionNode.LiteralExprNode { Literal: ParseTree.LiteralNode.IntegerNode { Value: 0 } }
-      ) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "Division by zero is not allowed.");
-      }
+      ) throw new DivisionByZero(node.Position);
     }
     private static void CheckCallExpressionNode(Context parentCtx, ParseTree.ExpressionNode.CallNode node) {
       var ctx = parentCtx with { ParentNode = node };
@@ -213,10 +196,7 @@ namespace Decaf.Frontend {
       // Check for negative array size when the size is a constant literal
       if (
         node.SizeExpr is ParseTree.ExpressionNode.LiteralExprNode { Literal: ParseTree.LiteralNode.IntegerNode { Value: < 0 } }
-      ) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, $"Array size must be non-negative");
-      }
+      ) throw new ArraySizeMustBePositive(node.Position);
     }
     private static void CheckLocationExpressionNode(Context parentCtx, ParseTree.ExpressionNode.LocationExprNode node) {
       // NOTE: We don't update the parent node here as we know it's a location expression (and not a call or something else that also has a location)
@@ -250,10 +230,7 @@ namespace Decaf.Frontend {
         parentCtx.ParentNode is not ParseTree.StatementNode.VariableDeclNode
         // Sanity check that it is top level (This would be caught by the checks on VariableDeclNode)
         || parentCtx.InFunction || parentCtx.InLoop
-      ) {
-        // TODO: Give this a unique error from `utils/errors`
-        throw new SemanticException(node.Position, "Functions may only be used as the initializer of a bind");
-      }
+      ) throw new FunctionLiteralMustBeDirectRhsOfVarDecl(node.Position);
       // Create a brand new context (functions don't inherit the context of their parent as they are self contained)
       var ctx = new Context { ParentNode = node, InFunction = true, InLoop = false };
       // Check the method body
@@ -275,8 +252,7 @@ namespace Decaf.Frontend {
                 Literal: ParseTree.LiteralNode.IntegerNode { Value: < 0 }
               }
             ) {
-              // TODO: Give this a unique error from `utils/errors`
-              throw new SemanticException(arrayNode.Position, $"Array index must be non-negative");
+              throw new ArrayIndexMustBeNonNegative(arrayNode.Position);
             }
             break;
           }

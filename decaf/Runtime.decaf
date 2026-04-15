@@ -20,6 +20,7 @@ module Runtime {
     // Determine if the program has enough memory
     if (end <= (pageCount * PageSize)) {
       // Grow the memory if we need
+      // TODO: We should compute the page size we need
       @wasm.memory.grow(1);
     }
     // Bump the heap pointer
