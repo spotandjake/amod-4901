@@ -28,7 +28,7 @@ namespace Decaf.Backend {
       var compiledLength = new WasmExpression.I32.Load(
         position,
         pointer,
-        new WasmExpression.I32.Const(position, 0) // length is at offset 0
+        0 // length is at offset 0
       );
       // Compare the index to the length
       var compiledBoundsCheck = new WasmExpression.I32.GeS(position, index, compiledLength);

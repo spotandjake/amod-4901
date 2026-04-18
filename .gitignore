@@ -12,5 +12,9 @@ decafTests/TestResults/
 # Antlr
 .antlr/
 
+# Wasm
+*.wat
+*.wasm
+
 # Mac os
 .DS_Store

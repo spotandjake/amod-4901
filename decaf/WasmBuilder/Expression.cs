@@ -104,33 +104,54 @@ namespace Decaf.WasmBuilder {
         internal override string ToWat(WasmBuildCtx ctx) => $"(i32.popcnt {LHS.ToWat(ctx)})";
       }
       // Load - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/load
-      public sealed record Load(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Load(Position Position, WasmExpression Ptr, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.load {offset} {Ptr.ToWat(ctx)})";
+        }
       }
-      public sealed record Load8S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load8_s {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Load8S(Position Position, WasmExpression Ptr, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.load8_s {offset} {Ptr.ToWat(ctx)})";
+        }
       }
-      public sealed record Load8U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load8_u {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Load8U(Position Position, WasmExpression Ptr, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.load8_u {offset} {Ptr.ToWat(ctx)})";
+        }
       }
-      public sealed record Load16S(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load16_s {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Load16S(Position Position, WasmExpression Ptr, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.load16_s {offset} {Ptr.ToWat(ctx)})";
+        }
       }
-      public sealed record Load16U(Position Position, WasmExpression Ptr, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) => $"(i32.load16_u {Ptr.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Load16U(Position Position, WasmExpression Ptr, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.load16_u {offset} {Ptr.ToWat(ctx)})";
+        }
       }
       // Store - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Memory/store
-      public sealed record Store(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) =>
-          $"(i32.store {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Store(Position Position, WasmExpression Ptr, WasmExpression Value, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.store {offset} {Ptr.ToWat(ctx)} {Value.ToWat(ctx)})";
+        }
       }
-      public sealed record Store8(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) =>
-          $"(i32.store8 {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Store8(Position Position, WasmExpression Ptr, WasmExpression Value, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.store8 {offset} {Ptr.ToWat(ctx)} {Value.ToWat(ctx)})";
+        }
       }
-      public sealed record Store16(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Offset) : I32(Position) {
-        internal override string ToWat(WasmBuildCtx ctx) =>
-          $"(i32.store16 {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} (offset {Offset.ToWat(ctx)}))";
+      public sealed record Store16(Position Position, WasmExpression Ptr, WasmExpression Value, int? Offset) : I32(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          var offset = Offset != null ? $"offset={Offset}" : "";
+          return $"(i32.store16 {offset} {Ptr.ToWat(ctx)} {Value.ToWat(ctx)})";
+        }
       }
     }
     // Memory
@@ -171,6 +192,18 @@ namespace Decaf.WasmBuilder {
         internal override string ToWat(WasmBuildCtx ctx) => $"(local.tee {Name.ToWat(ctx)} {Value.ToWat(ctx)})";
       }
     }
+    // Ref - https://webassembly.github.io/spec/core/text/instructions.html#reference-instructions
+    public abstract record Ref(Position Position) : WasmExpression(Position) {
+      // TODO: ref.null
+      public sealed record Func(Position Position, WasmLabel FunctionName) : Ref(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) => $"(ref.func {FunctionName.ToWat(ctx)})";
+      }
+      // TODO: ref.is_null
+      // TODO: ref.as_non_null
+      // TODO: ref.eq
+      // TODO: ref.test
+      // TODO: ref.cast
+    }
     // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
     public record Block(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position) {
       internal override string ToWat(WasmBuildCtx ctx) {
@@ -202,6 +235,21 @@ namespace Decaf.WasmBuilder {
           sb.Append($" {arg.ToWat(ctx)}");
         }
         sb.Append(")");
+        return sb.ToString();
+      }
+    }
+    // Call_ref - https://github.com/WebAssembly/gc/blob/main/proposals/function-references/Overview.md
+    public sealed record CallRef(Position Position, WasmType WasmType, WasmExpression FunctionRef, IEnumerable<WasmExpression> Arguments) : WasmExpression(Position) {
+      internal override string ToWat(WasmBuildCtx ctx) {
+        var sb = new StringBuilder();
+        if (WasmType is not WasmType.FuncRef) {
+          throw new System.Exception($"Expected WasmType to be FuncRef, but got {WasmType}");
+        }
+        sb.Append($"(call_ref {(WasmType as WasmType.FuncRef).Label.ToWat(ctx)} {FunctionRef.ToWat(ctx)}");
+        foreach (var arg in Arguments) {
+          sb.Append($" {arg.ToWat(ctx)}");
+        }
+        sb.Append(')');
         return sb.ToString();
       }
     }

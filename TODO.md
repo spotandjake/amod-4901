@@ -10,6 +10,10 @@ These are things directly related to deliverables or causing codegen issues that
   * Functions - Compile Functions
   * Strings - Compile Strings
 * ANF
+  * I think `ExprStatement` is causing us to generate intermediate binds to `void`s (we should correct this)
+  * Differentiate between a global and local in the top level bind
+    * Globals are used in other functions and need to be emitted as wasm globals
+    * locals are only used in the module body itself
   * Perform symbol resolution in the anf tree
     * This means replacing `AnfTree.Location` with more specific instructions like:
       * `AnfTree.Local.Get`

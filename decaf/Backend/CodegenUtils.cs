@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+
+using Decaf.IR.Signature;
 using Decaf.Utils;
 using Decaf.WasmBuilder;
 

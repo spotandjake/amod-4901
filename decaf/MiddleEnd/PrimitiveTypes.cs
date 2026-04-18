@@ -45,8 +45,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
     public static PrimResolution ResolvePrimitive(Position position, ParseTree.LocationNode node) {
       var path = GetLocationPath(position, node, []);
       return path switch {
-      // We found the wasm namespace, so we can delegate to the wasm resolver
-      ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
+        // We found the wasm namespace, so we can delegate to the wasm resolver
+        ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
         // Unknown primitive call
         _ => throw new UnknownPrimitiveCall(position, node.ToString()),
       };
@@ -55,48 +55,48 @@ namespace Decaf.MiddleEnd.TypeChecker {
     // NOTE: This resolver resolves anything in the @wasm namespace, which contains primitives that map to wasm instructions
     private static PrimResolution ResolveWasmPrimitive(Position position, ParseTree.LocationNode node, List<string> path) {
       return path switch {
-      // Memory namespace
-      ["memory", .. var subPath] => subPath switch {
-      // () => int
-      ["size"] =>
-        (
-          MakeSimpleMethod(position, [], Signature.PrimitiveType.Int),
-          PrimDefinition.WasmMemorySize
-        ),
-        // (pageCount: int) => int
-        ["grow"] =>
-                      (
-                        MakeSimpleMethod(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
-                        PrimDefinition.WasmMemoryGrow
-                      ),
-                      // (pointer: int, value: int, byteCount: int) => int
-                      ["fill"] =>
-                  (
-                    MakeSimpleMethod(
-                      position,
-                      [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-                      Signature.PrimitiveType.Int
-                    ),
-                    PrimDefinition.WasmMemoryFill
-                  ),
-        // Unknown
-        _ => throw new UnknownPrimitiveCall(position, node.ToString())
-      },
-      // I32 namespace
-      ["i32", .. var subPath] => subPath switch {
-      // (ptr: int, offset: int, value: int) => void
-      ["store"] =>
+        // Memory namespace
+        ["memory", .. var subPath] => subPath switch {
+          // () => int
+          ["size"] =>
+            (
+              MakeSimpleMethod(position, [], Signature.PrimitiveType.Int),
+              PrimDefinition.WasmMemorySize
+            ),
+          // (pageCount: int) => int
+          ["grow"] =>
+                        (
+                          MakeSimpleMethod(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
+                          PrimDefinition.WasmMemoryGrow
+                        ),
+          // (pointer: int, value: int, byteCount: int) => int
+          ["fill"] =>
       (
-          MakeSimpleMethod(
-            position,
-            [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-            Signature.PrimitiveType.Void
-          ),
-          PrimDefinition.WasmI32Store
+        MakeSimpleMethod(
+          position,
+          [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+          Signature.PrimitiveType.Int
         ),
-        // Unknown
-        _ => throw new UnknownPrimitiveCall(position, node.ToString())
-      },
+        PrimDefinition.WasmMemoryFill
+      ),
+          // Unknown
+          _ => throw new UnknownPrimitiveCall(position, node.ToString())
+        },
+        // I32 namespace
+        ["i32", .. var subPath] => subPath switch {
+          // (ptr: int, value: int) => void
+          ["store"] =>
+          (
+              MakeSimpleMethod(
+                position,
+                [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                Signature.PrimitiveType.Void
+              ),
+              PrimDefinition.WasmI32Store
+            ),
+          // Unknown
+          _ => throw new UnknownPrimitiveCall(position, node.ToString())
+        },
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       };

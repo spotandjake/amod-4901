@@ -212,15 +212,15 @@ namespace Decaf.MiddleEnd {
     ) {
       return new AnfTree.InstructionNode.BreakNode(node.Position);
     }
-    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.InstructionNode.ImmInstructionNode) FromExprStatementNode(
+    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.InstructionNode.SimpleExprInstructionNode) FromExprStatementNode(
       AnfState state, TypedTree.StatementNode.ExprStatementNode node
     ) {
-      var (binds, imm) = FromExpressionNodeAsImm(state, node.Expression);
+      var (binds, expr) = FromExpressionNodeAsSimpleExpr(state, node.Expression);
       return (
         binds,
-        new AnfTree.InstructionNode.ImmInstructionNode(
+        new AnfTree.InstructionNode.SimpleExprInstructionNode(
           node.Position,
-          imm
+          expr
         )
       );
     }

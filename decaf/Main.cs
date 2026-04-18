@@ -30,6 +30,11 @@ namespace Decaf.CLI {
     [Description("Weather we want to debug the compiler while compiling.")]
     [DefaultValue(false)]
     public bool Debug { get; init; }
+    // TODO: I think we almost want an out file and a separate output format???
+    [CommandOption("--wat", isRequired: false)]
+    [Description("Weather we want to emit the wat output of the compiled module, and the file to write it to.")]
+    [DefaultValue(null)]
+    public string WatOutputFile { get; init; }
   }
   // Our default command for the CLI application.
   public class ProgramCommand : Command<Settings> {
@@ -47,7 +52,10 @@ namespace Decaf.CLI {
       // Compile the source content
       try {
         var wasmModule = Compiler.CompileString(source, relPath);
-        Console.WriteLine(wasmModule.ToWat());
+        // Write the file output if specified in the settings
+        if (settings.WatOutputFile != null) {
+          File.WriteAllText(settings.WatOutputFile, wasmModule.ToWat());
+        }
         // TODO: Write the file output if specified in the settings
         // string json = JsonSerializer.Serialize(wasmModule, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
         // Console.WriteLine(json);

@@ -45,13 +45,14 @@ namespace Decaf.IR.AnfTree {
     ReturnInstructionNode,
     ContinueInstructionNode,
     BreakInstructionNode,
-    ImmInstructionNode,
+    SimpleExprInstructionNode,
     // --- Expressions ---
     PrefixExpressionNode,
     BinopExpressionNode,
     CallExpressionNode,
     PrimCallExpressionNode,
     ArrayInitExpressionNode,
+    ImmExpressionNode,
     // --- Immediates ---
     ConstantImmediate,
     LocationImmediate,
@@ -144,7 +145,7 @@ namespace Decaf.IR.AnfTree {
   [JsonDerivedType(typeof(InstructionNode.ReturnNode), "ReturnInstructionNode")]
   [JsonDerivedType(typeof(InstructionNode.ContinueNode), "ContinueInstructionNode")]
   [JsonDerivedType(typeof(InstructionNode.BreakNode), "BreakInstructionNode")]
-  [JsonDerivedType(typeof(InstructionNode.ImmInstructionNode), "ImmInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.SimpleExprInstructionNode), "SimpleExprInstructionNode")]
   public abstract record InstructionNode : Node {
     protected InstructionNode(Position position) : base(position) { }
 
@@ -218,10 +219,10 @@ namespace Decaf.IR.AnfTree {
     public sealed record BreakNode(Position Position) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.BreakInstructionNode;
     };
-    /// <summary>An immediate instruction.</summary>
-    public sealed record ImmInstructionNode(Position Position, ImmediateNode Imm) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.ImmInstructionNode;
-      public ImmediateNode Imm { get; } = Imm;
+    /// <summary>A simple expression instruction.</summary>
+    public sealed record SimpleExprInstructionNode(Position Position, SimpleExpressionNode Expr) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.SimpleExprInstructionNode;
+      public SimpleExpressionNode Expr { get; } = Expr;
     };
   }
   #endregion
@@ -318,7 +319,7 @@ namespace Decaf.IR.AnfTree {
       ImmediateNode Imm,
       Signature.Signature ExpressionType
     ) : SimpleExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.ImmInstructionNode;
+      public override NodeKind Kind => NodeKind.ImmExpressionNode;
       public ImmediateNode Imm { get; } = Imm;
     }
   }

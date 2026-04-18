@@ -27,8 +27,8 @@ namespace Decaf.Backend {
           new WasmExpression.I32.Store(
             node.Position,
             CompileImmediate(ctx, node.Arguments[0]),
-            CompileImmediate(ctx, node.Arguments[2]),
-            CompileImmediate(ctx, node.Arguments[1])
+            CompileImmediate(ctx, node.Arguments[1]),
+            0
           ),
         // Unknown
         _ => throw new Exception($"Unknown primitive: {node.Callee}"),
