@@ -44,7 +44,17 @@ module Runtime {
     // Allocate the block
     let pointer: int = Runtime.calloc(byteSize);
     // Store the length
-    @wasm.i32.store(pointer + byteSize, 0);
+    @wasm.i32.store(pointer, byteSize);
+    // Return the pointer
+    return pointer;
+  };
+  let allocateString = (length: int): int => {
+    // Compute the byteSize
+    let byteSize: int = length + 4;
+    // Allocate the block
+    let pointer: int = Runtime.malloc(byteSize);
+    // Store the length
+    @wasm.i32.store(pointer, length);
     // Return the pointer
     return pointer;
   };

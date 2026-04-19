@@ -266,6 +266,8 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(ctx);
       // NOTE: The [1..^1] is to skip the opening and closing quotes, this is safe because of lexing constraints
       var value = ctx.STRINGLIT().GetText()[1..^1];
+      // TODO: There are better ways to handle escape sequences than this
+      value = value.Replace("\\\"", "\"").Replace("\\n", "\n").Replace("\\t", "\t").Replace("\\\\", "\\");
       return new ParseTree.LiteralNode.StringNode(position, value);
     }
 #nullable enable

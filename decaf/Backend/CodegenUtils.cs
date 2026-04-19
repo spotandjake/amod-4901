@@ -22,6 +22,7 @@ namespace Decaf.Backend {
       public static readonly string RuntimeCallocName = GetMemberName(RuntimeModuleName, "calloc");
       // Allocation APIs
       public static readonly string RuntimeAllocateArray = GetMemberName(RuntimeModuleName, "allocateArray");
+      public static readonly string RuntimeAllocateString = GetMemberName(RuntimeModuleName, "allocateString");
     }
   }
 }

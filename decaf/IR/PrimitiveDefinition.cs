@@ -1,6 +1,8 @@
 // This file contains the type definition for primitive callouts in the language
 namespace Decaf.IR.PrimitiveDefinition {
   public enum PrimDefinition {
+    // General purpose primitives
+    GetPointer,
     // --- @wasm namespace ---
     // memory sub namespace
     WasmMemorySize,

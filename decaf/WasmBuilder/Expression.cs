@@ -165,6 +165,12 @@ namespace Decaf.WasmBuilder {
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position) {
         internal override string ToWat(WasmBuildCtx ctx) => $"(memory.fill {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} {Length.ToWat(ctx)})";
       }
+      public sealed record Init(
+        Position Position, WasmLabel DataSegment, WasmExpression DestPtr, WasmExpression SrcOffset, WasmExpression Length
+      ) : Memory(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) =>
+          $"(memory.init {DataSegment.ToWat(ctx)} {DestPtr.ToWat(ctx)} {SrcOffset.ToWat(ctx)} {Length.ToWat(ctx)})";
+      }
     }
     // Global - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Variables/global
     public abstract record Global(Position Position) : WasmExpression(Position) {

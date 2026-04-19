@@ -368,13 +368,54 @@ namespace Decaf.Backend {
         // We represent characters as `(i32.const <value>)` where <value> is the unicode code point of the character
         AnfTree.LiteralNode.CharacterNode characterNode =>
           new WasmExpression.I32.Const(characterNode.Position, characterNode.Value),
-        // TODO: Implement strings according to codegen design doc
-        AnfTree.LiteralNode.StringNode stringNode =>
-          throw new NotImplementedException("String literals are not yet supported"),
+        AnfTree.LiteralNode.StringNode stringNode => CompileStringLiteral(ctx, stringNode),
         AnfTree.LiteralNode.FunctionReferenceNode funcRefNode =>
           new WasmExpression.Ref.Func(funcRefNode.Position, CodegenUtils.GetMemberLabel(funcRefNode.Position, ctx.ModuleName, funcRefNode.FunctionName)),
         _ => throw new Exception($"Unknown literal node kind: {node.Kind}"),
       };
+    }
+    private static WasmExpression CompileStringLiteral(
+      CodegenContext ctx,
+      AnfTree.LiteralNode.StringNode node
+    ) {
+      // Create a data segment for the string literal
+      var rawData = System.Text.Encoding.UTF8.GetBytes(node.Value);
+      var dataSegment = new WasmDataSegment(
+        Position: node.Position,
+        Label: new WasmLabel.UniqueLabel(node.Position, $"str"),
+        Data: rawData
+      );
+      // Add the data segment to the module
+      ctx.WasmModule.AddDataSegment(dataSegment);
+      // Create a local for the pointer
+      var localLabel = new WasmLabel.UniqueLabel(node.Position, "str_ptr");
+      ctx.WasmLocals.Add(localLabel, new WasmType.I32(node.Position));
+      // Allocate the string
+      var allocatedStringPtr = new WasmExpression.Call(
+        node.Position,
+        new WasmLabel.Label(node.Position, CodegenUtils.Runtime.RuntimeAllocateString),
+        [new WasmExpression.I32.Const(node.Position, rawData.Length)]
+      );
+      var storeAllocatedPtr = new WasmExpression.Local.Set(node.Position, localLabel, allocatedStringPtr);
+      // Copy the data segment content into the allocated memory
+      var copyData = new WasmExpression.Memory.Init(
+        node.Position,
+        dataSegment.Label,
+        new WasmExpression.I32.Add(
+          node.Position,
+          new WasmExpression.Local.Get(node.Position, localLabel),
+          new WasmExpression.I32.Const(node.Position, 4)
+        ),
+        new WasmExpression.I32.Const(node.Position, 0),
+        new WasmExpression.I32.Const(node.Position, rawData.Length)
+      );
+      // Create a block to wrap the allocation and copy
+      return new WasmExpression.Block(
+        node.Position,
+        null,
+        [storeAllocatedPtr, copyData, new WasmExpression.Local.Get(node.Position, localLabel)],
+        new WasmType.I32(node.Position)
+      );
     }
     #endregion
     // --- Locations ---

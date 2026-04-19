@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 using ParseTree = Decaf.IR.ParseTree;
+using TypedTree = Decaf.IR.TypedTree;
 using Signature = Decaf.IR.Signature;
 using Decaf.IR.PrimitiveDefinition;
 using Decaf.Utils.Errors.TypeCheckingErrors;
 using Decaf.Utils;
+
+// TODO: Separate name resolution from type matching
 
 // This file contains the logic responsible for resolving primitive calls to their signatures and definitions.
 namespace Decaf.MiddleEnd.TypeChecker {
@@ -42,11 +45,24 @@ namespace Decaf.MiddleEnd.TypeChecker {
       };
     }
     // The main resolver
-    public static PrimResolution ResolvePrimitive(Position position, ParseTree.LocationNode node) {
+    public static PrimResolution ResolvePrimitive(
+      Position position, ParseTree.LocationNode node, TypedTree.ExpressionNode[] args
+    ) {
       var path = GetLocationPath(position, node, []);
       return path switch {
-      // We found the wasm namespace, so we can delegate to the wasm resolver
-      ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
+      // @getPtr: (val: a) => int
+      ["@getPointer"] =>
+        (
+          new Signature.Signature.FunctionSig(
+            position,
+            // TODO: This is unsafe
+            [args[0].ExpressionType],
+            new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.Int)
+          ),
+          PrimDefinition.GetPointer
+        ),
+        // We found the wasm namespace, so we can delegate to the wasm resolver
+        ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
         // Unknown primitive call
         _ => throw new UnknownPrimitiveCall(position, node.ToString()),
       };
@@ -65,21 +81,20 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ),
         // (pageCount: int) => int
         ["grow"] =>
-                          (
-                            MakeSimpleFunc(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
-                            PrimDefinition.WasmMemoryGrow
-                          ),
-                          // (pointer: int, value: int, byteCount: int) => int
-                          ["fill"] =>
-                    (
-                      MakeSimpleFunc(
-                        position,
-                        [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-                        Signature.PrimitiveType.Void
-                      ),
-                      PrimDefinition.WasmMemoryFill
-                    ),
-        // TODO: Separate name resolution from type matching
+              (
+                MakeSimpleFunc(position, [Signature.PrimitiveType.Int], Signature.PrimitiveType.Int),
+                PrimDefinition.WasmMemoryGrow
+              ),
+              // (pointer: int, value: int, byteCount: int) => int
+              ["fill"] =>
+              (
+                MakeSimpleFunc(
+                  position,
+                  [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                  Signature.PrimitiveType.Void
+                ),
+                PrimDefinition.WasmMemoryFill
+              ),
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },
@@ -97,34 +112,34 @@ namespace Decaf.MiddleEnd.TypeChecker {
         ),
         // (ptr: int, value: int) => void
         ["store8"] =>
-            (
-                 MakeSimpleFunc(
-                  position,
-                  [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-                  Signature.PrimitiveType.Void
+                (
+                     MakeSimpleFunc(
+                      position,
+                      [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                      Signature.PrimitiveType.Void
+                    ),
+                    PrimDefinition.WasmI32Store8
+                  ),
+                  // (ptr: int, value: int) => void
+                  ["store16"] =>
+              (
+                   MakeSimpleFunc(
+                    position,
+                    [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+                    Signature.PrimitiveType.Void
+                  ),
+                  PrimDefinition.WasmI32Store16
                 ),
-                PrimDefinition.WasmI32Store8
-              ),
-              // (ptr: int, value: int) => void
-              ["store16"] =>
-            (
-                 MakeSimpleFunc(
-                  position,
-                  [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-                  Signature.PrimitiveType.Void
-                ),
-                PrimDefinition.WasmI32Store16
-              ),
-              // ptr: int => int
-              ["load"] =>
-            (
-                 MakeSimpleFunc(
-                  position,
-                  [Signature.PrimitiveType.Int],
-                  Signature.PrimitiveType.Int
-                ),
-                PrimDefinition.WasmI32Load
-              ),
+                // ptr: int => int
+                ["load"] =>
+        (
+             MakeSimpleFunc(
+              position,
+              [Signature.PrimitiveType.Int],
+              Signature.PrimitiveType.Int
+            ),
+            PrimDefinition.WasmI32Load
+          ),
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },

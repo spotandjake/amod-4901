@@ -22,6 +22,8 @@ namespace Decaf.WasmBuilder {
     private ConcurrentQueue<WasmLabel> ImportOrder { get; } = new ConcurrentQueue<WasmLabel>();
     private ConcurrentDictionary<WasmLabel, WasmMemory> Memories { get; } = new ConcurrentDictionary<WasmLabel, WasmMemory>();
     private ConcurrentQueue<WasmLabel> MemoryOrder { get; } = new ConcurrentQueue<WasmLabel>();
+    private ConcurrentDictionary<WasmLabel, WasmDataSegment> DataSegments { get; } = new ConcurrentDictionary<WasmLabel, WasmDataSegment>();
+    private ConcurrentQueue<WasmLabel> DataSegmentOrder { get; } = new ConcurrentQueue<WasmLabel>();
     private ConcurrentDictionary<int, WasmGlobal> Globals { get; } = new ConcurrentDictionary<int, WasmGlobal>();
     private ConcurrentQueue<int> GlobalOrder { get; } = new ConcurrentQueue<int>();
     private ConcurrentDictionary<int, WasmFunction> Functions { get; } = new ConcurrentDictionary<int, WasmFunction>();
@@ -55,6 +57,14 @@ namespace Decaf.WasmBuilder {
       }
       else {
         MemoryOrder.Enqueue(memory.Label);
+      }
+    }
+    public void AddDataSegment(WasmDataSegment dataSegment) {
+      if (!DataSegments.TryAdd(dataSegment.Label, dataSegment)) {
+        throw new Exception($"Data segment {dataSegment.Label.ToWat(new WasmBuildCtx())} already exists in module");
+      }
+      else {
+        DataSegmentOrder.Enqueue(dataSegment.Label);
       }
     }
     public void AddGlobal(WasmGlobal global) {
@@ -124,6 +134,12 @@ namespace Decaf.WasmBuilder {
         }
         elementSection.AppendLine(")");
       }
+      // Compile the data segments
+      var dataSegmentSection = new StringBuilder();
+      foreach (var dataSegmentID in this.DataSegmentOrder) {
+        var dataSegment = this.DataSegments[dataSegmentID];
+        dataSegmentSection.AppendLine(dataSegment.ToWat(ctx));
+      }
       // Compile the global section
       var globalSection = new StringBuilder();
       foreach (var globalID in this.GlobalOrder) {
@@ -140,7 +156,7 @@ namespace Decaf.WasmBuilder {
       var memoryExportStr = "(export \"memory\" (memory 0))";
       var startExport = "(export \"_start\" (func $_start))";
       // Package the entire module
-      return $"(module {typeSection}{importSection}{memorySection}{memoryExportStr}{elementSection}{globalSection}{functionSection}{startExport})";
+      return $"(module{typeSection}{importSection}{memorySection}{memoryExportStr}{dataSegmentSection}{elementSection}{globalSection}{functionSection}{startExport})";
     }
   }
 }

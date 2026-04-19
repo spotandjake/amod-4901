@@ -11,6 +11,8 @@ namespace Decaf.Backend {
       AnfTree.SimpleExpressionNode.PrimCallNode node
     ) {
       return node.Callee switch {
+        // General purpose primitives
+        PrimDefinition.GetPointer => CompileImmediate(ctx, node.Arguments[0]),
         // --- @wasm namespace ---
         // memory sub namespace
         PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),

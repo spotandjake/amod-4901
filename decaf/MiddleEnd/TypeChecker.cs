@@ -418,7 +418,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Primitive are handles slightly differently
       if (node.Callee.IsPrimitive) {
         // Map the callee
-        var (primSig, callee) = PrimitiveTypes.ResolvePrimitive(node.Position, node.Callee);
+        var (primSig, callee) = PrimitiveTypes.ResolvePrimitive(node.Position, node.Callee, args.ToArray());
         var expectedSignature = primSig switch {
           Signature.Signature.FunctionSig funcSig => funcSig,
           _ => throw new CallOnNonMethod(node.Position)
