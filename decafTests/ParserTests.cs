@@ -5,6 +5,7 @@ using VerifyTests;
 using Decaf.Compiler;
 using Decaf.IR.ParseTree;
 using Decaf.Utils;
+using Decaf.Utils.Errors.ParsingErrors;
 
 [TestClass]
 public class DecafParserTests : VerifyBase {
@@ -25,7 +26,7 @@ public class DecafParserTests : VerifyBase {
   // Empty Program
   [TestMethod]
   public void TestEmpty() {
-    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(""));
+    Assert.Throws<UnrecognizedTokenException>(() => Parse(""));
   }
   // Modules
   [TestMethod]
@@ -608,7 +609,7 @@ public class DecafParserTests : VerifyBase {
   // Invalid Tests
   [TestMethod]
   public void TestInvalidStmtNoSemi() {
-    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
+    Assert.Throws<UnrecognizedTokenException>(() => Parse(@"
     module Main {
       let x = 1
     }
@@ -616,7 +617,7 @@ public class DecafParserTests : VerifyBase {
   }
   [TestMethod]
   public void TestInvalidParenExpression() {
-    Assert.Throws<System.Data.SyntaxErrorException>(() => Parse(@"
+    Assert.Throws<UnrecognizedTokenException>(() => Parse(@"
     module Main { 
       let x = ();
     }

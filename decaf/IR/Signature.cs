@@ -6,7 +6,6 @@ using Decaf.Utils;
 
 namespace Decaf.IR.Signature {
   // The primitive types in our language
-  // TODO: Give this a better name
   public enum PrimitiveType {
     Int,
     Boolean,
@@ -47,17 +46,8 @@ namespace Decaf.IR.Signature {
     public sealed record ArraySig(Position Position, Signature Typ) : Signature(Position) {
       public override string ToString() => $"{Typ}[]";
     }
-    // TODO: Give this a better name
     public sealed record PrimitiveSig(Position Position, PrimitiveType Type) : Signature(Position) {
-      public override string ToString() => Type switch {
-        PrimitiveType.Int => "int",
-        PrimitiveType.Boolean => "boolean",
-        PrimitiveType.Character => "char",
-        PrimitiveType.String => "string",
-        PrimitiveType.Void => "void",
-        // NOTE: This should never happen, if it does we forgot to update this method when we added a new primitive type
-        _ => throw new Exception("Unknown primitive type")
-      };
+      public override string ToString() => Enum.GetName(Type);
     }
   }
 }

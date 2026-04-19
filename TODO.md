@@ -5,16 +5,19 @@ This document contains a list of all the major tasks that need to be done before
 ### Critical
 These are things directly related to deliverables or causing codegen issues that we must fix.
 
-* Figure out how to resolve variables from the module scope that are not referenced by the `Runtime.x` way and instead are just reference by `x`.
-  * My new idea is that we build a symbol table during the scope checking phase that has entries for all the variables in the module scope. Then during codegen we can check this symbol table to see if a variable is a global or not and emit the correct instruction.
-* Codegen
-  * Modules - Compile Modules
-  * Strings - Compile Strings
+* Fix references
+  * Currently to handle references we resolve them by name and during codegen we mangle the name.
+    * We should probably assign each reference a unique id during scope checking and then only use that to refer to them from then on.
+* WasmTree
+  * Cleanup the wasm tree itself to ensure the ir is proper and matches wasm (We currently have some weird adaptions)
+  * Implement a `ToWasm`
+  * Cleanup our `ToWat`
 * ANF
   * I think `ExprStatement` is causing us to generate intermediate binds to `void`s (we should correct this)
   * Differentiate between a global and local in the top level bind
     * Globals are used in other functions and need to be emitted as wasm globals
     * locals are only used in the module body itself
+  * Differentiate between a `call` and `call_ref`
   * Perform symbol resolution in the anf tree
     * This means replacing `AnfTree.Location` with more specific instructions like:
       * `AnfTree.Local.Get`
@@ -23,9 +26,6 @@ These are things directly related to deliverables or causing codegen issues that
       * `AnfTree.Global.Set`
       * `AnfTree.Array.Set`
       * `AnfTree.Array.Get`
-* WasmTree
-  * Implement `ToWat`
-  * Implement `ToWasm`
 * Testing
   * Test Result of CodeGen by snapshot testing the generated WasmTree
   * Test the compiler end to end by running the produced modules and capturing the output
@@ -33,8 +33,6 @@ These are things directly related to deliverables or causing codegen issues that
   * Ensure all the docs are to date.
 
 ### Less Critical
-* Add a statement for defining wasm imports
-  * NOTE: This should be semantically restricted to the top level
 * Anf Optimizations
   * Constant folding and propagation
     * Constant folding is literally just in cases like a binop if the left and right are constants we can just compute the result
@@ -44,8 +42,6 @@ These are things directly related to deliverables or causing codegen issues that
     * Check if a variable is ever consumed, if not remove it
     * Check if a function is ever called, if not remove it
     * NOTE: These passes iterate blocks and modules in reverse
-* Investigate WASM GC
-  * It would be nice if we could switch to using wasm gc for our arrays and strings over the current approach of linear memory
 * Testing
   * FrontEnd
     * Parsing

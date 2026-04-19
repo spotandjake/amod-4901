@@ -7,6 +7,7 @@ using System.Linq;
 using System.Data;
 
 using Decaf.Compiler;
+using Decaf.Utils.Errors.LexingErrors;
 
 namespace decafTests.FrontEnd;
 
@@ -206,9 +207,9 @@ public class LexerTest : VerifyBase {
     DecafLexer lexer = Lex(testString);
     try {
       IToken token = lexer.NextToken();
-      Assert.Fail("Expected a SyntaxErrorException to be thrown.");
+      Assert.Fail("Expected a UnrecognizedTokenException to be thrown.");
     }
-    catch (SyntaxErrorException e) {
+    catch (UnrecognizedTokenException e) {
       Assert.Contains("'aa", e.Message);
     }
   }
@@ -251,9 +252,9 @@ public class LexerTest : VerifyBase {
     DecafLexer lexer = Lex(testString);
     try {
       IToken token = lexer.NextToken();
-      Assert.Fail("Expected a SyntaxErrorException to be thrown.");
+      Assert.Fail("Expected a UnrecognizedTokenException to be thrown.");
     }
-    catch (SyntaxErrorException e) {
+    catch (UnrecognizedTokenException e) {
       // NOTE: We don't care about the exact message, just that it includes the invalid token.
       Assert.Contains("$", e.Message);
     }

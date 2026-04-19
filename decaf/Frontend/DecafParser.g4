@@ -106,7 +106,7 @@ func_param_list: func_param (COMMA func_param)*;
 func_param: name=id_location COLON typ=type;
 
 // --- Types ---
-type: simple_type (LBRACK size=int_literal? RBRACK)?;
+type: simple_type (LBRACK RBRACK)?;
 simple_type
   : INT # IntType
   | BOOLEAN # BooleanType

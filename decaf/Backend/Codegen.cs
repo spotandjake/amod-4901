@@ -306,8 +306,7 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.SimpleExpressionNode.CallNode node
     ) {
-      // Resolve the method name being called
-      // TODO: Handle the type properly here???
+      // Resolve the function name being called
       var compiledCalleeType = GetWasmTypeFromSignature(ctx, node.Callee.LocationType);
       var compiledCallee = CompileLocationGet(ctx, node.Callee);
       // Compile the arguments to the call

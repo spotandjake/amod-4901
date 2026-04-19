@@ -9,7 +9,6 @@ namespace Decaf.WasmBuilder {
       internal override string ToWat(WasmBuildCtx ctx) => $"${Name}";
     }
     public sealed record UniqueLabel(Position Position, string Name) : WasmLabel(Position) {
-      // TODO: This ToWat is going to need to take a ctx to make it unique
       private int? _uniqueID;
       private string GetUniqueName(WasmBuildCtx ctx, string baseName) {
         // Generate a unique ID for this label if we haven't already

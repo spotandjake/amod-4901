@@ -42,8 +42,7 @@ namespace Decaf.Backend {
           Signature.PrimitiveType.Boolean => new WasmType.I32(signature.Position),
           Signature.PrimitiveType.Character => new WasmType.I32(signature.Position),
           Signature.PrimitiveType.String => new WasmType.I32(signature.Position),
-          // Void is going to be represented as an i32 with a value of 0, since we need to return something??
-          // TODO: Not sure if I like these void semantics????
+          // Void has no wasm representation
           Signature.PrimitiveType.Void =>
           throw new Exception("Void type cannot be used as a value and therefore does not have a wasm type"),
           // NOTE: This should never happen, if it does we forgot to update this method when we added a new primitive type
@@ -67,8 +66,7 @@ namespace Decaf.Backend {
           Signature.PrimitiveType.Boolean => new WasmExpression.I32.Const(signature.Position, 0),
           Signature.PrimitiveType.Character => new WasmExpression.I32.Const(signature.Position, 0),
           Signature.PrimitiveType.String => new WasmExpression.I32.Const(signature.Position, 0),
-          // The default value for void is also 0, since we are representing void as an i32 with a value of 0
-          // TODO: Figure out if this is the best way to represent void semantics????
+          // Void has no wasm representation
           Signature.PrimitiveType.Void =>
           throw new Exception("Void type cannot be used as a value and therefore does not have a default value"),
           // NOTE: This should never happen, if it does we forgot to update this method when we added a new primitive type

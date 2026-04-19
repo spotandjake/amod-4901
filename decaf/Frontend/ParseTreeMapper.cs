@@ -302,8 +302,6 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(ctx);
       var type = MapSimpleType(ctx.simple_type());
       if (ctx.LBRACK() != null && ctx.RBRACK() != null) {
-        var size = ctx.size != null ? MapIntLiteral(ctx.size) : null;
-        // TODO: What should we be doing with the size here??
         return new Signature.Signature.ArraySig(position, type);
       }
       else return type;

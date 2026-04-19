@@ -3,11 +3,27 @@ using System;
 namespace Decaf.Utils.Errors {
   class ErrorConstructor {
     public static string CreateError(Position position, string message) {
-      return $"\u001b[1mFile \"{position.fileName}\":{position.line}:{position.column}\u001b[0m:\n{message}";
+      var header = $"\u001b[1mFile \"{position.fileName}\":{position.line}:{position.column}\u001b[0m:";
+      var body = $"\u001b[31mError\u001b[0m: {message}";
+      return $"{header}\n{body}";
     }
   }
   // Lexing Errors
+  namespace LexingErrors {
+    public class UnrecognizedTokenException : Exception {
+      public UnrecognizedTokenException(Position Position, string message) : base(
+        ErrorConstructor.CreateError(Position, $"Unrecognized token, `{message}`")
+      ) { }
+    }
+  }
   // Parsing Errors
+  namespace ParsingErrors {
+    public class UnrecognizedTokenException : Exception {
+      public UnrecognizedTokenException(Position Position, string message) : base(
+        ErrorConstructor.CreateError(Position, $"Unrecognized token, `{message}`")
+      ) { }
+    }
+  }
   // Scoping Errors
   namespace ScopeErrors {
     /// <summary>
@@ -266,87 +282,37 @@ namespace Decaf.Utils.Errors {
     public static bool HandleError(bool debug, Exception exn) {
       switch (exn) {
         // Lexer
-        case System.Data.SyntaxErrorException e:
-          Console.WriteLine(e.Message);
-          break;
+        case LexingErrors.UnrecognizedTokenException:
         // Parser
-        case Antlr4.Runtime.Misc.ParseCanceledException e:
-          Console.WriteLine($"Parsing failed: {e.InnerException?.Message ?? e.Message}");
-          break;
+        case ParsingErrors.UnrecognizedTokenException:
         // Scoping
-        case ScopeErrors.DuplicateDeclarationException e:
-          Console.WriteLine(e.Message);
-          break;
-        case ScopeErrors.DeclarationNotDefinedException e:
-          Console.WriteLine(e.Message);
-          break;
-        case ScopeErrors.DeclarationNotMutableException e:
-          Console.WriteLine(e.Message);
-          break;
+        case ScopeErrors.DuplicateDeclarationException:
+        case ScopeErrors.DeclarationNotDefinedException:
+        case ScopeErrors.DeclarationNotMutableException:
         // Semantic Analysis
-        case SemanticErrors.ProgramModuleNotFound e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.FunctionsCanOnlyBeDefinedAtTopLevelOfModule e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.FunctionLiteralMustBeDirectRhsOfVarDecl e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.ReturnStatementOutsideOfFunction e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.ContinueStatementOutsideOfLoop e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.BreakStatementOutsideOfLoop e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.DivisionByZero e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.ArraySizeMustBePositive e:
-          Console.WriteLine(e.Message);
-          break;
-        case SemanticErrors.ArrayIndexMustBeNonNegative e:
-          Console.WriteLine(e.Message);
-          break;
+        case SemanticErrors.ProgramModuleNotFound:
+        case SemanticErrors.FunctionsCanOnlyBeDefinedAtTopLevelOfModule:
+        case SemanticErrors.FunctionLiteralMustBeDirectRhsOfVarDecl:
+        case SemanticErrors.ReturnStatementOutsideOfFunction:
+        case SemanticErrors.ContinueStatementOutsideOfLoop:
+        case SemanticErrors.BreakStatementOutsideOfLoop:
+        case SemanticErrors.DivisionByZero:
+        case SemanticErrors.ArraySizeMustBePositive:
+        case SemanticErrors.ArrayIndexMustBeNonNegative:
         // Type Checking
-        case TypeCheckingErrors.LhsNotRhs e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.CallOnNonMethod e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.MemberAccessOnNonModule e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.MemberAccessUnknown e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.ArrayAccessOnNonArray e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.ReturnUseOutsideOfMethod e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.NoReturnStatement e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.UnknownPrimitiveCall e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.InvalidPrimitiveUse e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.InvalidArrayType e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.InvalidVoidBind e:
-          Console.WriteLine(e.Message);
-          break;
-        case TypeCheckingErrors.ExpectedBindToHaveAType e:
-          Console.WriteLine(e.Message);
+        case TypeCheckingErrors.LhsNotRhs:
+        case TypeCheckingErrors.CallOnNonMethod:
+        case TypeCheckingErrors.MemberAccessOnNonModule:
+        case TypeCheckingErrors.MemberAccessUnknown:
+        case TypeCheckingErrors.ArrayAccessOnNonArray:
+        case TypeCheckingErrors.ReturnUseOutsideOfMethod:
+        case TypeCheckingErrors.NoReturnStatement:
+        case TypeCheckingErrors.UnknownPrimitiveCall:
+        case TypeCheckingErrors.InvalidPrimitiveUse:
+        case TypeCheckingErrors.InvalidArrayType:
+        case TypeCheckingErrors.InvalidVoidBind:
+        case TypeCheckingErrors.ExpectedBindToHaveAType:
+          Console.WriteLine(exn.Message);
           break;
         // Unknown
         default:

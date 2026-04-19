@@ -12,19 +12,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
   /// This module isn't overly decaf specific and could be easily re-used in other contexts.
   /// </summary>
   internal static class TypeCheckerCore {
-    // Internal Helpers
-    // TODO: This needs to be updated at the bare minimum
-    private static string GetPrimitiveTypeName(Signature.PrimitiveType type) {
-      return type switch {
-        Signature.PrimitiveType.Int => "int",
-        Signature.PrimitiveType.Boolean => "boolean",
-        Signature.PrimitiveType.Void => "void",
-        Signature.PrimitiveType.Character => "char",
-        Signature.PrimitiveType.String => "string",
-        // NOTE: This is never possible c# is bad at exhaustiveness checking with enums
-        _ => throw new Exception($"Unknown primitive type {type}"),
-      };
-    }
     // Checkers
     public static void CheckSignature(
       Signature.Signature expected,
@@ -116,7 +103,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // 1. The types must be the same on both sides
 
       if (expected.Type != received.Type) {
-        throw new LhsNotRhs(expected.Position, GetPrimitiveTypeName(expected.Type), GetPrimitiveTypeName(received.Type));
+        var expectedTypeName = Enum.GetName(expected.Type);
+        var receivedTypeName = Enum.GetName(received.Type);
+        throw new LhsNotRhs(expected.Position, expectedTypeName, receivedTypeName);
       }
     }
   }
