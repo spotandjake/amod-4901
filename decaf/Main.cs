@@ -7,6 +7,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 
 using Decaf.Utils.Errors;
+using Decaf.Utils;
 
 /// <summary>
 /// This is the main entry point for the Decaf Command Line Interface (CLI).
@@ -30,6 +31,11 @@ namespace Decaf.CLI {
     [Description("Weather we want to debug the compiler while compiling.")]
     [DefaultValue(false)]
     public bool Debug { get; init; }
+
+    [CommandOption("--use-start-section", isRequired: false)]
+    [Description("Weather to use the wasm start section.")]
+    [DefaultValue(false)]
+    public bool UseStartSection { get; init; }
     // TODO: I think we almost want an out file and a separate output format???
     [CommandOption("--wat", isRequired: false)]
     [Description("Weather we want to emit the wat output of the compiled module, and the file to write it to.")]
@@ -51,7 +57,16 @@ namespace Decaf.CLI {
       string source = File.ReadAllText(absPath);
       // Compile the source content
       try {
-        var wasmModule = Compiler.CompileString(source, relPath);
+        // Create our config
+        var config = new CompilationConfig {
+          // Global config
+          UseStartSection = settings.UseStartSection,
+          // Related to modules
+          BundleRuntime = true,
+          SkipOptimizationPasses = []
+        };
+        // Compile our program
+        var wasmModule = Compiler.CompileString(config, source, relPath);
         // Write the file output if specified in the settings
         if (settings.WatOutputFile != null) {
           File.WriteAllText(settings.WatOutputFile, wasmModule.ToWat());

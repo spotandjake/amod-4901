@@ -7,6 +7,9 @@ using Signature = Decaf.IR.Signature;
 using AnfTree = Decaf.IR.AnfTree;
 using Decaf.MiddleEnd.Optimizations;
 using Decaf.Utils;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace decafTests.MiddleEnd;
 
@@ -18,11 +21,20 @@ public class AnfTest : VerifyBase {
     settings.UseDirectory("Snapshots/Anf/");
     return settings;
   }
-  private static AnfTree.ProgramNode Test(string text, OptimizationConfig config) {
-    var frontEndProgram = Compiler.FrontEnd(text, null, bundleRuntime: false);
-    var middleEndProgram = Compiler.MiddleEnd(frontEndProgram, config);
+  private static AnfTree.ProgramNode Test(string text, List<string> skipOptimizationPasses) {
+    var config = new CompilationConfig {
+      UseStartSection = false,
+      SkipOptimizationPasses = skipOptimizationPasses,
+      BundleRuntime = false
+    };
+    var frontEndProgram = Compiler.FrontEnd(config, text, null);
+    var middleEndProgram = Compiler.MiddleEnd(config, frontEndProgram);
     return middleEndProgram;
   }
+  private static List<string> OnlyDeadCodeElimination =>
+    Optimizer.GetDefaultPasses().Where(
+      p => p != Enum.GetName(OptimizationPasses.DeadCodeElimination)
+    ).ToList();
   // --- Basic Anf Test --
   [TestMethod]
   public Task TestValidAnf() {
@@ -33,9 +45,7 @@ public class AnfTest : VerifyBase {
         }
       ",
       // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [],
-      }
+      Optimizer.GetDefaultPasses().ToList()
     );
     // NOTE: We ignore the position and the signatures cause we don't really care about them (less noise == more clarity)
     return Verify(result, CreateSettings())
@@ -56,10 +66,7 @@ public class AnfTest : VerifyBase {
           test();
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);
@@ -84,10 +91,7 @@ public class AnfTest : VerifyBase {
           }
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     // NOTE: We use a snapshot test here instead of structure because anf mangles loops,
     //       so snapshot testing is a bit more clear then trying to navigate the mangled loop structure 
@@ -107,10 +111,7 @@ public class AnfTest : VerifyBase {
           }
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     // NOTE: We use a snapshot test here instead of structure because anf mangles loops,
     //       so snapshot testing is a bit more clear then trying to navigate the mangled loop structure 
@@ -131,10 +132,7 @@ public class AnfTest : VerifyBase {
           }
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);
@@ -159,10 +157,7 @@ public class AnfTest : VerifyBase {
           }
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);
@@ -189,10 +184,7 @@ public class AnfTest : VerifyBase {
           }
         }
       ",
-      // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);
@@ -218,9 +210,7 @@ public class AnfTest : VerifyBase {
         }
       ",
       // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);
@@ -246,9 +236,7 @@ public class AnfTest : VerifyBase {
         }
       ",
       // Apply no optimizations to just test plain anf
-      new OptimizationConfig {
-        Passes = [OptimizationPasses.DeadCodeElimination],
-      }
+      OnlyDeadCodeElimination
     );
     Assert.IsNotNull(result);
     Assert.HasCount(1, result.Modules);

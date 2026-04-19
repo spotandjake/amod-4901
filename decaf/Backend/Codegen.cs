@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Decaf.WasmBuilder;
-using Spectre.Console;
+using Decaf.Utils;
 using AnfTree = Decaf.IR.AnfTree;
 using Signature = Decaf.IR.Signature;
 
@@ -38,7 +38,7 @@ namespace Decaf.Backend {
 #nullable restore
     // --- Code Units ---
     #region CodeUnits
-    public static WasmModule CompileProgram(AnfTree.ProgramNode node) {
+    public static WasmModule CompileProgram(CompilationConfig config, AnfTree.ProgramNode node) {
       // Create our wasm module
       var module = new WasmModule(node.Position);
       // Create our initial codegen context
@@ -60,17 +60,20 @@ namespace Decaf.Backend {
         null,
         startCalls.ConvertAll(label => new WasmExpression.Call(node.Position, label, []))
       );
+      var startLabel = new WasmLabel.Label(node.Position, "_start");
       var startFunc = new WasmFunction(
         Position: node.Position,
-        Label: new WasmLabel.Label(node.Position, "_start"),
+        Label: startLabel,
         Params: [],
         Results: [],
         Locals: new Dictionary<WasmLabel, WasmType>(),
         Body: body
       );
       module.AddFunction(startFunc);
-      // TODO: export this module as `_start` so that it gets called when the module is instantiated
-      // TODO: Add an option to set this as the start function of the module instead
+      if (config.UseStartSection) module.SetStartFunction(startLabel);
+      else {
+        // TODO: export this module as `_start` so that it gets called when the module is instantiated
+      }
       return module;
     }
     private static WasmLabel CompileModule(CodegenContext ctx, AnfTree.ModuleNode node) {

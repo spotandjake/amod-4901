@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.IO;
+using System.Linq;
 
 using Antlr4.Runtime;
 
@@ -8,6 +9,7 @@ using Decaf.MiddleEnd.TypeChecker;
 using Decaf.MiddleEnd.Optimizations;
 using Decaf.MiddleEnd;
 using Decaf.Backend;
+using Decaf.Utils;
 
 using ParseTree = Decaf.IR.ParseTree;
 using TypedTree = Decaf.IR.TypedTree;
@@ -40,15 +42,17 @@ namespace Decaf.Compiler {
     /// </summary>
     /// <param name="program">The program to bundle the runtime code into.</param>
     /// <returns>The bundled program.</returns>
-    private static ParseTree.ProgramNode BundleRuntime(ParseTree.ProgramNode program) {
+    private static ParseTree.ProgramNode BundleRuntime(CompilationConfig config, ParseTree.ProgramNode program) {
       // Get the embedded runtime resource (This is basically a hack to include the runtime code in the compiled assembly)
       var assembly = Assembly.GetExecutingAssembly();
       using var stream = assembly.GetManifestResourceStream("decaf.Runtime.decaf");
       using var reader = new BinaryReader(stream);
       byte[] data = reader.ReadBytes((int)stream.Length);
       var runtimeSource = System.Text.Encoding.UTF8.GetString(data);
+      // Create a new config based on the previous one
+      var runtimeConfig = config with { BundleRuntime = false };
       // Process with the front end
-      var runtimeProgram = FrontEnd(runtimeSource, "$internal$/Runtime.decaf", false);
+      var runtimeProgram = FrontEnd(runtimeConfig, runtimeSource, "$internal$/Runtime.decaf");
       // Bundle the runtime into the program
       return new ParseTree.ProgramNode(
         program.Position,
@@ -73,16 +77,17 @@ namespace Decaf.Compiler {
     /// <param name="inputFileName">The name of the file that contained the source code.</param>
     /// <returns>The compiled wasm module.</returns>
 #nullable enable
-    public static Wasm.WasmModule CompileString(string source, string? inputFileName) {
+    public static Wasm.WasmModule CompileString(
+      CompilationConfig config,
+      string source,
+      string? inputFileName
+    ) {
       // Front end
-      var frontEndProgram = FrontEnd(source, inputFileName);
+      var frontEndProgram = FrontEnd(config, source, inputFileName);
       // Middle end
-      var middleEndProgram = MiddleEnd(frontEndProgram, new OptimizationConfig {
-        // TODO: It may make sense to allow this to be configured to some degree
-        Passes = Optimizer.GetDefaultPasses(),
-      });
+      var middleEndProgram = MiddleEnd(config, frontEndProgram);
       // Back end
-      var wasmModule = Backend(middleEndProgram);
+      var wasmModule = Backend(config, middleEndProgram);
       // Return the compiled wasm module
       return wasmModule;
     }
@@ -97,20 +102,25 @@ namespace Decaf.Compiler {
     /// - Scope checking
     /// - Semantic checking
     /// </summary>
+    /// <param name="config">The compilation configuration to use for the front end.</param>
     /// <param name="source">The raw source code to compile.</param>
     /// <param name="inputFileName">The name of the file that contained the source code.</param>
     /// <returns>The program after front end processing.</returns>
 #nullable enable
-    public static ParseTree.ProgramNode FrontEnd(string source, string? inputFileName, bool bundleRuntime = true) {
+    public static ParseTree.ProgramNode FrontEnd(
+      CompilationConfig config,
+      string source,
+      string? inputFileName
+    ) {
       // Lex the program
       var lexer = LexSource(source, inputFileName);
       // Parse the program
       var tokenStream = new CommonTokenStream(lexer);
       var program = ParseSource(tokenStream);
       // Bundle the runtime
-      var bundledProgram = bundleRuntime ? BundleRuntime(program) : program;
+      var bundledProgram = config.BundleRuntime ? BundleRuntime(config, program) : program;
       // Check semantics - NOTE: we can't do semantic checks before bundling
-      var checkedProgram = bundleRuntime ? CheckSemantics(bundledProgram) : program;
+      var checkedProgram = config.BundleRuntime ? CheckSemantics(bundledProgram) : program;
       // Return the program after front end processing
       return checkedProgram;
     }
@@ -174,15 +184,19 @@ namespace Decaf.Compiler {
     ///       if scoping or semantics have not been validated then this may not work correctly and may throw 
     ///       unexpected exceptions, or produce malformed outputs.
     /// </summary>
+    /// <param name="config">The compilation configuration to use for the middle end.</param>
     /// <param name="program">The parsed program to process.</param>
     /// <returns>The processed program.</returns>
-    public static AnfTree.ProgramNode MiddleEnd(ParseTree.ProgramNode program, OptimizationConfig optimizationConfig) {
+    public static AnfTree.ProgramNode MiddleEnd(
+      CompilationConfig config,
+      ParseTree.ProgramNode program
+    ) {
       // Type check the program
       var typedProgram = TypeChecker.TypeProgramNode(program);
       // Lower to ANF
       var anfProgram = AnfMapper.FromProgramNode(typedProgram);
       // Run optimizations
-      var optimizedProgram = Optimizer.Optimize(anfProgram, optimizationConfig);
+      var optimizedProgram = Optimizer.Optimize(config, anfProgram);
       // Return the program after middle end processing
       return optimizedProgram;
     }
@@ -213,9 +227,9 @@ namespace Decaf.Compiler {
     /// </summary>
     /// <param name="program">The anf program to optimize.</param>
     /// <returns>The optimized program.</returns>
-    public static AnfTree.ProgramNode OptimizeAnf(AnfTree.ProgramNode program, OptimizationConfig config) {
+    public static AnfTree.ProgramNode OptimizeAnf(CompilationConfig config, AnfTree.ProgramNode program) {
       // Run optimizations
-      return Optimizer.Optimize(program, config);
+      return Optimizer.Optimize(config, program);
     }
     // --- Back end ---
 
@@ -223,11 +237,15 @@ namespace Decaf.Compiler {
     /// This method runs the entire back end pipeline on the given program, this includes:
     /// - Lowering to wasm
     /// </summary>
+    /// <param name="config">The compilation configuration to use for the back end.</param>
     /// <param name="program">The anf program to compile.</param>
     /// <returns>The compiled wasm module.</returns>
-    public static Wasm.WasmModule Backend(AnfTree.ProgramNode program) {
+    public static Wasm.WasmModule Backend(
+      CompilationConfig config,
+      AnfTree.ProgramNode program
+    ) {
       // Lower the program to wasm
-      var wasmModule = Codegen.CompileProgram(program);
+      var wasmModule = LowerToWasm(config, program);
       // Return the program after back end processing
       return wasmModule;
     }
@@ -237,9 +255,9 @@ namespace Decaf.Compiler {
     /// </summary>
     /// <param name="program">The anf program to lower.</param>
     /// <returns>The compiled wasm module.</returns>
-    public static Wasm.WasmModule LowerToWasm(AnfTree.ProgramNode program) {
+    public static Wasm.WasmModule LowerToWasm(CompilationConfig config, AnfTree.ProgramNode program) {
       // Lower the program to wasm
-      return Codegen.CompileProgram(program);
+      return Codegen.CompileProgram(config, program);
     }
   }
 

@@ -1,18 +1,12 @@
 using System;
 
 using AnfTree = Decaf.IR.AnfTree;
+using Decaf.Utils;
 
 namespace Decaf.MiddleEnd.Optimizations {
   /// <summary>The different optimization passes that can be run on the ANF tree.</summary>
   public enum OptimizationPasses {
     DeadCodeElimination,
-  }
-  /// <summary>
-  /// The configuration for running optimizations on the ANF tree.
-  /// This includes the different passes that should be run and the order they should be run in.
-  /// </summary>
-  public struct OptimizationConfig {
-    public OptimizationPasses[] Passes;
   }
   /// <summary>
   /// This is the main entry pointer for running all optimizations on the ANF tree.
@@ -25,13 +19,13 @@ namespace Decaf.MiddleEnd.Optimizations {
     /// get good performance but not running so many that it becomes inefficient.
     /// </summary>
     /// <returns>The default optimization passes.</returns>
-    public static OptimizationPasses[] GetDefaultPasses() => [
+    public static string[] GetDefaultPasses() => [
       // We run this first because it can cut down the size of the tree immediately and is very cheap
-      OptimizationPasses.DeadCodeElimination,
+      Enum.GetName(OptimizationPasses.DeadCodeElimination),
       // TODO: Run constant folding and propogation to open up more opportunities for dead code elimination
       // TODO: Re-run dead code elimination to cut down the new opportunities created by constant folding and propagation
     ];
-    public static AnfTree.ProgramNode Optimize(AnfTree.ProgramNode node, OptimizationConfig config) {
+    public static AnfTree.ProgramNode Optimize(CompilationConfig config, AnfTree.ProgramNode node) {
       /*
        * Optimization passes are a really hard thing to get right, and there are a lot of constraints on using them,
        * when to use them, and how to use them. For example, the order we run optimizations in is really important,
@@ -44,7 +38,8 @@ namespace Decaf.MiddleEnd.Optimizations {
        * order based on what we think will be most effective.
        */
       //  Run the optimizations in the order specified by the config
-      foreach (var pass in config.Passes) {
+      foreach (var pass in Enum.GetValues<OptimizationPasses>()) {
+        if (config.SkipOptimizationPasses.Contains(Enum.GetName(pass))) continue;
         node = pass switch {
           OptimizationPasses.DeadCodeElimination => DeadCodeOptimization.Optimize(node),
           // NOTE: This will never be hit

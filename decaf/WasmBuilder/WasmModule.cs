@@ -28,6 +28,9 @@ namespace Decaf.WasmBuilder {
     private ConcurrentQueue<int> GlobalOrder { get; } = new ConcurrentQueue<int>();
     private ConcurrentDictionary<int, WasmFunction> Functions { get; } = new ConcurrentDictionary<int, WasmFunction>();
     private ConcurrentQueue<int> FunctionOrder { get; } = new ConcurrentQueue<int>();
+#nullable enable
+    private WasmLabel? StartFunction { get; set; } = null;
+#nullable restore
     // Public API
     // TODO: This should return a reference that can be used to refer to the type later on
     public void AddWasmType(WasmLabel name, WasmType type) {
@@ -94,6 +97,9 @@ namespace Decaf.WasmBuilder {
       // TODO: Should this add the type to the module????
       // TODO: This should possibly return a funcref that we can use to refer to the function later on????
     }
+    public void SetStartFunction(WasmLabel label) {
+      this.StartFunction = label;
+    }
     // Output API
     public string ToWat() {
       var ctx = new WasmBuildCtx();
@@ -155,8 +161,10 @@ namespace Decaf.WasmBuilder {
       // TODO: We should handle exports properly but this is just for an experiment
       var memoryExportStr = "(export \"memory\" (memory 0))";
       var startExport = "(export \"_start\" (func $_start))";
+      // Compile the start section if it exists
+      var startSection = this.StartFunction != null ? $"(start {this.StartFunction.ToWat(ctx)})" : "";
       // Package the entire module
-      return $"(module{typeSection}{importSection}{memorySection}{memoryExportStr}{dataSegmentSection}{elementSection}{globalSection}{functionSection}{startExport})";
+      return $"(module{typeSection}{importSection}{memorySection}{memoryExportStr}{dataSegmentSection}{elementSection}{globalSection}{functionSection}{startExport}{startSection})";
     }
   }
 }

@@ -1,14 +1,20 @@
 using VerifyMSTest;
-using VerifyTests;
 
 using Decaf.Compiler;
 using Decaf.IR.TypedTree;
+using Decaf.Utils;
 using Decaf.Utils.Errors.TypeCheckingErrors;
 
 [TestClass]
 public class DecafTypeCheckerTests : VerifyBase {
   private static ProgramNode TypeCheck(string text) {
-    var frontEndProgram = Compiler.FrontEnd(text, null, bundleRuntime: false);
+    var frontEndProgram = Compiler.FrontEnd(new CompilationConfig {
+      // Global Config
+      SkipOptimizationPasses = [],
+      UseStartSection = false,
+      // Module Config
+      BundleRuntime = false
+    }, text, null);
     var typeCheckedProgram = Compiler.TypeCheck(frontEndProgram);
     return typeCheckedProgram;
   }
