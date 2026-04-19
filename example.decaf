@@ -1,19 +1,6 @@
 module Program {
-  import wasm fd_write: (int, int, int, int) => int from "wasi_snapshot_preview1";
-
-  let print = (str: string): void => {
-    let ptr: int = @getPointer(str);
-    // Create our iovec (<ptr>, <len>)
-    let iov: int = Runtime.malloc(8);
-    @wasm.i32.store(iov, ptr + 4); // ptr
-    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
-    // Call fd_write
-    let written: int = Runtime.malloc(4);
-    Program.fd_write(1, iov, 1, written);
-  };
-
   let hello_world = (): void => {
-    Program.print("Hello World!\n");
+    Runtime.print("Hello World!\n");
   };
   Program.hello_world();
 }

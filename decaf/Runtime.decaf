@@ -1,6 +1,9 @@
 // This is the runtime for decaf, it is a simple module that includes,
 // some core functionality required by user programs.
 module Runtime {
+  // This is a WASI import that enables printing similar to posix fd_write
+  import wasm fd_write: (int, int, int, int) => int from "wasi_snapshot_preview1";
+
   // --- Declarations ---
   // The heap pointer.
   let HeapPointer: int = 0;
@@ -60,5 +63,18 @@ module Runtime {
     @wasm.i32.store(pointer, length);
     // Return the pointer
     return pointer;
+  };
+  // --- General ---
+  let print = (str: string): void => {
+    // Get the pointer for the string
+    let ptr: int = @getPointer(str);
+    // Create our iovec (<ptr>, <len>)
+    let iov: int = Runtime.malloc(8);
+    @wasm.i32.store(iov, ptr + 4); // ptr
+    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
+    // The number of bytes written will be stored here, as fd_write may not write all the data
+    let written: int = Runtime.malloc(4); 
+    // Call fd_write
+    Program.fd_write(1, iov, 1, written);
   };
 }
