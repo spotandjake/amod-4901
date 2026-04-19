@@ -47,11 +47,6 @@ These are things directly related to deliverables or causing codegen issues that
     * Parsing
       * We should rewrite these to match the new grammar
       * Proper precedence tests
-    * Semantic Analysis
-      * We should clean up the semantic analysis tests
-        * We should find each place a semantic error can occur and write a specific test targeting the branch
-        * We should also have related tests for valid programs that are similar
-          * i.e proper `continue`, `break` usage.
   * MiddleEnd
     * We should rewrite the type checking tests to be more specific and less snapshot based
   * Backend

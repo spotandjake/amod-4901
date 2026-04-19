@@ -130,7 +130,6 @@ namespace Decaf.Backend {
       // TODO: This is a bit hacky, we should probably do the right analysis to avoid needing this
       // NOTE: All wasm functions must leave the return on the stack, however we pop it using `return` as if it were an early return, to ensure that the function validates we just leave a default value on the stack however it is never going to be hit, an optimizer should be able to easily remove it later (The downside is we could hide control flow bugs if we are not careful)
       if (node.Signature.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
-        // TODO: We need to make sure that this returns the right thing
         body = new WasmExpression.Block(
           node.Position,
           null,
@@ -156,10 +155,8 @@ namespace Decaf.Backend {
       // Build our wasm function
       return new WasmFunction(
         Position: node.Position,
-        // TODO: Generate the label properly
         Label: CodegenUtils.GetMemberLabel(node.Position, ctx.ModuleName, node.Name),
         Params: parameters,
-        // TODO: Collect the return types from the signature
         Results: returnTypes,
         Locals: locals,
         Body: body

@@ -32,13 +32,11 @@ namespace Decaf.WasmBuilder {
     private WasmLabel? StartFunction { get; set; } = null;
 #nullable restore
     // Public API
-    // TODO: This should return a reference that can be used to refer to the type later on
     public void AddWasmType(WasmLabel name, WasmType type) {
       if (type is not WasmType.Func funcType) {
         throw new Exception("Only function types are currently supported in the module");
       }
       if (!WasmTypes.TryAdd(name, funcType)) {
-        // TODO: I don't like this error handling
         throw new Exception($"Type {name.ToWat(new WasmBuildCtx())} already exists in module");
       }
       else {
@@ -71,11 +69,8 @@ namespace Decaf.WasmBuilder {
       }
     }
     public void AddGlobal(WasmGlobal global) {
-      // TODO: It would be nice if we had this return some sort of globalref that we could use to refer to the global later on
-      // TODO: Is the hash code a reasonable key for this? (Does it capture uniqueness well enough?)
       var id = global.Label.GetHashCode();
       if (!Globals.TryAdd(id, global)) {
-        // TODO: I don't like this error handling
         throw new Exception($"Global with label {global.Label.ToWat(new WasmBuildCtx())} already exists in module");
       }
       else {
@@ -84,10 +79,8 @@ namespace Decaf.WasmBuilder {
       }
     }
     public void AddFunction(WasmFunction func) {
-      // TODO: Is the hash code a reasonable key for this? (Does it capture uniqueness well enough?)
       var id = func.Label.GetHashCode();
       if (!Functions.TryAdd(id, func)) {
-        // TODO: I don't like this error handling
         throw new Exception($"Function with label {func.Label.ToWat(new WasmBuildCtx())} already exists in module");
       }
       else {
