@@ -30,7 +30,6 @@
                       Name: testMethod
                     },
                     ReturnType: {
-                      Kind: TypeNode,
                       Type: Void
                     },
                     Body: {

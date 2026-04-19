@@ -15,9 +15,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode
-                },
+                Signature: {},
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
@@ -32,9 +30,7 @@
               },
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode
-                },
+                Signature: {},
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
@@ -49,11 +45,8 @@
               },
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
-                  ElementType: {
-                    Kind: TypeNode
-                  }
+                Signature: {
+                  Typ: {}
                 },
                 Name: {
                   Kind: IdentifierLocationNode,
@@ -62,9 +55,7 @@
                 },
                 InitExpr: {
                   Kind: ArrayInitExpressionNode,
-                  Type: {
-                    Kind: TypeNode
-                  },
+                  Signature: {},
                   SizeExpr: {
                     Kind: LiteralExpressionNode,
                     Literal: {
@@ -96,15 +87,12 @@
                       Name: foo
                     },
                     ReturnType: {
-                      Kind: TypeNode,
                       Type: Void
                     },
                     Parameters: [
                       {
                         Kind: ParameterNode,
-                        Type: {
-                          Kind: TypeNode
-                        },
+                        Signature: {},
                         Name: {
                           Kind: IdentifierLocationNode,
                           IsPrimitive: false,
@@ -113,8 +101,7 @@
                       },
                       {
                         Kind: ParameterNode,
-                        Type: {
-                          Kind: TypeNode,
+                        Signature: {
                           Type: Boolean
                         },
                         Name: {
@@ -125,11 +112,8 @@
                       },
                       {
                         Kind: ParameterNode,
-                        Type: {
-                          Kind: TypeNode,
-                          ElementType: {
-                            Kind: TypeNode
-                          }
+                        Signature: {
+                          Typ: {}
                         },
                         Name: {
                           Kind: IdentifierLocationNode,
@@ -264,9 +248,7 @@
                       IsPrimitive: false,
                       Name: bar
                     },
-                    ReturnType: {
-                      Kind: TypeNode
-                    },
+                    ReturnType: {},
                     Body: {
                       Kind: BlockStatementNode,
                       Statements: [
@@ -321,7 +303,6 @@
                       Name: calloutMethod
                     },
                     ReturnType: {
-                      Kind: TypeNode,
                       Type: Void
                     },
                     Body: {

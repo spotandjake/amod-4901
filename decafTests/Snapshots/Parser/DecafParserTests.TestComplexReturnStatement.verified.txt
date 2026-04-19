@@ -29,9 +29,7 @@
                       IsPrimitive: false,
                       Name: testMethod
                     },
-                    ReturnType: {
-                      Kind: TypeNode
-                    },
+                    ReturnType: {},
                     Body: {
                       Kind: BlockStatementNode,
                       Statements: [

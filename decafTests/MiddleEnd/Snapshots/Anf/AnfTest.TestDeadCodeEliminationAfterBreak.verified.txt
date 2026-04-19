@@ -61,7 +61,7 @@
                         Kind: BindInstructionNode,
                         Name: y,
                         SimpleExpression: {
-                          Kind: ImmInstructionNode,
+                          Kind: ImmExpressionNode,
                           Imm: {
                             Kind: ConstantImmediate,
                             Value: {

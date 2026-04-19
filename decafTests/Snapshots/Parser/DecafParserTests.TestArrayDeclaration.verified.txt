@@ -15,11 +15,8 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
-                  ElementType: {
-                    Kind: TypeNode
-                  }
+                Signature: {
+                  Typ: {}
                 },
                 Name: {
                   Kind: IdentifierLocationNode,
@@ -28,9 +25,7 @@
                 },
                 InitExpr: {
                   Kind: ArrayInitExpressionNode,
-                  Type: {
-                    Kind: TypeNode
-                  },
+                  Signature: {},
                   SizeExpr: {
                     Kind: LiteralExpressionNode,
                     Literal: {

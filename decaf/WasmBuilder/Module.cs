@@ -18,6 +18,8 @@ namespace Decaf.WasmBuilder {
     // Section Data
     private ConcurrentDictionary<WasmLabel, WasmType.Func> WasmTypes { get; } = new ConcurrentDictionary<WasmLabel, WasmType.Func>();
     private ConcurrentQueue<WasmLabel> WasmTypeOrder { get; } = new ConcurrentQueue<WasmLabel>();
+    private ConcurrentDictionary<WasmLabel, WasmImport> Imports { get; } = new ConcurrentDictionary<WasmLabel, WasmImport>();
+    private ConcurrentQueue<WasmLabel> ImportOrder { get; } = new ConcurrentQueue<WasmLabel>();
     private ConcurrentDictionary<WasmLabel, WasmMemory> Memories { get; } = new ConcurrentDictionary<WasmLabel, WasmMemory>();
     private ConcurrentQueue<WasmLabel> MemoryOrder { get; } = new ConcurrentQueue<WasmLabel>();
     private ConcurrentDictionary<int, WasmGlobal> Globals { get; } = new ConcurrentDictionary<int, WasmGlobal>();
@@ -37,6 +39,14 @@ namespace Decaf.WasmBuilder {
       else {
         // We also need to keep track of the order of types for the output since the order matters in wasm
         WasmTypeOrder.Enqueue(name);
+      }
+    }
+    public void AddImport(WasmImport import) {
+      if (!Imports.TryAdd(import.Label, import)) {
+        throw new Exception($"Import {import.Label.ToWat(new WasmBuildCtx())} already exists in module");
+      }
+      else {
+        ImportOrder.Enqueue(import.Label);
       }
     }
     public void AddMemory(WasmMemory memory) {
@@ -83,6 +93,12 @@ namespace Decaf.WasmBuilder {
         var type = this.WasmTypes[typeID];
         typeSection.AppendLine($"(type {typeID.ToWat(ctx)} {type.ToWat(ctx)})");
       }
+      // Compile the import section
+      var importSection = new StringBuilder();
+      foreach (var importID in this.ImportOrder) {
+        var import = this.Imports[importID];
+        importSection.AppendLine(import.ToWat(ctx));
+      }
       // Compile the memory section
       var memorySection = new StringBuilder();
       foreach (var memoryID in this.MemoryOrder) {
@@ -94,6 +110,14 @@ namespace Decaf.WasmBuilder {
       var elementSection = new StringBuilder();
       if (this.FunctionOrder.Count > 0) {
         elementSection.AppendLine("(elem declare funcref");
+        // From the import section
+        foreach (var importID in this.ImportOrder) {
+          var import = this.Imports[importID];
+          if (import.Type is WasmType.Func) {
+            elementSection.AppendLine($"  (ref.func {import.Label.ToWat(ctx)})");
+          }
+        }
+        // From the function section
         foreach (var funcID in this.FunctionOrder) {
           var func = this.Functions[funcID];
           elementSection.AppendLine($"  (ref.func {func.Label.ToWat(ctx)})");
@@ -112,8 +136,11 @@ namespace Decaf.WasmBuilder {
         var func = this.Functions[funcID];
         functionSection.AppendLine(func.ToWat(ctx));
       }
+      // TODO: We should handle exports properly but this is just for an experiment
+      var memoryExportStr = "(export \"memory\" (memory 0))";
+      var startExport = "(export \"_start\" (func $_start))";
       // Package the entire module
-      return $"(module {typeSection}{memorySection}{elementSection}{globalSection}{functionSection})";
+      return $"(module {typeSection}{importSection}{memorySection}{memoryExportStr}{elementSection}{globalSection}{functionSection}{startExport})";
     }
   }
 }

@@ -1,9 +1,34 @@
 module Program {
-  let y: int = 0;
-  let test = (): void => {
-    Program.y = 1;
-    return;
-    Program.y = 2;
+  import wasm fd_write: (int, int, int, int) => int from "wasi_snapshot_preview1";
+
+  let print = (ptr: int): void => {
+     // Create our iovec (<ptr>, <len>)
+    let iov: int = Runtime.malloc(8);
+    @wasm.i32.store(iov, ptr + 4); // ptr
+    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
+    // Call fd_write
+    let written: int = Runtime.malloc(4);
+    Program.fd_write(1, iov, 1, written);
   };
-  Program.test();
+
+  let hello_world = (): void => {
+    // Write our testing string into memory
+    let strPtr: int = Runtime.malloc(17);
+    @wasm.i32.store(strPtr, 13);        // length
+    @wasm.i32.store8(strPtr + 4, 72);   // H
+    @wasm.i32.store8(strPtr + 5, 101);  // e
+    @wasm.i32.store8(strPtr + 6, 108);  // l
+    @wasm.i32.store8(strPtr + 7, 108);  // l
+    @wasm.i32.store8(strPtr + 8, 111);  // o
+    @wasm.i32.store8(strPtr + 9, 32);   // space
+    @wasm.i32.store8(strPtr + 10, 87);   // W
+    @wasm.i32.store8(strPtr + 11, 111);  // o
+    @wasm.i32.store8(strPtr + 12, 114);  // r
+    @wasm.i32.store8(strPtr + 13, 108); // l
+    @wasm.i32.store8(strPtr + 14, 100); // d
+    @wasm.i32.store8(strPtr + 15, 33);  // !
+    @wasm.i32.store8(strPtr + 16, 10);  // \n
+    Program.print(strPtr);
+  };
+  Program.hello_world();
 }

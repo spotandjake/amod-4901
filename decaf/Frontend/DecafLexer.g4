@@ -5,6 +5,9 @@ lexer grammar DecafLexer;
 
 // Keywords - code units
 MODULE   : 'm' 'o' 'd' 'u' 'l' 'e' ;
+IMPORT   : 'i' 'm' 'p' 'o' 'r' 't' ;
+FROM     : 'f' 'r' 'o' 'm' ;
+WASM     : 'w' 'a' 's' 'm' ;
 
 // Keywords - Type
 INT     : 'i' 'n' 't' ;

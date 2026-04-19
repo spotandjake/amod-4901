@@ -39,8 +39,14 @@ namespace Decaf.Frontend {
       parentScope.AddDeclaration(node.Position, node.Name.Name, false);
       // Create a new scope for the module
       var moduleScope = new Scope<bool>(parentScope);
+      // Check the module imports
+      foreach (var imp in node.Imports) CheckImportNode(imp, moduleScope);
       // Check the module body
       CheckBlockStatementNode(node.Body, moduleScope);
+    }
+    private static void CheckImportNode(ParseTree.ImportNode node, Scope<bool> parentScope) {
+      // Add the import declaration to the module scope
+      parentScope.AddDeclaration(node.Position, node.Name.Name, false);
     }
     #endregion
     // --- Statement Nodes ---

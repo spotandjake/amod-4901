@@ -19,7 +19,7 @@ namespace Decaf.IR.Signature {
   /// This is used for type checking and eventually code generation.
   /// </summary>
   [JsonDerivedType(typeof(Signature.ModuleSig), "ModuleSignature")]
-  [JsonDerivedType(typeof(Signature.MethodSig), "MethodSignature")]
+  [JsonDerivedType(typeof(Signature.FunctionSig), "FunctionSignature")]
   [JsonDerivedType(typeof(Signature.ArraySig), "ArraySignature")]
   [JsonDerivedType(typeof(Signature.PrimitiveSig), "PrimitiveSignature")]
   public abstract record Signature {
@@ -34,7 +34,7 @@ namespace Decaf.IR.Signature {
         return $"Module {{\n{sb.ToString()}}}";
       }
     }
-    public sealed record MethodSig(Position Position, Signature[] ParameterTypes, Signature ReturnType) : Signature(Position) {
+    public sealed record FunctionSig(Position Position, Signature[] ParameterTypes, Signature ReturnType) : Signature(Position) {
       public override string ToString() {
         var sb = new System.Text.StringBuilder();
         foreach (var param in ParameterTypes) {

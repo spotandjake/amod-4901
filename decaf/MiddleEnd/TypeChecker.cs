@@ -19,11 +19,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
 #nullable enable
     private readonly record struct Context(
       string? CurrentModule,
-      Signature.Signature.MethodSig? CurrentMethod,
+      Signature.Signature.FunctionSig? CurrentFunc,
       Scope<Signature.Signature> CurrentScope
     ) {
       public string? CurrentModule { get; } = CurrentModule;
-      public Signature.Signature.MethodSig? CurrentMethod { get; } = CurrentMethod;
+      public Signature.Signature.FunctionSig? CurrentFunc { get; } = CurrentFunc;
       public Scope<Signature.Signature> CurrentScope { get; } = CurrentScope;
     }
 #nullable disable
@@ -59,6 +59,17 @@ namespace Decaf.MiddleEnd.TypeChecker {
       parentCtx.CurrentScope.AddDeclaration(node.Position, name, moduleSignature);
       // Create a new context for the module
       var ctx = new Context(name, null, new Scope<Signature.Signature>(parentCtx.CurrentScope));
+      // Map the imports of the module
+      var imports = new List<TypedTree.ImportNode>();
+      foreach (var imp in node.Imports) {
+        // Map the import
+        var typedImp = TypeImportNode(ctx, imp);
+        imports.Add(typedImp);
+        // Update the signature
+        moduleSignature.Members[typedImp.Name] = typedImp.Signature;
+        // Update the scope
+        parentCtx.CurrentScope.SetDeclaration(typedImp.Position, name, moduleSignature);
+      }
       // Map the statements of the module
       var statements = new List<TypedTree.StatementNode>();
       foreach (var stmt in node.Body.Statements) {
@@ -79,7 +90,15 @@ namespace Decaf.MiddleEnd.TypeChecker {
       }
       var body = new TypedTree.StatementNode.BlockNode(node.Body.Position, statements.ToArray(), ctx.CurrentScope);
       // Map the module node itself
-      return new TypedTree.ModuleNode(node.Position, name, body, ctx.CurrentScope, moduleSignature);
+      return new TypedTree.ModuleNode(node.Position, name, imports.ToArray(), body, ctx.CurrentScope, moduleSignature);
+    }
+    private static TypedTree.ImportNode TypeImportNode(Context parentCtx, ParseTree.ImportNode node) {
+      // Add the binding to the scope
+      parentCtx.CurrentScope.AddDeclaration(node.Position, node.Name.Name, node.Signature);
+      // Map the node itself
+      return new TypedTree.ImportNode(
+        node.Position, node.Name.Name, node.Signature, node.Module
+      );
     }
     #endregion
     // --- Statements ---
@@ -111,7 +130,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Create a new context for the block
       var ctx = new Context(
         parentCtx.CurrentModule,
-        parentCtx.CurrentMethod,
+        parentCtx.CurrentFunc,
         new Scope<Signature.Signature>(parentCtx.CurrentScope)
       );
       // Map the statements
@@ -130,18 +149,18 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var binds = new List<TypedTree.StatementNode.VariableDeclNode.BindNode>();
       foreach (var bind in node.Binds) {
         // Extract the signature of the bind
-        var signature = bind.Type switch {
+        var signature = bind.Signature switch {
           // We are allowed to infer the type of a function literal
           null when bind.InitExpr is ParseTree.ExpressionNode.LiteralExprNode {
             Literal: ParseTree.LiteralNode.FunctionNode functionLiteral
           } => ExtractFunctionSignatureFromFunctionLiteral(parentCtx, functionLiteral),
-          // Void isn't a valid bind
-          ParseTree.TypeNode.SimpleNode { Type: Signature.PrimitiveType.Void } =>
-            throw new InvalidVoidBind(bind.Position),
           // In any other case we don't allow inference
           null => throw new ExpectedBindToHaveAType(bind.Position, bind.Name.Name),
+          // Void isn't a valid bind
+          Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void } =>
+            throw new InvalidVoidBind(bind.Position),
           // Map the type of the bind if it exists
-          _ => TypeTypeNode(parentCtx, bind.Type)
+          _ => bind.Signature
         };
         // Add the binding to the scope
         // NOTE: It is important that we do this before mapping the init expr so we can support recursive definitions
@@ -215,9 +234,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
       HasReturn = true;
       // NOTE: Ensure that we are actually in a method, this should never be hit
       //       as we check this semantically however it makes sense to sanity check this here as well.
-      if (parentCtx.CurrentMethod == null) throw new ReturnUseOutsideOfMethod(node.Position);
+      if (parentCtx.CurrentFunc == null) throw new ReturnUseOutsideOfMethod(node.Position);
       // Extract the return value and expected return type from the context
-      var expectedReturnType = parentCtx.CurrentMethod.ReturnType;
+      var expectedReturnType = parentCtx.CurrentFunc.ReturnType;
       // Map the return value if it exists
       var returnValue = node.Value switch {
         null => null,
@@ -278,14 +297,14 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var expectedSignature = node.Operator switch {
         // (bool) => bool
         IR.Operators.PrefixOperator.Not =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Boolean)],
             new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Boolean)
           ),
         // (int) => int
         IR.Operators.PrefixOperator.BitwiseNot =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int)],
             new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int)
@@ -297,7 +316,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var operand = TypeExpressionNode(parentCtx, node.Operand);
       // Construct the actual signature of the operator application
       // NOTE: We treat prefix operators as functions that take a single argument (This allows us to reuse the logic)
-      var actualSignature = new Signature.Signature.MethodSig(
+      var actualSignature = new Signature.Signature.FunctionSig(
         node.Position,
         [operand.ExpressionType],
         expectedSignature.ReturnType
@@ -321,7 +340,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         IR.Operators.BinaryOperator.Minus or
         IR.Operators.BinaryOperator.Multiply or
         IR.Operators.BinaryOperator.Divide =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [
               new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int),
@@ -334,7 +353,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         IR.Operators.BinaryOperator.GreaterThan or
         IR.Operators.BinaryOperator.LessThanOrEqual or
         IR.Operators.BinaryOperator.GreaterThanOrEqual =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [
               new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int),
@@ -345,7 +364,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // Equality operators: (a, a) => boolean
         IR.Operators.BinaryOperator.Equal or
         IR.Operators.BinaryOperator.NotEqual =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [lhs.ExpressionType, lhs.ExpressionType],
             new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Boolean)
@@ -353,7 +372,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // Conditional operators: (boolean, boolean) => boolean
         IR.Operators.BinaryOperator.And or
         IR.Operators.BinaryOperator.Or =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Boolean),
              new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Boolean)],
@@ -364,7 +383,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         IR.Operators.BinaryOperator.BitwiseOr or
         IR.Operators.BinaryOperator.BitwiseLeftShift or
         IR.Operators.BinaryOperator.BitwiseRightShift =>
-          new Signature.Signature.MethodSig(
+          new Signature.Signature.FunctionSig(
             node.Position,
             [
               new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int),
@@ -375,7 +394,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         _ => throw new Exception($"Unknown binary operator {node.Operator}"),
       };
       // Construct the actual signature of the operator application
-      var actualSignature = new Signature.Signature.MethodSig(
+      var actualSignature = new Signature.Signature.FunctionSig(
         node.Position,
         [lhs.ExpressionType, rhs.ExpressionType],
         expectedSignature.ReturnType
@@ -401,11 +420,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // Map the callee
         var (primSig, callee) = PrimitiveTypes.ResolvePrimitive(node.Position, node.Callee);
         var expectedSignature = primSig switch {
-          Signature.Signature.MethodSig methodSig => methodSig,
+          Signature.Signature.FunctionSig funcSig => funcSig,
           _ => throw new CallOnNonMethod(node.Position)
         };
         // Construct the signature
-        var signature = new Signature.Signature.MethodSig(
+        var signature = new Signature.Signature.FunctionSig(
           node.Position,
           argTypes.ToArray(),
           expectedSignature.ReturnType
@@ -419,11 +438,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // Map the callee
         var callee = TypeLocationNode(parentCtx, node.Callee);
         var expectedSignature = callee.LocationType switch {
-          Signature.Signature.MethodSig methodSig => methodSig,
+          Signature.Signature.FunctionSig funcSig => funcSig,
           _ => throw new CallOnNonMethod(node.Position)
         };
         // Construct the signature
-        var signature = new Signature.Signature.MethodSig(
+        var signature = new Signature.Signature.FunctionSig(
           node.Position,
           argTypes.ToArray(),
           expectedSignature.ReturnType
@@ -444,10 +463,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
         expected: new Signature.Signature.PrimitiveSig(node.SizeExpr.Position, Signature.PrimitiveType.Int),
         received: sizeExpr.ExpressionType
       );
-      // Map the type node
-      var typeNode = TypeTypeNode(parentCtx, node.Type);
       // Validate that we support arrays of this type
-      if (typeNode is not Signature.Signature.PrimitiveSig {
+      if (node.Signature is not Signature.Signature.PrimitiveSig {
         Type:
           Signature.PrimitiveType.Int or
           Signature.PrimitiveType.Boolean or
@@ -455,10 +472,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
         // NOTE: We don't support arrays of strings or user defined types yet but we will in the future
         // NOTE: This check is a little fragile if we add more types we should probably work on this
       }) {
-        throw new InvalidArrayType(node.Position, typeNode.ToString());
+        throw new InvalidArrayType(node.Position, node.Signature.ToString());
       }
       // Build the signature of the new array node
-      var signature = new Signature.Signature.ArraySig(node.Position, typeNode);
+      var signature = new Signature.Signature.ArraySig(node.Position, node.Signature);
       // Map the node itself
       return new TypedTree.ExpressionNode.ArrayInitNode(node.Position, sizeExpr, signature);
     }
@@ -520,12 +537,12 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Map the parameter nodes
       var parameters = new List<TypedTree.LiteralNode.FunctionNode.ParameterNode>();
       foreach (var param in node.Parameters) {
-        // Map the parameter type
-        var paramSignature = TypeTypeNode(parentCtx, param.Type);
         // Add the parameter to the method scope
-        context.CurrentScope.AddDeclaration(param.Position, param.Name.Name, paramSignature);
+        context.CurrentScope.AddDeclaration(param.Position, param.Name.Name, param.Signature);
         // Map the parameter node
-        var typedParam = new TypedTree.LiteralNode.FunctionNode.ParameterNode(param.Position, param.Name.Name, paramSignature);
+        var typedParam = new TypedTree.LiteralNode.FunctionNode.ParameterNode(
+          param.Position, param.Name.Name, param.Signature
+        );
         parameters.Add(typedParam);
       }
       // Map the method body
@@ -544,33 +561,16 @@ namespace Decaf.MiddleEnd.TypeChecker {
         signature
       );
     }
-    private static Signature.Signature.MethodSig ExtractFunctionSignatureFromFunctionLiteral(
-      Context parentCtx, ParseTree.LiteralNode.FunctionNode node
+    private static Signature.Signature.FunctionSig ExtractFunctionSignatureFromFunctionLiteral(
+      Context _, ParseTree.LiteralNode.FunctionNode node
     ) {
-      // Map our return type
-      var returnSignature = TypeTypeNode(parentCtx, node.ReturnType);
       // Map our parameters
       var parameterSignatures = new List<Signature.Signature>();
       foreach (var param in node.Parameters) {
-        var paramSignature = TypeTypeNode(parentCtx, param.Type);
-        parameterSignatures.Add(paramSignature);
+        parameterSignatures.Add(param.Signature);
       }
       // Create a signature for the method
-      return new Signature.Signature.MethodSig(node.Position, parameterSignatures.ToArray(), returnSignature);
-    }
-    #endregion
-    // --- Types ---
-    #region Types
-    private static Signature.Signature TypeTypeNode(Context parentCtx, ParseTree.TypeNode node) {
-      return node switch {
-        // TODO: We drop `size` here (what was it used for previously)???
-        ParseTree.TypeNode.ArrayNode arrNode =>
-          new Signature.Signature.ArraySig(node.Position, TypeTypeNode(parentCtx, arrNode.ElementType)),
-        ParseTree.TypeNode.SimpleNode simpleNode =>
-          new Signature.Signature.PrimitiveSig(node.Position, simpleNode.Type),
-        // NOTE: This should be impossible unless we forget to update the checker when adding types
-        _ => throw new Exception($"Unknown type node type: {node.Kind}"),
-      };
+      return new Signature.Signature.FunctionSig(node.Position, parameterSignatures.ToArray(), node.ReturnType);
     }
     #endregion
     // --- Locations ---

@@ -13,6 +13,7 @@ namespace Decaf.IR.ParseTree {
     // --- Code Units ---
     ProgramNode,
     ModuleNode,
+    ImportNode,
     // --- Statements ---
     BlockStatementNode,
     VariableDeclNode,
@@ -36,8 +37,6 @@ namespace Decaf.IR.ParseTree {
     CharacterLiteralNode,
     StringLiteralNode,
     FunctionLiteralNode,
-    // --- Types ---
-    TypeNode,
     // --- Locations ---
     ArrayLocationNode,
     MemberLocationNode,
@@ -71,11 +70,21 @@ namespace Decaf.IR.ParseTree {
   };
   /// <summary>A module declaration, `module <name:id> <body:block_stmt>`.</summary>
   public sealed record ModuleNode(
-    Position Position, LocationNode.IdentifierNode Name, StatementNode.BlockNode Body
+    Position Position, LocationNode.IdentifierNode Name, ImportNode[] Imports, StatementNode.BlockNode Body
   ) : Node(Position) {
     public override NodeKind Kind => NodeKind.ModuleNode;
     public LocationNode.IdentifierNode Name { get; } = Name;
+    public ImportNode[] Imports { get; } = Imports;
     public StatementNode.BlockNode Body { get; } = Body;
+  }
+  /// <summary>An import statement, `import wasm <name:id>: <type> from "<module:string>"`.</summary>
+  public sealed record ImportNode(
+    Position Position, LocationNode.IdentifierNode Name, Signature.Signature Signature, string Module
+  ) : Node(Position) {
+    public override NodeKind Kind => NodeKind.ImportNode;
+    public LocationNode.IdentifierNode Name { get; } = Name;
+    public Signature.Signature Signature { get; } = Signature;
+    public string Module { get; } = Module;
   }
   #endregion
 
@@ -111,10 +120,10 @@ namespace Decaf.IR.ParseTree {
       // A single declaration bind.
 #nullable enable
       public sealed record BindNode(
-        Position Position, TypeNode? Type, LocationNode.IdentifierNode Name, ExpressionNode InitExpr
+        Position Position, Signature.Signature? Signature, LocationNode.IdentifierNode Name, ExpressionNode InitExpr
       ) : Node(Position) {
         public override NodeKind Kind => NodeKind.BindNode;
-        public TypeNode? Type { get; } = Type;
+        public Signature.Signature? Signature { get; } = Signature;
         public LocationNode.IdentifierNode Name { get; } = Name;
         public ExpressionNode InitExpr { get; } = InitExpr;
       }
@@ -212,9 +221,11 @@ namespace Decaf.IR.ParseTree {
       public ExpressionNode[] Arguments { get; } = Arguments;
     }
     /// <summary>An array initialization expression, `new <type>[<size>]`.</summary>
-    public sealed record ArrayInitNode(Position Position, TypeNode Type, ExpressionNode SizeExpr) : ExpressionNode(Position) {
+    public sealed record ArrayInitNode(
+      Position Position, Signature.Signature Signature, ExpressionNode SizeExpr
+    ) : ExpressionNode(Position) {
       public override NodeKind Kind => NodeKind.ArrayInitExpressionNode;
-      public TypeNode Type { get; } = Type;
+      public Signature.Signature Signature { get; } = Signature;
       public ExpressionNode SizeExpr { get; } = SizeExpr;
     }
     /// <summary>A location expression, `<location>`, for example `x`, `x.y` or `x[y]`.</summary>
@@ -269,22 +280,22 @@ namespace Decaf.IR.ParseTree {
       // A parameter node, `<name:id>: <type>`, for example `x: int` or `y: string[]`.
       public sealed record ParameterNode(
         Position Position,
-        TypeNode Type,
+        Signature.Signature Signature,
         LocationNode.IdentifierNode Name
       ) : Node(Position) {
         public override NodeKind Kind => NodeKind.ParameterNode;
-        public TypeNode Type { get; } = Type;
+        public Signature.Signature Signature { get; } = Signature;
         public LocationNode.IdentifierNode Name { get; } = Name;
       }
       public override NodeKind Kind => NodeKind.FunctionLiteralNode;
       public LocationNode.IdentifierNode Name { get; }
-      public TypeNode ReturnType { get; }
+      public Signature.Signature ReturnType { get; }
       public ParameterNode[] Parameters { get; }
       public StatementNode.BlockNode Body { get; }
       public FunctionNode(
         Position Position,
         LocationNode.IdentifierNode Name,
-        TypeNode ReturnType,
+        Signature.Signature ReturnType,
         ParameterNode[] Parameters,
         StatementNode.BlockNode Body
       ) : base(Position) {
@@ -293,28 +304,6 @@ namespace Decaf.IR.ParseTree {
         this.Parameters = Parameters;
         this.Body = Body;
       }
-    }
-  }
-  #endregion
-
-  // --- Types ---
-  #region Types
-  /// <summary>
-  /// A type node, which represents a type in our parse tree. 
-  /// This can be a primitive type like `int` or `boolean`, or it can be an array type like `int[]` or `string[]`.
-  /// </summary>
-  public abstract record TypeNode : Node {
-    protected TypeNode(Position position) : base(position) { }
-#nullable enable
-    public sealed record ArrayNode(Position Position, TypeNode ElementType, int? Size) : TypeNode(Position) {
-      public override NodeKind Kind => NodeKind.TypeNode;
-      public TypeNode ElementType { get; } = ElementType;
-      public int? Size { get; } = Size;
-    }
-#nullable restore
-    public sealed record SimpleNode(Position Position, Signature.PrimitiveType Type) : TypeNode(Position) {
-      public override NodeKind Kind => NodeKind.TypeNode;
-      public Signature.PrimitiveType Type { get; } = Type;
     }
   }
   #endregion

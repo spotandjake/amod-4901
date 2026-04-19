@@ -15,9 +15,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode
-                },
+                Signature: {},
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,

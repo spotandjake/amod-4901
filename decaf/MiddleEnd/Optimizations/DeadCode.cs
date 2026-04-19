@@ -49,6 +49,7 @@ namespace Decaf.MiddleEnd.Optimizations {
       return new AnfTree.ModuleNode(
         node.Position,
         node.Name,
+        node.Imports,
         optimizedFunctions.ToArray(),
         optimizedModuleBody,
         node.Signature

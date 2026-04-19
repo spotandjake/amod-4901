@@ -26,9 +26,18 @@ public class LexerTest : VerifyBase {
   public void TestEnsureLexerTestUpdated() {
     // NOTE: This isn't an actual test of the lexer, but if a rule is added or removed 
     //       it ensures that the tests are also looked at / not forgotten about.
-    Assert.HasCount(60, DecafLexer.ruleNames);
+    Assert.HasCount(63, DecafLexer.ruleNames);
   }
   // Unit Test Keywords
+  [TestMethod]
+  public void TestCodeUnitsKeywords() {
+    var lexer = Lex("module import from wasm");
+    Assert.AreEqual(DecafLexer.MODULE, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.IMPORT, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.FROM, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.WASM, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
+  }
   [TestMethod]
   public void TestTypeKeywords() {
     var lexer = Lex("int boolean char string void");
@@ -41,10 +50,12 @@ public class LexerTest : VerifyBase {
   }
   [TestMethod]
   public void TestInstructionKeywords() {
-    var lexer = Lex("break continue return");
+    var lexer = Lex("break continue return new let");
     Assert.AreEqual(DecafLexer.BREAK, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.CONTINUE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.RETURN, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.NEW, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.LET, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
   }
   [TestMethod]
@@ -60,14 +71,6 @@ public class LexerTest : VerifyBase {
     var lexer = Lex("true false");
     Assert.AreEqual(DecafLexer.TRUE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.FALSE, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
-  }
-  [TestMethod]
-  public void TestOtherKeywords() {
-    var lexer = Lex("module let new");
-    Assert.AreEqual(DecafLexer.MODULE, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.LET, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.NEW, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
   }
   // Unit Test Operators

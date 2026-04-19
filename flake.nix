@@ -12,6 +12,8 @@
           pkgs.antlr # ANTLR4 tool
           pkgs.go-task # task command - script runner
           pkgs.wasm-tools # Toolkit for working with WebAssembly
+          pkgs.binaryen # WebAssembly optimization and analysis tools
+          pkgs.wasmtime # WebAssembly runtime
         ];
         # Put java on the path
         shellHook = pkgs: ''

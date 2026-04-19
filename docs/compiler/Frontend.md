@@ -19,6 +19,10 @@ Below is a list of tokens defined by the lexer, these are the different componen
 * Keywords (Meaningful words within the language)
   * Code Units
     * MODULE: "module" - This is equivalent to `class` in other languages
+    * IMPORT: "import" - This is used to import modules from other files
+    * FROM: "from" - This is used in conjunction with `import` to specify the module to import from
+    * WASM: "wasm" - This is used to specify that the import is a wasm import
+      * Currently we only support wasm imports
   * Types
     * INT: "int"
     * BOOLEAN: "boolean"

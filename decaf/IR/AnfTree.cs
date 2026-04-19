@@ -35,6 +35,7 @@ namespace Decaf.IR.AnfTree {
     // --- Code Units ---
     ProgramNode,
     ModuleNode,
+    ImportNode,
     FunctionNode,
     // --- Instructions ---
     BlockInstructionNode,
@@ -93,15 +94,26 @@ namespace Decaf.IR.AnfTree {
   public sealed record ModuleNode(
     Position Position,
     string Name,
+    ImportNode[] Imports,
     FunctionNode[] Functions,
     InstructionNode.BlockNode Body,
     Signature.Signature.ModuleSig Signature
   ) : Node(Position) {
     public override NodeKind Kind => NodeKind.ModuleNode;
     public string Name { get; } = Name;
+    public ImportNode[] Imports { get; } = Imports;
     public FunctionNode[] Functions { get; } = Functions;
     public InstructionNode.BlockNode Body { get; } = Body;
     public Signature.Signature.ModuleSig Signature { get; } = Signature;
+  }
+  /// <summary>An import declaration.</summary>
+  public sealed record ImportNode(
+    Position Position, string Name, Signature.Signature Signature, string Module
+  ) : Node(Position) {
+    public override NodeKind Kind => NodeKind.ImportNode;
+    public string Name { get; } = Name;
+    public Signature.Signature Signature { get; } = Signature;
+    public string Module { get; } = Module;
   }
   /// <summary>A function declaration.</summary>
   public sealed record FunctionNode : Node {

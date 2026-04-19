@@ -15,8 +15,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
+                Signature: {
                   Type: String
                 },
                 Name: {
@@ -39,9 +38,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode
-                },
+                Signature: {},
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
@@ -61,8 +58,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
+                Signature: {
                   Type: Boolean
                 },
                 Name: {
@@ -85,8 +81,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
+                Signature: {
                   Type: Void
                 },
                 Name: {

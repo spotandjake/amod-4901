@@ -30,17 +30,13 @@
                       Name: foo
                     },
                     ReturnType: {
-                      Kind: TypeNode,
                       Type: Void
                     },
                     Parameters: [
                       {
                         Kind: ParameterNode,
-                        Type: {
-                          Kind: TypeNode,
-                          ElementType: {
-                            Kind: TypeNode
-                          }
+                        Signature: {
+                          Typ: {}
                         },
                         Name: {
                           Kind: IdentifierLocationNode,

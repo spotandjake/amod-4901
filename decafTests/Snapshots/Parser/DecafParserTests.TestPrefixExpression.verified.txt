@@ -15,8 +15,7 @@
             Binds: [
               {
                 Kind: BindNode,
-                Type: {
-                  Kind: TypeNode,
+                Signature: {
                   Type: Boolean
                 },
                 Name: {

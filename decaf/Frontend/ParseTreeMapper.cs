@@ -56,8 +56,19 @@ namespace Decaf.Frontend {
     private static ParseTree.ModuleNode MapModuleNode(DecafParser.Module_declContext ctx) {
       var position = MapPositionContext(ctx);
       var name = MapIdLocation(ctx.name);
-      var body = MapBlockStatement(ctx.body);
-      return new ParseTree.ModuleNode(position, name, body);
+      // Map the imports
+      var imports = ctx.imports != null ? ctx.import_stmt().Select(i => MapImportNode(i)).ToArray() : [];
+      // Map the body
+      var statements = ctx.stmts != null ? ctx.statement().Select(MapStatementNode).ToArray() : [];
+      var body = new ParseTree.StatementNode.BlockNode(position, statements);
+      return new ParseTree.ModuleNode(position, name, imports, body);
+    }
+    private static ParseTree.ImportNode MapImportNode(DecafParser.Import_stmtContext ctx) {
+      var position = MapPositionContext(ctx);
+      var name = MapIdLocation(ctx.name);
+      var type = MapTypeContext(ctx.typ);
+      var module = ctx.source.Text[1..^1]; // Remove the surrounding quotes, this is safe because of lexing constraints
+      return new ParseTree.ImportNode(position, name, type, module);
     }
     #endregion
     // --- Statements ---
@@ -285,27 +296,34 @@ namespace Decaf.Frontend {
 
     // --- Types ---
     #region Types
-    private static ParseTree.TypeNode MapTypeContext(DecafParser.TypeContext ctx) {
+    private static Signature.Signature MapTypeContext(DecafParser.TypeContext ctx) {
       var position = MapPositionContext(ctx);
       var type = MapSimpleType(ctx.simple_type());
       if (ctx.LBRACK() != null && ctx.RBRACK() != null) {
         var size = ctx.size != null ? MapIntLiteral(ctx.size) : null;
-        return new ParseTree.TypeNode.ArrayNode(position, type, size?.Value ?? null);
+        // TODO: What should we be doing with the size here??
+        return new Signature.Signature.ArraySig(position, type);
       }
       else return type;
     }
-    private static ParseTree.TypeNode.SimpleNode MapSimpleType(DecafParser.Simple_typeContext ctx) {
+    private static Signature.Signature MapSimpleType(DecafParser.Simple_typeContext ctx) {
       var position = MapPositionContext(ctx);
-      var type = ctx switch {
-        DecafParser.IntTypeContext _ => Signature.PrimitiveType.Int,
-        DecafParser.BooleanTypeContext _ => Signature.PrimitiveType.Boolean,
-        DecafParser.CharTypeContext _ => Signature.PrimitiveType.Character,
-        DecafParser.StringTypeContext _ => Signature.PrimitiveType.String,
-        DecafParser.VoidTypeContext _ => Signature.PrimitiveType.Void,
+      return ctx switch {
+        DecafParser.IntTypeContext _ => new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.Int),
+        DecafParser.BooleanTypeContext _ => new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.Boolean),
+        DecafParser.CharTypeContext _ => new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.Character),
+        DecafParser.StringTypeContext _ => new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.String),
+        DecafParser.VoidTypeContext _ => new Signature.Signature.PrimitiveSig(position, Signature.PrimitiveType.Void),
+        DecafParser.FuncTypeContext funcTypeCtx => MapFuncType(funcTypeCtx.func_type()),
         // NOTE: This should be impossible due to grammar restrictions
         _ => throw new InvalidProgramException("Impossible type at MapSimpleType")
       };
-      return new ParseTree.TypeNode.SimpleNode(position, type);
+    }
+    private static Signature.Signature MapFuncType(DecafParser.Func_typeContext ctx) {
+      var position = MapPositionContext(ctx);
+      var returnType = MapTypeContext(ctx.returnType);
+      var parameterTypes = ctx.paramTypes != null ? ctx.paramTypes.type().Select(MapTypeContext).ToArray() : [];
+      return new Signature.Signature.FunctionSig(position, parameterTypes, returnType);
     }
     #endregion
 

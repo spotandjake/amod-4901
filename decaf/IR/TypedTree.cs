@@ -30,15 +30,26 @@ namespace Decaf.IR.TypedTree {
   public sealed record ModuleNode(
     Position Position,
     string Name,
+    ImportNode[] Imports,
     StatementNode.BlockNode Body,
     Scope<Signature.Signature> Scope,
     Signature.Signature.ModuleSig Signature
   ) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ModuleNode;
     public string Name { get; } = Name;
+    public ImportNode[] Imports { get; } = Imports;
     public StatementNode.BlockNode Body { get; } = Body;
     public Scope<Signature.Signature> Scope { get; } = Scope;
     public Signature.Signature.ModuleSig Signature { get; } = Signature;
+  }
+  /// <summary>An import statement, `import wasm <name:id>: <type> from "<module:string>"`.</summary>
+  public sealed record ImportNode(
+    Position Position, string Name, Signature.Signature Signature, string Module
+  ) : Node(Position) {
+    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ImportNode;
+    public string Name { get; } = Name;
+    public Signature.Signature Signature { get; } = Signature;
+    public string Module { get; } = Module;
   }
   #endregion
 

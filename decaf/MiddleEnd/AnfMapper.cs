@@ -46,8 +46,23 @@ namespace Decaf.MiddleEnd {
     }
     private static AnfTree.ModuleNode FromModuleNode(AnfState _, TypedTree.ModuleNode node) {
       var moduleState = new AnfState(node.Scope, []);
-      // Map the body
       var instructions = new List<AnfTree.InstructionNode>();
+      // Map the imports
+      var imports = new List<AnfTree.ImportNode>();
+      foreach (var imp in node.Imports) {
+        var mappedImp = new AnfTree.ImportNode(imp.Position, imp.Name, imp.Signature, imp.Module);
+        imports.Add(mappedImp);
+        // We also need to add a setup instruction for the import to our module body
+        var anfLiteral = new AnfTree.LiteralNode.FunctionReferenceNode(
+          imp.Position,
+          imp.Name,
+          imp.Signature
+        );
+        var imm = new AnfTree.ImmediateNode.ConstantNode(node.Position, anfLiteral, imp.Signature);
+        var expr = new AnfTree.SimpleExpressionNode.ImmediateExpressionNode(imp.Position, imm, imp.Signature);
+        instructions.Add(new AnfTree.InstructionNode.BindNode(imp.Position, imp.Name, expr));
+      }
+      // Map the body
       foreach (var stmt in node.Body.Statements) {
         var (binds, instr) = FromStatementNode(moduleState, stmt);
         instructions.AddRange(binds);
@@ -55,7 +70,9 @@ namespace Decaf.MiddleEnd {
       }
       var body = new AnfTree.InstructionNode.BlockNode(node.Body.Position, instructions.ToArray());
       // Produce the new module node
-      return new AnfTree.ModuleNode(node.Position, node.Name, moduleState.ModuleFunctions.ToArray(), body, node.Signature);
+      return new AnfTree.ModuleNode(
+        node.Position, node.Name, imports.ToArray(), moduleState.ModuleFunctions.ToArray(), body, node.Signature
+      );
     }
     #endregion
     // --- Statements ---

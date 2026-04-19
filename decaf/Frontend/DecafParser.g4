@@ -7,11 +7,14 @@ options { tokenVocab=DecafLexer; }
 
 // --- Code Units ---
 
-// A program is a sequence of module declarations
+// A program is a list of modules.
 program: module_decl+;
 
 // A module is a named collection of statements, it serves as a container for functions and variables.
-module_decl: MODULE name=id_location body=block_stmt SEMI?;
+module_decl: MODULE name=id_location LBRACE imports=import_stmt* stmts=statement* RBRACE SEMI?;
+
+// An import statement is a special top level statement that represents a WebAssembly import.
+import_stmt: IMPORT WASM name=id_location COLON typ=type FROM source=STRINGLIT SEMI;
 
 // --- Statements ---
 statement
@@ -109,7 +112,10 @@ simple_type
   | BOOLEAN # BooleanType
   | CHAR # CharType
   | STRING # StringType
-  | VOID # VoidType;
+  | VOID # VoidType
+  | func_type # FuncType;
+func_type: LPAREN paramTypes=type_list* RPAREN ARROW returnType=type;
+type_list: type (COMMA type)*;
 
 // --- Locations ---
 location: array_location;

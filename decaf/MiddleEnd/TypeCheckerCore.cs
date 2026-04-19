@@ -13,17 +13,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
   /// </summary>
   internal static class TypeCheckerCore {
     // Internal Helpers
-    // TODO: Maybe we just convert this to `toString` overrides on the signatures?
-    private static string GetTypeCategoryName(Signature.Signature signature) {
-      return signature switch {
-        Signature.Signature.PrimitiveSig _ => "primitive",
-        Signature.Signature.ModuleSig _ => "module",
-        Signature.Signature.MethodSig _ => "method",
-        Signature.Signature.ArraySig _ => "array",
-        // NOTE: This is never possible c# is bad at exhaustiveness checking with records
-        _ => throw new Exception($"Unknown signature type {signature.GetType()}"),
-      };
-    }
     // TODO: This needs to be updated at the bare minimum
     private static string GetPrimitiveTypeName(Signature.PrimitiveType type) {
       return type switch {
@@ -46,8 +35,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
         case (Signature.Signature.ModuleSig e, Signature.Signature.ModuleSig r):
           CheckModuleSignature(e, r);
           break;
-        case (Signature.Signature.MethodSig e, Signature.Signature.MethodSig r):
-          CheckMethodSignature(e, r);
+        case (Signature.Signature.FunctionSig e, Signature.Signature.FunctionSig r):
+          CheckFunctionSignature(e, r);
           break;
         case (Signature.Signature.ArraySig e, Signature.Signature.ArraySig r):
           CheckArraySignature(e, r);
@@ -57,7 +46,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
           break;
         // Currently we only have four type categories which have no subtyping relationships, so if we do not match on one of the above
         // cases we know that the types do not match.
-        default: throw new LhsNotRhs(expected.Position, GetTypeCategoryName(expected), GetTypeCategoryName(received));
+        default: throw new LhsNotRhs(expected.Position, expected.ToString(), received.ToString());
       }
     }
     public static void CheckModuleSignature(
@@ -85,11 +74,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
         CheckSignature(expectedMember.Value, value);
       }
     }
-    public static void CheckMethodSignature(
-      Signature.Signature.MethodSig expected,
-      Signature.Signature.MethodSig received
+    public static void CheckFunctionSignature(
+      Signature.Signature.FunctionSig expected,
+      Signature.Signature.FunctionSig received
     ) {
-      // The rules for method signature compatibility are as follows:
+      // The rules for function signature compatibility are as follows:
       // 1. The parameter counts must be the same on both sides
       // 2. The parameter types must be the same on both sides
       // 3. The return types must be the same on both sides

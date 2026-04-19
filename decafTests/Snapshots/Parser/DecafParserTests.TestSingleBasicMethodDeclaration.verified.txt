@@ -30,7 +30,6 @@
                       Name: foo
                     },
                     ReturnType: {
-                      Kind: TypeNode,
                       Type: Void
                     },
                     Body: {
