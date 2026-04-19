@@ -18,6 +18,8 @@ namespace Decaf.WasmBuilder {
     // Section Data
     private ConcurrentDictionary<WasmLabel, WasmType.Func> WasmTypes { get; } = new ConcurrentDictionary<WasmLabel, WasmType.Func>();
     private ConcurrentQueue<WasmLabel> WasmTypeOrder { get; } = new ConcurrentQueue<WasmLabel>();
+    private ConcurrentDictionary<WasmLabel, WasmMemory> Memories { get; } = new ConcurrentDictionary<WasmLabel, WasmMemory>();
+    private ConcurrentQueue<WasmLabel> MemoryOrder { get; } = new ConcurrentQueue<WasmLabel>();
     private ConcurrentDictionary<int, WasmGlobal> Globals { get; } = new ConcurrentDictionary<int, WasmGlobal>();
     private ConcurrentQueue<int> GlobalOrder { get; } = new ConcurrentQueue<int>();
     private ConcurrentDictionary<int, WasmFunction> Functions { get; } = new ConcurrentDictionary<int, WasmFunction>();
@@ -35,6 +37,14 @@ namespace Decaf.WasmBuilder {
       else {
         // We also need to keep track of the order of types for the output since the order matters in wasm
         WasmTypeOrder.Enqueue(name);
+      }
+    }
+    public void AddMemory(WasmMemory memory) {
+      if (!Memories.TryAdd(memory.Label, memory)) {
+        throw new Exception($"Memory {memory.Label.ToWat(new WasmBuildCtx())} already exists in module");
+      }
+      else {
+        MemoryOrder.Enqueue(memory.Label);
       }
     }
     public void AddGlobal(WasmGlobal global) {
@@ -73,6 +83,23 @@ namespace Decaf.WasmBuilder {
         var type = this.WasmTypes[typeID];
         typeSection.AppendLine($"(type {typeID.ToWat(ctx)} {type.ToWat(ctx)})");
       }
+      // Compile the memory section
+      var memorySection = new StringBuilder();
+      foreach (var memoryID in this.MemoryOrder) {
+        var memory = this.Memories[memoryID];
+        memorySection.AppendLine(memory.ToWat(ctx));
+      }
+      // Compile an element section for the function references
+      // TODO: This should probably be done externally like the other things
+      var elementSection = new StringBuilder();
+      if (this.FunctionOrder.Count > 0) {
+        elementSection.AppendLine("(elem declare funcref");
+        foreach (var funcID in this.FunctionOrder) {
+          var func = this.Functions[funcID];
+          elementSection.AppendLine($"  (ref.func {func.Label.ToWat(ctx)})");
+        }
+        elementSection.AppendLine(")");
+      }
       // Compile the global section
       var globalSection = new StringBuilder();
       foreach (var globalID in this.GlobalOrder) {
@@ -86,7 +113,7 @@ namespace Decaf.WasmBuilder {
         functionSection.AppendLine(func.ToWat(ctx));
       }
       // Package the entire module
-      return $"(module {typeSection}{globalSection}{functionSection})";
+      return $"(module {typeSection}{memorySection}{elementSection}{globalSection}{functionSection})";
     }
   }
 }

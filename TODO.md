@@ -5,9 +5,10 @@ This document contains a list of all the major tasks that need to be done before
 ### Critical
 These are things directly related to deliverables or causing codegen issues that we must fix.
 
+* Figure out how to resolve variables from the module scope that are not referenced by the `Runtime.x` way and instead are just reference by `x`.
+  * My new idea is that we build a symbol table during the scope checking phase that has entries for all the variables in the module scope. Then during codegen we can check this symbol table to see if a variable is a global or not and emit the correct instruction.
 * Codegen
   * Modules - Compile Modules
-  * Functions - Compile Functions
   * Strings - Compile Strings
 * ANF
   * I think `ExprStatement` is causing us to generate intermediate binds to `void`s (we should correct this)

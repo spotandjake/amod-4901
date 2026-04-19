@@ -43,6 +43,9 @@ namespace Decaf.Backend {
       var module = new WasmModule(node.Position);
       // Create our initial codegen context
       var ctx = CodegenContext.CreateInitialContext(module);
+      // Add the memory to the module
+      var memory = new WasmMemory(node.Position, new WasmLabel.Label(node.Position, "memory"), InitialPages: 1);
+      ctx.WasmModule.AddMemory(memory);
       // Generate code for each module
       var startCalls = new List<WasmLabel>();
       foreach (var mod in node.Modules) {
@@ -73,7 +76,7 @@ namespace Decaf.Backend {
     }
     private static WasmLabel CompileModule(CodegenContext ctx, AnfTree.ModuleNode node) {
       // Create a new context for the module
-      var moduleCtx = ctx with { TopLevel = true, ModuleName = node.Name };
+      var moduleCtx = ctx with { TopLevel = true, WasmLocals = new Dictionary<WasmLabel, WasmType>(), ModuleName = node.Name };
       // Compile the functions in the module
       foreach (var func in node.Functions) {
         var wasmFunc = CompileFunction(moduleCtx, func);
@@ -82,6 +85,11 @@ namespace Decaf.Backend {
       }
       // Compile the module body
       var body = CompileBlockInstruction(moduleCtx, node.Body, isTopLevel: true);
+      // Collect the local from the post compilation context
+      var locals = new Dictionary<WasmLabel, WasmType>();
+      foreach (var local in moduleCtx.WasmLocals) {
+        locals.Add(local.Key, local.Value);
+      }
       // Create a new function called `main` for the module body and add it to the module
       var label = CodegenUtils.GetMemberLabel(node.Position, node.Name, "_main");
       var mainFunc = new WasmFunction(
@@ -89,8 +97,7 @@ namespace Decaf.Backend {
         Label: label,
         Params: [],
         Results: [],
-        // TODO: Actually collect these from the function signature and body
-        Locals: new Dictionary<WasmLabel, WasmType>(),
+        Locals: locals,
         Body: body
       );
       ctx.WasmModule.AddFunction(mainFunc);
@@ -105,8 +112,24 @@ namespace Decaf.Backend {
         BreakLabel = null,
         ContinueLabel = null
       };
+      // Validate signature
+      if (node.Signature is not Signature.Signature.MethodSig methodSig) {
+        // TODO: Enforce this variant in the IR
+        throw new Exception($"Impossible, function has a non function signature type");
+      }
       // Compile the body of the function
       var body = CompileBlockInstruction(funcCtx, node.Body);
+      // TODO: This is a bit hacky, we should probably do the right analysis to avoid needing this
+      // NOTE: All wasm functions must leave the return on the stack, however we pop it using `return` as if it were an early return, to ensure that the function validates we just leave a default value on the stack however it is never going to be hit, an optimizer should be able to easily remove it later (The downside is we could hide control flow bugs if we are not careful)
+      if (methodSig.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
+        // TODO: We need to make sure that this reutrns the right thing
+        body = new WasmExpression.Block(
+          node.Position,
+          null,
+          [body, GetDefaultValueFromSignature(funcCtx, methodSig.ReturnType)],
+          GetWasmTypeFromSignature(funcCtx, methodSig.ReturnType)
+        );
+      }
       // Collect the parameters
       var parameters = new Dictionary<WasmLabel, WasmType>();
       foreach (var param in node.Parameters) {
@@ -114,10 +137,6 @@ namespace Decaf.Backend {
       }
       // Collect the return types from the signature
       var returnTypes = new List<WasmType>();
-      if (node.Signature is not Signature.Signature.MethodSig methodSig) {
-        // TODO: Enforce this variant in the IR
-        throw new Exception($"Impossible, function has a non function signature type");
-      }
       if (methodSig.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
         returnTypes.Add(GetWasmTypeFromSignature(funcCtx, methodSig.ReturnType));
       }
@@ -182,7 +201,7 @@ namespace Decaf.Backend {
           Label: label,
           Type: wasmType,
           IsMutable: true,
-          Init: GetDefaultValueFromSignature(node.SimpleExpression.ExpressionType)
+          Init: GetDefaultValueFromSignature(ctx, node.SimpleExpression.ExpressionType)
         );
         // Add the global to the module
         ctx.WasmModule.AddGlobal(global);

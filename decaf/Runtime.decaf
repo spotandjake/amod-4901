@@ -18,7 +18,7 @@ module Runtime {
     // Fetch the page count
     let pageCount: int = @wasm.memory.size();
     // Determine if the program has enough memory
-    if (end <= (pageCount * PageSize)) {
+    if (end <= (pageCount * Runtime.PageSize)) {
       // Grow the memory if we need
       // TODO: We should compute the page size we need
       @wasm.memory.grow(1);

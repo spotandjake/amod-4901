@@ -1,9 +1,9 @@
 module Program {
   let y: int = 0;
   let test = (): void => {
-    y = 1;
+    Program.y = 1;
     return;
-    y = 2;
+    Program.y = 2;
   };
-  test();
+  Program.test();
 }

@@ -54,12 +54,12 @@ namespace Decaf.Backend {
         _ => throw new Exception($"Unknown signature node kind: {signature.GetType()}"),
       };
     }
-    private static WasmExpression GetDefaultValueFromSignature(Signature.Signature signature) {
+    private static WasmExpression GetDefaultValueFromSignature(CodegenContext ctx, Signature.Signature signature) {
       return signature switch {
         // This is an i32 because it is a pointer, the default value for a pointer is 0 (null)
         Signature.Signature.ArraySig => new WasmExpression.I32.Const(signature.Position, 0),
-        // TODO: I need to figure out a proper value for this????
-        Signature.Signature.MethodSig => new WasmExpression.I32.Const(signature.Position, 0),
+        Signature.Signature.MethodSig methodSig =>
+          new WasmExpression.Ref.Null(signature.Position, GetWasmMethodTypeFromSignature(ctx, methodSig)),
         // For primitive types we can return the default value for that type
         Signature.Signature.PrimitiveSig primitiveSig => primitiveSig.Type switch {
           Signature.PrimitiveType.Int => new WasmExpression.I32.Const(signature.Position, 0),

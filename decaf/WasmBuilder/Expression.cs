@@ -194,7 +194,15 @@ namespace Decaf.WasmBuilder {
     }
     // Ref - https://webassembly.github.io/spec/core/text/instructions.html#reference-instructions
     public abstract record Ref(Position Position) : WasmExpression(Position) {
-      // TODO: ref.null
+      public sealed record Null(Position Position, WasmType WasmType) : Ref(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) {
+          // TODO: This feels like a code smell, we should probably figure out a good way to pass type references??
+          if (WasmType is not WasmType.FuncRef funcRef) {
+            throw new System.Exception($"Expected WasmType to be FuncRef, but got {WasmType}");
+          }
+          return $"(ref.null {funcRef.Label.ToWat(ctx)})";
+        }
+      }
       public sealed record Func(Position Position, WasmLabel FunctionName) : Ref(Position) {
         internal override string ToWat(WasmBuildCtx ctx) => $"(ref.func {FunctionName.ToWat(ctx)})";
       }
@@ -205,10 +213,13 @@ namespace Decaf.WasmBuilder {
       // TODO: ref.cast
     }
     // Block - https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/Control_flow/block
-    public record Block(Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions) : WasmExpression(Position) {
+    public record Block(
+      Position Position, WasmLabel Label, IEnumerable<WasmExpression> Expressions, WasmType ResultType = null
+    ) : WasmExpression(Position) {
       internal override string ToWat(WasmBuildCtx ctx) {
         var sb = new StringBuilder();
-        sb.Append($"(block {Label?.ToWat(ctx) ?? ""}");
+        var resultTypeStr = ResultType != null ? $"(result {ResultType.ToWat(ctx)})" : "";
+        sb.Append($"(block {Label?.ToWat(ctx) ?? ""} {resultTypeStr}");
         foreach (var expr in Expressions) {
           sb.AppendLine();
           sb.Append($"  {expr.ToWat(ctx)}");
@@ -245,10 +256,11 @@ namespace Decaf.WasmBuilder {
         if (WasmType is not WasmType.FuncRef) {
           throw new System.Exception($"Expected WasmType to be FuncRef, but got {WasmType}");
         }
-        sb.Append($"(call_ref {(WasmType as WasmType.FuncRef).Label.ToWat(ctx)} {FunctionRef.ToWat(ctx)}");
+        sb.Append($"(call_ref {(WasmType as WasmType.FuncRef).Label.ToWat(ctx)}");
         foreach (var arg in Arguments) {
           sb.Append($" {arg.ToWat(ctx)}");
         }
+        sb.Append($" {FunctionRef.ToWat(ctx)}");
         sb.Append(')');
         return sb.ToString();
       }

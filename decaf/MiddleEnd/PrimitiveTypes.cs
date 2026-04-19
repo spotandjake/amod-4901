@@ -75,7 +75,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         MakeSimpleMethod(
           position,
           [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
-          Signature.PrimitiveType.Int
+          Signature.PrimitiveType.Void
         ),
         PrimDefinition.WasmMemoryFill
       ),
