@@ -56,9 +56,6 @@ namespace Decaf.CLI {
         if (settings.WatOutputFile != null) {
           File.WriteAllText(settings.WatOutputFile, wasmModule.ToWat());
         }
-        // TODO: Write the file output if specified in the settings
-        // string json = JsonSerializer.Serialize(wasmModule, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
-        // Console.WriteLine(json);
       }
       catch (Exception e) {
         // Handle any errors that occur during compilation

@@ -12,8 +12,7 @@ namespace Decaf.MiddleEnd {
   // NOTE: One downside of the recursive approach is theoretically we could blow the stack if we have very nested expressions.
   //       However if this were to ever become an issue we would switch to a work queue based approach.
   public static class AnfMapper {
-    private record AnfState(Scope<Signature.Signature> CurrentScope, List<AnfTree.FunctionNode> ModuleFunctions) {
-      public Scope<Signature.Signature> CurrentScope { get; } = CurrentScope;
+    private record AnfState(List<AnfTree.FunctionNode> ModuleFunctions) {
       public int TempCounter { get; set; } = 0;
       public List<AnfTree.FunctionNode> ModuleFunctions { get; set; } = ModuleFunctions;
     }
@@ -41,11 +40,11 @@ namespace Decaf.MiddleEnd {
       // No mapping is required on the program node, since it is just a container
       return new AnfTree.ProgramNode(
         node.Position,
-        node.Modules.Select((m) => FromModuleNode(new AnfState(node.Scope, null), m)).ToArray()
+        node.Modules.Select((m) => FromModuleNode(new AnfState(null), m)).ToArray()
       );
     }
     private static AnfTree.ModuleNode FromModuleNode(AnfState _, TypedTree.ModuleNode node) {
-      var moduleState = new AnfState(node.Scope, []);
+      var moduleState = new AnfState([]);
       var instructions = new List<AnfTree.InstructionNode>();
       // Map the imports
       var imports = new List<AnfTree.ImportNode>();
@@ -95,11 +94,10 @@ namespace Decaf.MiddleEnd {
     }
     private static AnfTree.InstructionNode.BlockNode FromBlockStatementNode(AnfState state, TypedTree.StatementNode.BlockNode node) {
       // Create a new state for the block since it introduces a new scope
-      var newState = new AnfState(node.Scope, state.ModuleFunctions);
       // Map the statements
       var statements = new List<AnfTree.InstructionNode>();
       foreach (var stmt in node.Statements) {
-        var (binds, instr) = FromStatementNode(newState, stmt);
+        var (binds, instr) = FromStatementNode(state, stmt);
         statements.AddRange(binds);
         statements.Add(instr);
       }
@@ -433,7 +431,7 @@ namespace Decaf.MiddleEnd {
         // Functions are a slightly more complex special case
         case TypedTree.LiteralNode.FunctionNode functionNode: {
             // Create a new state for the function
-            var newState = new AnfState(functionNode.Body.Scope, []);
+            var newState = new AnfState([]);
             // Convert the parameters to the ANF tree variants
             var parameters = new List<AnfTree.FunctionNode.ParameterNode>();
             foreach (var param in functionNode.Parameters) {
@@ -448,7 +446,8 @@ namespace Decaf.MiddleEnd {
               functionNode.Name,
               parameters.ToArray(),
               body,
-              functionNode.LiteralType
+              // NOTE: This cast is safe because we refine the input on a function literal itself
+              functionNode.LiteralType as Signature.Signature.FunctionSig
             );
             // Add the function to the module context
             state.ModuleFunctions.Add(anfNode);

@@ -62,7 +62,6 @@ namespace Decaf.Backend {
       );
       var startFunc = new WasmFunction(
         Position: node.Position,
-        // TODO: Validate that this is right according to WASI
         Label: new WasmLabel.Label(node.Position, "_start"),
         Params: [],
         Results: [],
@@ -70,8 +69,8 @@ namespace Decaf.Backend {
         Body: body
       );
       module.AddFunction(startFunc);
-      // TODO: Set this as the module start function
-      // TODO: Add the wasm types to the module from the context
+      // TODO: export this module as `_start` so that it gets called when the module is instantiated
+      // TODO: Add an option to set this as the start function of the module instead
       return module;
     }
     private static WasmLabel CompileModule(CodegenContext ctx, AnfTree.ModuleNode node) {
@@ -123,22 +122,17 @@ namespace Decaf.Backend {
         BreakLabel = null,
         ContinueLabel = null
       };
-      // Validate signature
-      if (node.Signature is not Signature.Signature.FunctionSig funcSig) {
-        // TODO: Enforce this variant in the IR
-        throw new Exception($"Impossible, function has a non function signature type");
-      }
       // Compile the body of the function
       var body = CompileBlockInstruction(funcCtx, node.Body);
       // TODO: This is a bit hacky, we should probably do the right analysis to avoid needing this
       // NOTE: All wasm functions must leave the return on the stack, however we pop it using `return` as if it were an early return, to ensure that the function validates we just leave a default value on the stack however it is never going to be hit, an optimizer should be able to easily remove it later (The downside is we could hide control flow bugs if we are not careful)
-      if (funcSig.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
-        // TODO: We need to make sure that this reutrns the right thing
+      if (node.Signature.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
+        // TODO: We need to make sure that this returns the right thing
         body = new WasmExpression.Block(
           node.Position,
           null,
-          [body, GetDefaultValueFromSignature(funcCtx, funcSig.ReturnType)],
-          GetWasmTypeFromSignature(funcCtx, funcSig.ReturnType)
+          [body, GetDefaultValueFromSignature(funcCtx, node.Signature.ReturnType)],
+          GetWasmTypeFromSignature(funcCtx, node.Signature.ReturnType)
         );
       }
       // Collect the parameters
@@ -148,8 +142,8 @@ namespace Decaf.Backend {
       }
       // Collect the return types from the signature
       var returnTypes = new List<WasmType>();
-      if (funcSig.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
-        returnTypes.Add(GetWasmTypeFromSignature(funcCtx, funcSig.ReturnType));
+      if (node.Signature.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
+        returnTypes.Add(GetWasmTypeFromSignature(funcCtx, node.Signature.ReturnType));
       }
       // Collect the local from the post compilation context
       var locals = new Dictionary<WasmLabel, WasmType>();

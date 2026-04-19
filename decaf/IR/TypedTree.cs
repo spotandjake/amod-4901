@@ -312,7 +312,7 @@ namespace Decaf.IR.TypedTree {
         ParameterNode[] Parameters,
         StatementNode.BlockNode Body,
         Scope<Signature.Signature> Scope,
-        Signature.Signature LiteralType
+        Signature.Signature.FunctionSig LiteralType
       ) : base(Position, LiteralType) {
         this.Name = Name;
         this.Parameters = Parameters;

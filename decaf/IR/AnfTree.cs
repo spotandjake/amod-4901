@@ -131,13 +131,13 @@ namespace Decaf.IR.AnfTree {
     public string Name { get; }
     public ParameterNode[] Parameters { get; }
     public InstructionNode.BlockNode Body { get; }
-    public Signature.Signature Signature { get; }
+    public Signature.Signature.FunctionSig Signature { get; }
     public FunctionNode(
       Position Position,
       string Name,
       ParameterNode[] Parameters,
       InstructionNode.BlockNode Body,
-      Signature.Signature Signature
+      Signature.Signature.FunctionSig Signature
     ) : base(Position) {
       this.Name = Name;
       this.Parameters = Parameters;

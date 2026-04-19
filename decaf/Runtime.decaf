@@ -18,10 +18,13 @@ module Runtime {
     // Fetch the page count
     let pageCount: int = @wasm.memory.size();
     // Determine if the program has enough memory
-    if (end <= (pageCount * Runtime.PageSize)) {
+    let size: int = pageCount * Runtime.PageSize;
+    if (end <= size) {
       // Grow the memory if we need
-      // TODO: We should compute the page size we need
-      @wasm.memory.grow(1);
+      let neededSize: int = end - size;
+      // Ceil int division
+      let neededPages: int = (neededSize + Runtime.PageSize - 1) / Runtime.PageSize;
+      @wasm.memory.grow(neededPages);
     }
     // Bump the heap pointer
     Runtime.HeapPointer = end;
