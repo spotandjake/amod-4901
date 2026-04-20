@@ -2,5 +2,5 @@ module Program {
   let hello_world = (): void => {
     Runtime.print("Hello World!\n");
   };
-  Program.hello_world();
+  hello_world();
 }

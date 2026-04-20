@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 using Decaf.IR.Signature;
 using Decaf.Utils;
 using Decaf.WasmBuilder;
@@ -15,14 +12,14 @@ namespace Decaf.Backend {
       return new WasmLabel.Label(position, GetMemberName(moduleName, memberName));
     }
     // We need to be able to refer to the runtime module so we can call its functions.
-    public static class Runtime {
-      public const string RuntimeModuleName = "Runtime";
+    public class Runtime(Signature.ModuleSig ModuleSig) {
+      public static readonly string RuntimeModuleName = "Runtime";
       // Allocation API
-      public static readonly string RuntimeMallocName = GetMemberName(RuntimeModuleName, "malloc");
-      public static readonly string RuntimeCallocName = GetMemberName(RuntimeModuleName, "calloc");
+      public readonly Symbol RuntimeMallocName = ModuleSig.Resolutions["malloc"];
+      public readonly Symbol RuntimeCallocName = ModuleSig.Resolutions["calloc"];
       // Allocation APIs
-      public static readonly string RuntimeAllocateArray = GetMemberName(RuntimeModuleName, "allocateArray");
-      public static readonly string RuntimeAllocateString = GetMemberName(RuntimeModuleName, "allocateString");
+      public readonly Symbol RuntimeAllocateArray = ModuleSig.Resolutions["allocateArray"];
+      public readonly Symbol RuntimeAllocateString = ModuleSig.Resolutions["allocateString"];
     }
   }
 }

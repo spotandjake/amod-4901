@@ -32,28 +32,28 @@ namespace Decaf.Frontend {
     /// <exception cref="DeclarationNotMutableException">When a declaration is being mutated but is not mutable.</exception>
     public static void CheckProgramNode(ParseTree.ProgramNode node) {
       // Initialize our global program scope
-      var globalScope = new Scope<bool>(null);
+      var globalScope = new Scope<string, bool>(null);
       // Check each module
       foreach (var module in node.Modules) CheckModuleNode(module, globalScope);
     }
-    private static void CheckModuleNode(ParseTree.ModuleNode node, Scope<bool> parentScope) {
+    private static void CheckModuleNode(ParseTree.ModuleNode node, Scope<string, bool> parentScope) {
       // Add the module declaration to the global scope (We do this before checking the module body to allow for recursive modules)
       parentScope.AddDeclaration(node.Position, node.Name.Name, false);
       // Create a new scope for the module
-      var moduleScope = new Scope<bool>(parentScope);
+      var moduleScope = new Scope<string, bool>(parentScope);
       // Check the module imports
       foreach (var imp in node.Imports) CheckImportNode(imp, moduleScope);
       // Check the module body
       CheckBlockStatementNode(node.Body, moduleScope);
     }
-    private static void CheckImportNode(ParseTree.ImportNode node, Scope<bool> parentScope) {
+    private static void CheckImportNode(ParseTree.ImportNode node, Scope<string, bool> parentScope) {
       // Add the import declaration to the module scope
       parentScope.AddDeclaration(node.Position, node.Name.Name, false);
     }
     #endregion
     // --- Statement Nodes ---
     #region StatementNodes
-    private static void CheckStatementNode(ParseTree.StatementNode node, Scope<bool> parentScope) {
+    private static void CheckStatementNode(ParseTree.StatementNode node, Scope<string, bool> parentScope) {
       switch (node) {
         case ParseTree.StatementNode.BlockNode blockNode:
           CheckBlockStatementNode(blockNode, parentScope);
@@ -84,13 +84,15 @@ namespace Decaf.Frontend {
         default: throw new Exception($"Unknown statement node type: {node.Kind}");
       }
     }
-    private static void CheckBlockStatementNode(ParseTree.StatementNode.BlockNode node, Scope<bool> parentScope) {
+    private static void CheckBlockStatementNode(ParseTree.StatementNode.BlockNode node, Scope<string, bool> parentScope) {
       // Create a new scope for the block
-      var scope = new Scope<bool>(parentScope);
+      var scope = new Scope<string, bool>(parentScope);
       // Check the statements
       foreach (var stmt in node.Statements) CheckStatementNode(stmt, scope);
     }
-    private static void CheckVariableDeclarationStatementNode(ParseTree.StatementNode.VariableDeclNode node, Scope<bool> parentScope) {
+    private static void CheckVariableDeclarationStatementNode(
+      ParseTree.StatementNode.VariableDeclNode node, Scope<string, bool> parentScope
+    ) {
       // Add the binds to scope
       foreach (var bind in node.Binds) {
         // NOTE: All binds are mutable except for function binds which cannot be reassigned
@@ -101,29 +103,29 @@ namespace Decaf.Frontend {
         CheckExpressionNode(bind.InitExpr, parentScope);
       }
     }
-    private static void CheckAssignmentStatementNode(ParseTree.StatementNode.AssignmentNode node, Scope<bool> parentScope) {
+    private static void CheckAssignmentStatementNode(ParseTree.StatementNode.AssignmentNode node, Scope<string, bool> parentScope) {
       CheckLocationNode(mutating: true, node.Location, parentScope);
       CheckExpressionNode(node.Expression, parentScope);
     }
-    private static void CheckIfStatementNode(ParseTree.StatementNode.IfNode node, Scope<bool> parentScope) {
+    private static void CheckIfStatementNode(ParseTree.StatementNode.IfNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.Condition, parentScope);
       CheckStatementNode(node.TrueBranch, parentScope);
       if (node.FalseBranch != null) CheckStatementNode(node.FalseBranch, parentScope);
     }
-    private static void CheckWhileStatementNode(ParseTree.StatementNode.WhileNode node, Scope<bool> parentScope) {
+    private static void CheckWhileStatementNode(ParseTree.StatementNode.WhileNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.Condition, parentScope);
       CheckStatementNode(node.Body, parentScope);
     }
-    private static void CheckReturnStatementNode(ParseTree.StatementNode.ReturnNode node, Scope<bool> parentScope) {
+    private static void CheckReturnStatementNode(ParseTree.StatementNode.ReturnNode node, Scope<string, bool> parentScope) {
       if (node.Value != null) CheckExpressionNode(node.Value, parentScope);
     }
-    private static void CheckExpressionStatementNode(ParseTree.StatementNode.ExprStatementNode node, Scope<bool> parentScope) {
+    private static void CheckExpressionStatementNode(ParseTree.StatementNode.ExprStatementNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.Expression, parentScope);
     }
     #endregion
     // --- Expressions ---
     #region Expressions
-    private static void CheckExpressionNode(ParseTree.ExpressionNode node, Scope<bool> parentScope) {
+    private static void CheckExpressionNode(ParseTree.ExpressionNode node, Scope<string, bool> parentScope) {
       switch (node) {
         case ParseTree.ExpressionNode.PrefixNode prefixNode:
           CheckPrefixExpressionNode(prefixNode, parentScope);
@@ -147,30 +149,30 @@ namespace Decaf.Frontend {
         default: throw new Exception($"Unknown expression node type: {node.Kind}");
       }
     }
-    private static void CheckPrefixExpressionNode(ParseTree.ExpressionNode.PrefixNode node, Scope<bool> parentScope) {
+    private static void CheckPrefixExpressionNode(ParseTree.ExpressionNode.PrefixNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.Operand, parentScope);
     }
-    private static void CheckBinopExpressionNode(ParseTree.ExpressionNode.BinopNode node, Scope<bool> parentScope) {
+    private static void CheckBinopExpressionNode(ParseTree.ExpressionNode.BinopNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.Lhs, parentScope);
       CheckExpressionNode(node.Rhs, parentScope);
     }
-    private static void CheckCallExpressionNode(ParseTree.ExpressionNode.CallNode node, Scope<bool> parentScope) {
+    private static void CheckCallExpressionNode(ParseTree.ExpressionNode.CallNode node, Scope<string, bool> parentScope) {
       CheckLocationNode(mutating: false, node.Callee, parentScope);
       foreach (var arg in node.Arguments) CheckExpressionNode(arg, parentScope);
     }
-    private static void CheckArrayInitExpressionNode(ParseTree.ExpressionNode.ArrayInitNode node, Scope<bool> parentScope) {
+    private static void CheckArrayInitExpressionNode(ParseTree.ExpressionNode.ArrayInitNode node, Scope<string, bool> parentScope) {
       CheckExpressionNode(node.SizeExpr, parentScope);
     }
-    private static void CheckLocationExpressionNode(ParseTree.ExpressionNode.LocationExprNode node, Scope<bool> parentScope) {
+    private static void CheckLocationExpressionNode(ParseTree.ExpressionNode.LocationExprNode node, Scope<string, bool> parentScope) {
       CheckLocationNode(mutating: false, node.Location, parentScope);
     }
-    private static void CheckLiteralExpressionNode(ParseTree.ExpressionNode.LiteralExprNode node, Scope<bool> parentScope) {
+    private static void CheckLiteralExpressionNode(ParseTree.ExpressionNode.LiteralExprNode node, Scope<string, bool> parentScope) {
       CheckLiteralNode(node.Literal, parentScope);
     }
     #endregion
     // --- Literals ---
     #region Literals
-    private static void CheckLiteralNode(ParseTree.LiteralNode node, Scope<bool> parentScope) {
+    private static void CheckLiteralNode(ParseTree.LiteralNode node, Scope<string, bool> parentScope) {
       switch (node) {
         // Nothing to check for most literals as they don't touch the scope
         case ParseTree.LiteralNode.IntegerNode:
@@ -185,9 +187,9 @@ namespace Decaf.Frontend {
         default: throw new Exception($"Unknown literal node type: {node.Kind}");
       }
     }
-    private static void CheckFunctionLiteralNode(ParseTree.LiteralNode.FunctionNode node, Scope<bool> parentScope) {
+    private static void CheckFunctionLiteralNode(ParseTree.LiteralNode.FunctionNode node, Scope<string, bool> parentScope) {
       // Create a new scope for the function
-      var functionScope = new Scope<bool>(parentScope);
+      var functionScope = new Scope<string, bool>(parentScope);
       // Add parameters to scope (NOTE: not mutable)
       foreach (var param in node.Parameters)
         functionScope.AddDeclaration(param.Position, param.Name.Name, false);
@@ -197,7 +199,7 @@ namespace Decaf.Frontend {
     #endregion
     // --- Locations ---
     #region Locations
-    private static void CheckLocationNode(bool mutating, ParseTree.LocationNode node, Scope<bool> parentScope) {
+    private static void CheckLocationNode(bool mutating, ParseTree.LocationNode node, Scope<string, bool> parentScope) {
       if (node.IsPrimitive) {
         if (mutating) throw new DeclarationNotMutableException(node.Position, "primitive");
         // We can skip checks on primitive locations (they will be resolved during type checking)

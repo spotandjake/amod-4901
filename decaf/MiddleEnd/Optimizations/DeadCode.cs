@@ -37,7 +37,7 @@ namespace Decaf.MiddleEnd.Optimizations {
         // Rebuild the function with the optimizations applied
         optimizedFunctions.Add(new AnfTree.FunctionNode(
           func.Position,
-          func.Name,
+          func.ID,
           func.Parameters,
           optimizedBody,
           func.Signature
@@ -48,7 +48,7 @@ namespace Decaf.MiddleEnd.Optimizations {
       // Rebuild the node with the optimizations applied
       return new AnfTree.ModuleNode(
         node.Position,
-        node.Name,
+        node.ID,
         node.Imports,
         optimizedFunctions.ToArray(),
         optimizedModuleBody,

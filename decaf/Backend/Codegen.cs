@@ -4,6 +4,7 @@ using Decaf.WasmBuilder;
 using Decaf.Utils;
 using AnfTree = Decaf.IR.AnfTree;
 using Signature = Decaf.IR.Signature;
+using System.Linq;
 
 // TODO: It would probably make sense to using binaryen for code generation, we get pretty much nothing from doing it ourselves, and it would prevent a lot of subtle semantic bugs. However we are doing it this way for the learning experience as of now.
 
@@ -13,22 +14,19 @@ namespace Decaf.Backend {
   public static partial class Codegen {
 #nullable enable
     private record struct CodegenContext {
+      public CodegenUtils.Runtime Runtime;
       public WasmModule WasmModule; // The module we are currently building itself
       public Dictionary<Signature.Signature, WasmLabel> WasmTypes; // A mapping from signatures to the labels of their corresponding types in the module
       public Dictionary<WasmLabel, WasmType>? WasmLocals; // A list of locals in the current function
-      public string? ModuleName; // The name of the module we are currently building, used for generating labels
-      public bool TopLevel; // Whether we are currently compiling at the top level of a module (as opposed to within a block)
-                            // Related to looping
 
       public WasmLabel? BreakLabel; // The label to break to when we encounter a `break`
       public WasmLabel? ContinueLabel; // The label to break to when we encounter
-      public static CodegenContext CreateInitialContext(WasmModule WasmModule) {
+      public static CodegenContext CreateInitialContext(CodegenUtils.Runtime Runtime, WasmModule WasmModule) {
         return new CodegenContext {
+          Runtime = Runtime,
           WasmModule = WasmModule,
-          WasmTypes = new Dictionary<Signature.Signature, WasmLabel>(),
+          WasmTypes = [],
           WasmLocals = null,
-          ModuleName = null,
-          TopLevel = true,
           // Looping
           BreakLabel = null,
           ContinueLabel = null,
@@ -36,13 +34,22 @@ namespace Decaf.Backend {
       }
     }
 #nullable restore
+    // --- Symbols ---
+    private static WasmLabel.Label CompileSymbol(Position position, Symbol symbol) {
+      return new WasmLabel.Label(position, symbol.GetUniqueName());
+    }
     // --- Code Units ---
     #region CodeUnits
     public static WasmModule CompileProgram(CompilationConfig config, AnfTree.ProgramNode node) {
       // Create our wasm module
       var module = new WasmModule(node.Position);
+      // Find the runtime class
+      var runtimeModule = node.Modules.First(m => m.ID.Name == CodegenUtils.Runtime.RuntimeModuleName);
+      if (runtimeModule == null)
+        throw new Exception($"Could not find runtime module with name {CodegenUtils.Runtime.RuntimeModuleName}");
+      var runtime = new CodegenUtils.Runtime(runtimeModule.Signature);
       // Create our initial codegen context
-      var ctx = CodegenContext.CreateInitialContext(module);
+      var ctx = CodegenContext.CreateInitialContext(runtime, module);
       // Add the memory to the module
       var memory = new WasmMemory(node.Position, new WasmLabel.Label(node.Position, "memory"), InitialPages: 1);
       ctx.WasmModule.AddMemory(memory);
@@ -78,14 +85,14 @@ namespace Decaf.Backend {
     }
     private static WasmLabel CompileModule(CodegenContext ctx, AnfTree.ModuleNode node) {
       // Create a new context for the module
-      var moduleCtx = ctx with { TopLevel = true, WasmLocals = new Dictionary<WasmLabel, WasmType>(), ModuleName = node.Name };
+      var moduleCtx = ctx with { WasmLocals = [] };
       // Compile the imports in the module
       foreach (var imp in node.Imports) {
         var import = new WasmImport(
           Position: imp.Position,
-          Label: CodegenUtils.GetMemberLabel(imp.Position, node.Name, imp.Name),
-          Module: imp.Module,
-          Name: imp.Name,
+          Label: CompileSymbol(imp.Position, imp.ID),
+          Module: imp.ExternalModule,
+          Name: imp.ExternalName,
           Type: GetWasmTypeFromSignature(moduleCtx, imp.Signature, returnRef: false)
         );
         moduleCtx.WasmModule.AddImport(import);
@@ -97,14 +104,14 @@ namespace Decaf.Backend {
         ctx.WasmModule.AddFunction(wasmFunc);
       }
       // Compile the module body
-      var body = CompileBlockInstruction(moduleCtx, node.Body, isTopLevel: true);
+      var body = CompileBlockInstruction(moduleCtx, node.Body);
       // Collect the local from the post compilation context
       var locals = new Dictionary<WasmLabel, WasmType>();
       foreach (var local in moduleCtx.WasmLocals) {
         locals.Add(local.Key, local.Value);
       }
       // Create a new function called `main` for the module body and add it to the module
-      var label = CodegenUtils.GetMemberLabel(node.Position, node.Name, "_main");
+      var label = CompileSymbol(node.Position, node.ID);
       var mainFunc = new WasmFunction(
         Position: node.Position,
         Label: label,
@@ -120,8 +127,7 @@ namespace Decaf.Backend {
     private static WasmFunction CompileFunction(CodegenContext ctx, AnfTree.FunctionNode node) {
       // Create a new context for the function
       var funcCtx = ctx with {
-        TopLevel = false,
-        WasmLocals = new Dictionary<WasmLabel, WasmType>(),
+        WasmLocals = [],
         BreakLabel = null,
         ContinueLabel = null
       };
@@ -140,7 +146,7 @@ namespace Decaf.Backend {
       // Collect the parameters
       var parameters = new Dictionary<WasmLabel, WasmType>();
       foreach (var param in node.Parameters) {
-        parameters.Add(new WasmLabel.Label(param.Position, param.Name), GetWasmTypeFromSignature(funcCtx, param.Signature));
+        parameters.Add(CompileSymbol(param.Position, param.ID), GetWasmTypeFromSignature(funcCtx, param.Signature));
       }
       // Collect the return types from the signature
       var returnTypes = new List<WasmType>();
@@ -155,7 +161,7 @@ namespace Decaf.Backend {
       // Build our wasm function
       return new WasmFunction(
         Position: node.Position,
-        Label: CodegenUtils.GetMemberLabel(node.Position, ctx.ModuleName, node.Name),
+        Label: CompileSymbol(node.Position, node.ID),
         Params: parameters,
         Results: returnTypes,
         Locals: locals,
@@ -183,12 +189,11 @@ namespace Decaf.Backend {
       };
     }
     private static WasmExpression.Block CompileBlockInstruction(
-      CodegenContext ctx, AnfTree.InstructionNode.BlockNode node, bool isTopLevel = false
+      CodegenContext ctx, AnfTree.InstructionNode.BlockNode node
     ) {
-      var newCtx = ctx with { TopLevel = isTopLevel };
       var instructions = new List<WasmExpression>();
       foreach (var instruction in node.Instructions) {
-        instructions.Add(CompileInstruction(newCtx, instruction));
+        instructions.Add(CompileInstruction(ctx, instruction));
       }
       return new WasmExpression.Block(node.Position, null, instructions);
     }
@@ -197,10 +202,9 @@ namespace Decaf.Backend {
       // Compile the expression
       var compiledExpr = CompileSimpleExpr(ctx, node.SimpleExpression);
       // If this is a top level bind, we need to create a global variable for it
-      if (ctx.TopLevel) {
-        // TODO: We should probably do more anf analysis and figure out if this actually needs to be a global later
+      if (node.ID.IsGlobal) {
         var wasmType = GetWasmTypeFromSignature(ctx, node.SimpleExpression.ExpressionType);
-        var label = CodegenUtils.GetMemberLabel(node.Position, ctx.ModuleName, node.Name);
+        var label = CompileSymbol(node.Position, node.ID);
         var global = new WasmGlobal(
           node.Position,
           Label: label,
@@ -215,22 +219,20 @@ namespace Decaf.Backend {
       }
       else {
         // Add the local variable to the context
-        var localLabel = new WasmLabel.Label(node.Position, node.Name);
+        var localLabel = CompileSymbol(node.Position, node.ID);
         var localType = GetWasmTypeFromSignature(ctx, node.SimpleExpression.ExpressionType);
         ctx.WasmLocals!.Add(localLabel, localType);
         // Otherwise, we can just create a local variable for it
         return new WasmExpression.Local.Set(node.Position, localLabel, compiledExpr);
       }
     }
-    private static WasmExpression CompileAssignmentInstruction(CodegenContext parentCtx, AnfTree.InstructionNode.AssignmentNode node) {
-      var ctx = parentCtx with { TopLevel = false };
+    private static WasmExpression CompileAssignmentInstruction(CodegenContext ctx, AnfTree.InstructionNode.AssignmentNode node) {
       // Compile the immediate
       var compiledValue = CompileImmediate(ctx, node.Imm);
       // Compile the assignment to the location
       return CompileLocationSet(ctx, node.Location, compiledValue);
     }
-    private static WasmExpression.If CompileIfInstruction(CodegenContext parentCtx, AnfTree.InstructionNode.IfNode node) {
-      var ctx = parentCtx with { TopLevel = false };
+    private static WasmExpression.If CompileIfInstruction(CodegenContext ctx, AnfTree.InstructionNode.IfNode node) {
       // Compile the condition
       var compiledCondition = CompileImmediate(ctx, node.Condition);
       // Compile the true branch
@@ -241,11 +243,10 @@ namespace Decaf.Backend {
       return new WasmExpression.If(node.Position, compiledCondition, compiledTrueBranch, compiledFalseBranch);
     }
     private static WasmExpression.Block CompileLoopInstruction(CodegenContext parentCtx, AnfTree.InstructionNode.LoopNode node) {
-      var ctx = parentCtx with { TopLevel = false };
       // Properly generate the labels
       var loop_label = new WasmLabel.UniqueLabel(node.Position, "loop_inner");
       var block_label = new WasmLabel.UniqueLabel(node.Position, "loop_outer");
-      var newCtx = ctx with {
+      var newCtx = parentCtx with {
         BreakLabel = block_label,
         ContinueLabel = loop_label,
       };
@@ -286,10 +287,9 @@ namespace Decaf.Backend {
     // --- Simple Expressions ---
     #region SimpleExpressions
     private static WasmExpression CompileSimpleExpr(
-      CodegenContext parentCtx,
+      CodegenContext ctx,
       AnfTree.SimpleExpressionNode node
     ) {
-      var ctx = parentCtx with { TopLevel = false };
       return node switch {
         AnfTree.SimpleExpressionNode.PrefixNode prefixNode => CompilePrefixSimpleExpr(ctx, prefixNode),
         AnfTree.SimpleExpressionNode.BinopNode binopNode => CompileBinopSimpleExpr(ctx, binopNode),
@@ -321,7 +321,7 @@ namespace Decaf.Backend {
     ) {
       return new WasmExpression.Call(
         node.Position,
-        new WasmLabel.Label(node.Position, CodegenUtils.Runtime.RuntimeAllocateArray),
+        CompileSymbol(node.Position, ctx.Runtime.RuntimeAllocateArray),
         [CompileImmediate(ctx, node.SizeImm)]
       );
     }
@@ -363,7 +363,10 @@ namespace Decaf.Backend {
           new WasmExpression.I32.Const(characterNode.Position, characterNode.Value),
         AnfTree.LiteralNode.StringNode stringNode => CompileStringLiteral(ctx, stringNode),
         AnfTree.LiteralNode.FunctionReferenceNode funcRefNode =>
-          new WasmExpression.Ref.Func(funcRefNode.Position, CodegenUtils.GetMemberLabel(funcRefNode.Position, ctx.ModuleName, funcRefNode.FunctionName)),
+          new WasmExpression.Ref.Func(
+            funcRefNode.Position,
+            CompileSymbol(funcRefNode.Position, funcRefNode.ID)
+          ),
         _ => throw new Exception($"Unknown literal node kind: {node.Kind}"),
       };
     }
@@ -386,7 +389,7 @@ namespace Decaf.Backend {
       // Allocate the string
       var allocatedStringPtr = new WasmExpression.Call(
         node.Position,
-        new WasmLabel.Label(node.Position, CodegenUtils.Runtime.RuntimeAllocateString),
+        CompileSymbol(node.Position, ctx.Runtime.RuntimeAllocateString),
         [new WasmExpression.I32.Const(node.Position, rawData.Length)]
       );
       var storeAllocatedPtr = new WasmExpression.Local.Set(node.Position, localLabel, allocatedStringPtr);
@@ -418,7 +421,6 @@ namespace Decaf.Backend {
       AnfTree.LocationNode node,
       WasmExpression value
     ) {
-      // TODO: We should be smarter about name resolution
       switch (node) {
         case AnfTree.LocationNode.ArrayNode arrNode: {
             // Compile the root location get expression
@@ -438,24 +440,19 @@ namespace Decaf.Backend {
               [compiledBoundsCheck, compiledSet]
             );
           }
-        case AnfTree.LocationNode.MemberNode memberNode: {
-            // NOTE: We currently have a restriction that all member accesses must be on a global variable
-            //       This means that member accesses should always have the form `<module>.<member>`.
-            if (memberNode.Root is not AnfTree.LocationNode.IdentifierNode rootIdNode) {
-              // This shouldn't be possible due to typechecking and language construct constraints
-              throw new Exception("Impossible, member access with unexpected root type");
+        case AnfTree.LocationNode.SymbolLocation symbolNode: {
+            // Based on the global state we generate either a `global.set` or a `local.set` here
+            if (symbolNode.ID.IsGlobal) {
+              // This is a global variable, we need to generate a `global.set`
+              var globalLabel = CompileSymbol(node.Position, symbolNode.ID);
+              return new WasmExpression.Global.Set(node.Position, globalLabel, value);
             }
-            // Get the mangled name
-            var globalLabel = CodegenUtils.GetMemberLabel(node.Position, rootIdNode.Name, memberNode.Member);
-            // Build the global.set
-            return new WasmExpression.Global.Set(node.Position, globalLabel, value);
+            else {
+              // This is a local variable, we need to generate a `local.set`
+              var localLabel = CompileSymbol(node.Position, symbolNode.ID);
+              return new WasmExpression.Local.Set(node.Position, localLabel, value);
+            }
           }
-        case AnfTree.LocationNode.IdentifierNode idNode:
-          return new WasmExpression.Local.Set(
-            node.Position,
-            new WasmLabel.Label(node.Position, idNode.Name),
-            value
-          );
         // NOTE: This should be impossible in most cases
         default: throw new Exception($"Unknown location node kind: {node.Kind}");
       }
@@ -464,7 +461,6 @@ namespace Decaf.Backend {
       CodegenContext ctx,
       AnfTree.LocationNode node
     ) {
-      // TODO: We should be smarter about name resolution
       switch (node) {
         case AnfTree.LocationNode.ArrayNode arrNode: {
             // Compile the root get expression
@@ -484,23 +480,19 @@ namespace Decaf.Backend {
               [compiledBoundsCheck, compiledGet]
             );
           }
-        case AnfTree.LocationNode.MemberNode memberNode: {
-            // NOTE: We currently have a restriction that all member accesses must be on a global variable
-            //       This means that member accesses should always have the form `<module>.<member>`.
-            if (memberNode.Root is not AnfTree.LocationNode.IdentifierNode rootIdNode) {
-              // This shouldn't be possible due to typechecking and language construct constraints
-              throw new Exception("Impossible, member access with unexpected root type");
+        case AnfTree.LocationNode.SymbolLocation symbolNode: {
+            // Based on the global state we generate either a `global.get` or a `local.get` here
+            if (symbolNode.ID.IsGlobal) {
+              // This is a global variable, we need to generate a `global.get`
+              var globalLabel = CompileSymbol(node.Position, symbolNode.ID);
+              return new WasmExpression.Global.Get(node.Position, globalLabel);
             }
-            // Get the mangled name
-            var globalLabel = CodegenUtils.GetMemberLabel(node.Position, rootIdNode.Name, memberNode.Member);
-            // Build the global.get
-            return new WasmExpression.Global.Get(node.Position, globalLabel);
+            else {
+              // This is a local variable, we need to generate a `local.get`
+              var localLabel = CompileSymbol(node.Position, symbolNode.ID);
+              return new WasmExpression.Local.Get(node.Position, localLabel);
+            }
           }
-        case AnfTree.LocationNode.IdentifierNode idNode:
-          return new WasmExpression.Local.Get(
-            idNode.Position,
-            new WasmLabel.Label(idNode.Position, idNode.Name)
-          );
         // NOTE: This should be impossible in most cases
         default: throw new Exception($"Unknown location node kind: {node.Kind}");
       }

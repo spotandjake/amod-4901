@@ -2,7 +2,10 @@
   Modules: [
     {
       Kind: ModuleNode,
-      Name: Program,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
       Body: {
         Kind: BlockInstructionNode,
         Instructions: [
@@ -13,7 +16,11 @@
               Instructions: [
                 {
                   Kind: BindInstructionNode,
-                  Name: __anf_temp_0,
+                  ID: {
+                    Name: __anf_temp,
+                    IsGlobal: false,
+                    ID: 3
+                  },
                   SimpleExpression: {
                     Kind: BinopExpressionNode,
                     Lhs: {
@@ -44,8 +51,12 @@
                   Condition: {
                     Kind: LocationImmediate,
                     Location: {
-                      Kind: IdentifierLocationNode,
-                      Name: __anf_temp_0,
+                      Kind: SymbolLocationNode,
+                      ID: {
+                        Name: __anf_temp,
+                        IsGlobal: false,
+                        ID: 3
+                      },
                       LocationType: {
                         Type: Boolean
                       }
@@ -59,7 +70,11 @@
                     Instructions: [
                       {
                         Kind: BindInstructionNode,
-                        Name: y,
+                        ID: {
+                          Name: y,
+                          IsGlobal: false,
+                          ID: 1
+                        },
                         SimpleExpression: {
                           Kind: ImmExpressionNode,
                           Imm: {

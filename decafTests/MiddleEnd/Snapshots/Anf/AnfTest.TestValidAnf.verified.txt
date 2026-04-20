@@ -2,7 +2,10 @@
   Modules: [
     {
       Kind: ModuleNode,
-      Name: Program,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
       Body: {
         Kind: BlockInstructionNode,
         Instructions: [
@@ -11,7 +14,11 @@
             Instructions: [
               {
                 Kind: BindInstructionNode,
-                Name: __anf_temp_0,
+                ID: {
+                  Name: __anf_temp,
+                  IsGlobal: false,
+                  ID: 2
+                },
                 SimpleExpression: {
                   Kind: BinopExpressionNode,
                   Lhs: {
@@ -37,14 +44,22 @@
               },
               {
                 Kind: BindInstructionNode,
-                Name: x,
+                ID: {
+                  Name: x,
+                  IsGlobal: true,
+                  ID: 1
+                },
                 SimpleExpression: {
                   Kind: BinopExpressionNode,
                   Lhs: {
                     Kind: LocationImmediate,
                     Location: {
-                      Kind: IdentifierLocationNode,
-                      Name: __anf_temp_0,
+                      Kind: SymbolLocationNode,
+                      ID: {
+                        Name: __anf_temp,
+                        IsGlobal: false,
+                        ID: 2
+                      },
                       LocationType: {}
                     },
                     Signature: {}
@@ -67,7 +82,14 @@
       },
       Signature: {
         Members: {
-          x: {}
+          Decaf.Utils.Symbol: {}
+        },
+        Resolutions: {
+          x: {
+            Name: x,
+            IsGlobal: true,
+            ID: 1
+          }
         }
       }
     }

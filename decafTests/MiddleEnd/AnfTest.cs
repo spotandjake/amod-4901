@@ -145,7 +145,7 @@ public class AnfTest : VerifyBase {
     // NOTE: We need to validate we hoisted the `x` bind instead of the `y` bind to make sure we got rid of the correct branch
     var bindNode = instr as AnfTree.InstructionNode.BindNode;
     Assert.IsNotNull(bindNode);
-    Assert.AreEqual("x", bindNode.Name);
+    Assert.AreEqual("x", bindNode.ID.Name);
   }
   [TestMethod]
   public void TestDeadCodeEliminationIfTrue2() {
@@ -170,7 +170,7 @@ public class AnfTest : VerifyBase {
     // NOTE: We need to validate we hoisted the `x` bind instead of the `y` bind to make sure we got rid of the correct branch
     var bindNode = instr as AnfTree.InstructionNode.BindNode;
     Assert.IsNotNull(bindNode);
-    Assert.AreEqual("x", bindNode.Name);
+    Assert.AreEqual("x", bindNode.ID.Name);
   }
   [TestMethod]
   public void TestDeadCodeEliminationIfFalse1() {
@@ -197,7 +197,7 @@ public class AnfTest : VerifyBase {
     // NOTE: We need to validate we hoisted the `x` bind instead of the `y` bind to make sure we got rid of the correct branch
     var bindNode = instr as AnfTree.InstructionNode.BindNode;
     Assert.IsNotNull(bindNode);
-    Assert.AreEqual("y", bindNode.Name);
+    Assert.AreEqual("y", bindNode.ID.Name);
   }
   [TestMethod]
   public void TestDeadCodeEliminationIfFalse2() {

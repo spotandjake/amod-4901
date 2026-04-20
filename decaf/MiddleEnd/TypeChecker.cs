@@ -14,17 +14,21 @@ using Decaf.Utils.Errors.TypeCheckingErrors;
 /// </summary>
 namespace Decaf.MiddleEnd.TypeChecker {
   // The type checker itself
-  public static class TypeChecker {
+  public static partial class TypeChecker {
     // The context used for type checking
 #nullable enable
     private readonly record struct Context(
-      string? CurrentModule,
+      IDGenerator SymbolIDGenerator,
+      bool TopLevel,
       Signature.Signature.FunctionSig? CurrentFunc,
-      Scope<Signature.Signature> CurrentScope
+      Scope<Symbol, Signature.Signature> CurrentScope,
+      Scope<string, Symbol> ResolutionScope
     ) {
-      public string? CurrentModule { get; } = CurrentModule;
+      public IDGenerator SymbolIDGenerator { get; } = SymbolIDGenerator;
+      public bool TopLevel { get; } = TopLevel;
       public Signature.Signature.FunctionSig? CurrentFunc { get; } = CurrentFunc;
-      public Scope<Signature.Signature> CurrentScope { get; } = CurrentScope;
+      public Scope<Symbol, Signature.Signature> CurrentScope { get; } = CurrentScope;
+      public Scope<string, Symbol> ResolutionScope { get; } = ResolutionScope;
     }
 #nullable disable
 
@@ -32,7 +36,13 @@ namespace Decaf.MiddleEnd.TypeChecker {
     #region CodeUnits
     public static TypedTree.ProgramNode TypeProgramNode(ParseTree.ProgramNode node) {
       // Initialize a new context for the program
-      var ctx = new Context(null, null, new Scope<Signature.Signature>(null));
+      var ctx = new Context(
+        SymbolIDGenerator: new IDGenerator(),
+        CurrentFunc: null,
+        TopLevel: true,
+        CurrentScope: new Scope<Symbol, Signature.Signature>(null),
+        ResolutionScope: new Scope<string, Symbol>(null)
+      );
       // Map the modules
       var modules = new List<TypedTree.ModuleNode>();
       foreach (var module in node.Modules) {
@@ -41,9 +51,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
         modules.Add(typedModule);
       }
       // Map the program node itself
-      return new TypedTree.ProgramNode(node.Position, modules.ToArray(), ctx.CurrentScope);
+      return new TypedTree.ProgramNode(node.Position, modules.ToArray(), ctx.CurrentScope, ctx.SymbolIDGenerator);
     }
     private static TypedTree.ModuleNode TypeModuleNode(Context parentCtx, ParseTree.ModuleNode node) {
+      // TODO: Consider if modules can be self recursive???
       // NOTE: Mapping modules is a little interesting as modules are allowed to be self recursive.
       //       This means that we need to know the signature of the module before we can type check the body of the module.
       //       There are a few traditional ways to handle this depending on the type system being used the simplest of which is
@@ -53,52 +64,58 @@ namespace Decaf.MiddleEnd.TypeChecker {
       //       This means that we can initially register the module with an empty signature, and as we map the statements
       //       we can update the module signature and the global scope as we go.
 
-      var name = node.Name.Name;
+      var symbol = Symbol.Create(parentCtx.SymbolIDGenerator, node.Position, true, node.Name.Name);
+
       // Create a base signature and register the module in the parent scope
-      var moduleSignature = new Signature.Signature.ModuleSig(node.Position, []);
-      parentCtx.CurrentScope.AddDeclaration(node.Position, name, moduleSignature);
+      var moduleSignature = new Signature.Signature.ModuleSig(node.Position, [], []);
+      parentCtx.CurrentScope.AddDeclaration(node.Position, symbol, moduleSignature);
+      parentCtx.ResolutionScope.AddDeclaration(node.Position, node.Name.Name, symbol);
       // Create a new context for the module
-      var ctx = new Context(name, null, new Scope<Signature.Signature>(parentCtx.CurrentScope));
+      var ctx = new Context(
+        SymbolIDGenerator: parentCtx.SymbolIDGenerator,
+        CurrentFunc: null,
+        TopLevel: true,
+        CurrentScope: new Scope<Symbol, Signature.Signature>(parentCtx.CurrentScope),
+        ResolutionScope: new Scope<string, Symbol>(parentCtx.ResolutionScope)
+      );
       // Map the imports of the module
       var imports = new List<TypedTree.ImportNode>();
       foreach (var imp in node.Imports) {
         // Map the import
         var typedImp = TypeImportNode(ctx, imp);
         imports.Add(typedImp);
-        // Update the signature
-        moduleSignature.Members[typedImp.Name] = typedImp.Signature;
-        // Update the scope
-        parentCtx.CurrentScope.SetDeclaration(typedImp.Position, name, moduleSignature);
+        // Update the module signature & module scope
+        moduleSignature.Members[typedImp.ID] = typedImp.Signature;
+        moduleSignature.Resolutions[typedImp.ID.Name] = typedImp.ID;
       }
       // Map the statements of the module
       var statements = new List<TypedTree.StatementNode>();
       foreach (var stmt in node.Body.Statements) {
         bool HasReturn = false; // NOTE: You can't return from a module but this is needed for if statements in the module body
         var typedStmt = TypeStatementNode(ctx, stmt, ref HasReturn);
-        // NOTE: We could sanity check the HasReturn but we check it elsewhere so it doesn't make sense to check it here as well.
         statements.Add(typedStmt);
         // If the statement is a declaration statement we need to update the module signature
         if (typedStmt is TypedTree.StatementNode.VariableDeclNode variableDecl) {
           // NOTE: It would probably make sense to add a statement in the future to mark binds as public
           foreach (var bind in variableDecl.Binds) {
             // Update the signature
-            moduleSignature.Members[bind.Name] = bind.Signature;
-            // Update the scope
-            parentCtx.CurrentScope.SetDeclaration(variableDecl.Position, name, moduleSignature);
+            moduleSignature.Members[bind.ID] = bind.Signature;
+            moduleSignature.Resolutions[bind.ID.Name] = bind.ID;
           }
         }
       }
       var body = new TypedTree.StatementNode.BlockNode(node.Body.Position, statements.ToArray(), ctx.CurrentScope);
       // Map the module node itself
-      return new TypedTree.ModuleNode(node.Position, name, imports.ToArray(), body, ctx.CurrentScope, moduleSignature);
+      return new TypedTree.ModuleNode(node.Position, symbol, imports.ToArray(), body, ctx.CurrentScope, moduleSignature);
     }
     private static TypedTree.ImportNode TypeImportNode(Context parentCtx, ParseTree.ImportNode node) {
+      // Generate a symbol
+      var symbol = Symbol.Create(parentCtx.SymbolIDGenerator, node.Position, true, node.Name.Name);
       // Add the binding to the scope
-      parentCtx.CurrentScope.AddDeclaration(node.Position, node.Name.Name, node.Signature);
+      parentCtx.CurrentScope.AddDeclaration(node.Position, symbol, node.Signature);
+      parentCtx.ResolutionScope.AddDeclaration(node.Position, node.Name.Name, symbol);
       // Map the node itself
-      return new TypedTree.ImportNode(
-        node.Position, node.Name.Name, node.Signature, node.Module
-      );
+      return new TypedTree.ImportNode(node.Position, symbol, node.Signature, node.Name.Name, node.Module);
     }
     #endregion
     // --- Statements ---
@@ -129,9 +146,11 @@ namespace Decaf.MiddleEnd.TypeChecker {
     ) {
       // Create a new context for the block
       var ctx = new Context(
-        parentCtx.CurrentModule,
-        parentCtx.CurrentFunc,
-        new Scope<Signature.Signature>(parentCtx.CurrentScope)
+        SymbolIDGenerator: parentCtx.SymbolIDGenerator,
+        CurrentFunc: parentCtx.CurrentFunc,
+        TopLevel: false,
+        CurrentScope: new Scope<Symbol, Signature.Signature>(parentCtx.CurrentScope),
+        ResolutionScope: new Scope<string, Symbol>(parentCtx.ResolutionScope)
       );
       // Map the statements
       var statements = new List<TypedTree.StatementNode>();
@@ -139,7 +158,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
         var typedStmt = TypeStatementNode(ctx, stmt, ref HasReturn);
         statements.Add(typedStmt);
       }
-      // Map the block node itself, note that the scope of the block is the current scope of the context
+      // Map the block node itself
       return new TypedTree.StatementNode.BlockNode(node.Position, statements.ToArray(), ctx.CurrentScope);
     }
     private static TypedTree.StatementNode.VariableDeclNode TypeVariableDeclarationStatementNode(
@@ -150,6 +169,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
       foreach (var bind in node.Binds) {
         // Extract the signature of the bind
         var signature = bind.Signature switch {
+          // TODO: We might just want to allow inference for all binds???
           // We are allowed to infer the type of a function literal
           null when bind.InitExpr is ParseTree.ExpressionNode.LiteralExprNode {
             Literal: ParseTree.LiteralNode.FunctionNode functionLiteral
@@ -162,15 +182,18 @@ namespace Decaf.MiddleEnd.TypeChecker {
           // Map the type of the bind if it exists
           _ => bind.Signature
         };
+        // Generate a symbol for the bind
+        var symbol = Symbol.Create(parentCtx.SymbolIDGenerator, bind.Position, parentCtx.TopLevel, bind.Name.Name);
         // Add the binding to the scope
         // NOTE: It is important that we do this before mapping the init expr so we can support recursive definitions
-        parentCtx.CurrentScope.AddDeclaration(bind.Position, bind.Name.Name, signature);
+        parentCtx.CurrentScope.AddDeclaration(bind.Position, symbol, signature);
+        parentCtx.ResolutionScope.AddDeclaration(bind.Position, bind.Name.Name, symbol);
         // Map the init expression
         var initExpr = TypeExpressionNode(parentCtx, bind.InitExpr);
         // Validate the init expression matches the signature of the bind
         TypeCheckerCore.CheckSignature(expected: signature, received: initExpr.ExpressionType);
         // Map the bind itself
-        var typedBind = new TypedTree.StatementNode.VariableDeclNode.BindNode(bind.Position, bind.Name.Name, initExpr, signature);
+        var typedBind = new TypedTree.StatementNode.VariableDeclNode.BindNode(bind.Position, symbol, initExpr, signature);
         binds.Add(typedBind);
       }
       // Map the node itself
@@ -203,8 +226,15 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Map the true branch & false branch
       bool hasReturnTrueBranch = false;
       bool hasReturnFalseBranch = false;
-      var trueBranch = TypeStatementNode(parentCtx, node.TrueBranch, ref hasReturnTrueBranch);
-      var falseBranch = node.FalseBranch != null ? TypeStatementNode(parentCtx, node.FalseBranch, ref hasReturnFalseBranch) : null;
+      var ctx = new Context(
+        SymbolIDGenerator: parentCtx.SymbolIDGenerator,
+        CurrentFunc: parentCtx.CurrentFunc,
+        TopLevel: false,
+        CurrentScope: parentCtx.CurrentScope,
+        ResolutionScope: parentCtx.ResolutionScope
+      );
+      var trueBranch = TypeStatementNode(ctx, node.TrueBranch, ref hasReturnTrueBranch);
+      var falseBranch = node.FalseBranch != null ? TypeStatementNode(ctx, node.FalseBranch, ref hasReturnFalseBranch) : null;
       // Properly set the HasReturn value for this if statement up the tree.
       if (!HasReturn) HasReturn = hasReturnTrueBranch && hasReturnFalseBranch;
       // Map the node itself
@@ -222,7 +252,14 @@ namespace Decaf.MiddleEnd.TypeChecker {
       );
       // Map the body
       bool hasReturn = false; // NOTE: You can't return from a loop 
-      var body = TypeStatementNode(parentCtx, node.Body, ref hasReturn);
+      var ctx = new Context(
+        SymbolIDGenerator: parentCtx.SymbolIDGenerator,
+        CurrentFunc: parentCtx.CurrentFunc,
+        TopLevel: false,
+        CurrentScope: parentCtx.CurrentScope,
+        ResolutionScope: parentCtx.ResolutionScope
+      );
+      var body = TypeStatementNode(ctx, node.Body, ref hasReturn);
       // Map the while node itself
       return new TypedTree.StatementNode.WhileNode(node.Position, condition, body);
     }
@@ -266,9 +303,6 @@ namespace Decaf.MiddleEnd.TypeChecker {
     private static TypedTree.StatementNode.ExprStatementNode TypeExpressionStatementNode(
       Context parentCtx, ParseTree.StatementNode.ExprStatementNode node
     ) {
-      // NOTE: In the future it may make sense to restrict expression statements to only allow expressions that result in void,
-      //       but for now we allow any expression as a statement and just ignore the result.
-
       // Map the expression itself
       var expr = TypeExpressionNode(parentCtx, node.Expression);
       // Map node itself
@@ -407,6 +441,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
     private static TypedTree.ExpressionNode TypeCallExpressionNode(
       Context parentCtx, ParseTree.ExpressionNode.CallNode node
     ) {
+      // Primitive are handles slightly differently
+      if (node.Callee.IsPrimitive) return TypePrimitiveCallExpressionNode(parentCtx, node);
       // Map the arguments
       var args = new List<TypedTree.ExpressionNode>();
       var argTypes = new List<Signature.Signature>();
@@ -415,43 +451,22 @@ namespace Decaf.MiddleEnd.TypeChecker {
         args.Add(typedArg);
         argTypes.Add(typedArg.ExpressionType);
       }
-      // Primitive are handles slightly differently
-      if (node.Callee.IsPrimitive) {
-        // Map the callee
-        var (primSig, callee) = PrimitiveTypes.ResolvePrimitive(node.Position, node.Callee, args.ToArray());
-        var expectedSignature = primSig switch {
-          Signature.Signature.FunctionSig funcSig => funcSig,
-          _ => throw new CallOnNonMethod(node.Position)
-        };
-        // Construct the signature
-        var signature = new Signature.Signature.FunctionSig(
-          node.Position,
-          argTypes.ToArray(),
-          expectedSignature.ReturnType
-        );
-        // Check the signature matches the expected signature
-        TypeCheckerCore.CheckSignature(expected: expectedSignature, received: signature);
-        // Map the node itself
-        return new TypedTree.ExpressionNode.PrimCallNode(node.Position, callee, args.ToArray(), expectedSignature.ReturnType);
-      }
-      else {
-        // Map the callee
-        var callee = TypeLocationNode(parentCtx, node.Callee);
-        var expectedSignature = callee.LocationType switch {
-          Signature.Signature.FunctionSig funcSig => funcSig,
-          _ => throw new CallOnNonMethod(node.Position)
-        };
-        // Construct the signature
-        var signature = new Signature.Signature.FunctionSig(
-          node.Position,
-          argTypes.ToArray(),
-          expectedSignature.ReturnType
-        );
-        // Check the signature matches the expected signature
-        TypeCheckerCore.CheckSignature(expected: expectedSignature, received: signature);
-        // Map the node itself
-        return new TypedTree.ExpressionNode.CallNode(node.Position, callee, args.ToArray(), expectedSignature.ReturnType);
-      }
+      // Map the callee
+      var callee = TypeLocationNode(parentCtx, node.Callee);
+      var expectedSignature = callee.LocationType switch {
+        Signature.Signature.FunctionSig funcSig => funcSig,
+        _ => throw new CallOnNonMethod(node.Position)
+      };
+      // Construct the signature
+      var signature = new Signature.Signature.FunctionSig(
+        node.Position,
+        argTypes.ToArray(),
+        expectedSignature.ReturnType
+      );
+      // Check the signature matches the expected signature
+      TypeCheckerCore.CheckSignature(expected: expectedSignature, received: signature);
+      // Map the node itself
+      return new TypedTree.ExpressionNode.CallNode(node.Position, callee, args.ToArray(), expectedSignature.ReturnType);
     }
     private static TypedTree.ExpressionNode.ArrayInitNode TypeArrayInitExpressionNode(
       Context parentCtx, ParseTree.ExpressionNode.ArrayInitNode node
@@ -529,35 +544,41 @@ namespace Decaf.MiddleEnd.TypeChecker {
       // Extract a signature from the literal
       var signature = ExtractFunctionSignatureFromFunctionLiteral(parentCtx, node);
       // Create a new context for the method
-      var context = new Context(
-        parentCtx.CurrentModule,
-        signature,
-        new Scope<Signature.Signature>(parentCtx.CurrentScope)
+      var ctx = new Context(
+        SymbolIDGenerator: parentCtx.SymbolIDGenerator,
+        CurrentFunc: signature,
+        TopLevel: false,
+        CurrentScope: new Scope<Symbol, Signature.Signature>(parentCtx.CurrentScope),
+        ResolutionScope: new Scope<string, Symbol>(parentCtx.ResolutionScope)
       );
       // Map the parameter nodes
       var parameters = new List<TypedTree.LiteralNode.FunctionNode.ParameterNode>();
       foreach (var param in node.Parameters) {
+        // Generate a symbol for the parameter
+        var paramSymbol = Symbol.Create(ctx.SymbolIDGenerator, param.Position, false, param.Name.Name);
         // Add the parameter to the method scope
-        context.CurrentScope.AddDeclaration(param.Position, param.Name.Name, param.Signature);
+        ctx.CurrentScope.AddDeclaration(param.Position, paramSymbol, param.Signature);
+        ctx.ResolutionScope.AddDeclaration(param.Position, param.Name.Name, paramSymbol);
         // Map the parameter node
-        var typedParam = new TypedTree.LiteralNode.FunctionNode.ParameterNode(
-          param.Position, param.Name.Name, param.Signature
-        );
+        var typedParam = new TypedTree.LiteralNode.FunctionNode.ParameterNode(param.Position, paramSymbol, param.Signature);
         parameters.Add(typedParam);
       }
       // Map the method body
       bool HasReturn = false;
-      var body = TypeBlockStatementNode(context, node.Body, ref HasReturn);
+      var body = TypeBlockStatementNode(ctx, node.Body, ref HasReturn);
       if (!HasReturn && signature.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
         throw new NoReturnStatement(node.Position, node.Name.Name, signature.ReturnType.ToString());
       }
+      // Resolve the symbol of the function literal
+      // NOTE: If this fails then we have a bug in our scope logic as we should have already added the bind
+      var symbol = parentCtx.ResolutionScope.GetDeclaration(node.Position, node.Name.Name);
       // Map the node itself
       return new TypedTree.LiteralNode.FunctionNode(
         node.Position,
-        node.Name.Name,
+        symbol,
         parameters.ToArray(),
         body,
-        context.CurrentScope,
+        ctx.CurrentScope,
         signature
       );
     }
@@ -604,18 +625,23 @@ namespace Decaf.MiddleEnd.TypeChecker {
               if (root.LocationType is not Signature.Signature.ModuleSig moduleSignature) {
                 throw new MemberAccessOnNonModule(node.Position);
               }
-              // Ensure the module has the member being accessed
-              if (!moduleSignature.Members.TryGetValue(memberNode.Member, out Signature.Signature memberSignature)) {
+              // Resolve the member being accessed to a symbol in the module scope
+              if (!moduleSignature.Resolutions.TryGetValue(memberNode.Member, out Symbol memberSymbol)) {
                 throw new MemberAccessUnknown(node.Position, memberNode.Member);
               }
+              // Resolve the signature
+              // NOTE: If this fails then we have a bug as our `Resolutions` and `Members` should always be in sync
+              var memberSignature = moduleSignature.Members[memberSymbol];
               // Map the node itself
-              return new TypedTree.LocationNode.MemberNode(node.Position, root, memberNode.Member, memberSignature);
+              return new TypedTree.LocationNode.SymbolLocation(node.Position, memberSymbol, memberSignature);
             }
           case ParseTree.LocationNode.IdentifierNode identifierNode: {
+              // Resolve the identifier to a symbol in the current scope
+              var symbol = parentCtx.ResolutionScope.GetDeclaration(node.Position, identifierNode.Name);
               // Find the signature of the identifier in the current scope
-              var signature = parentCtx.CurrentScope.GetDeclaration(node.Position, identifierNode.Name);
+              var signature = parentCtx.CurrentScope.GetDeclaration(node.Position, symbol);
               // Map the node itself
-              return new TypedTree.LocationNode.IdentifierNode(node.Position, identifierNode.Name, signature);
+              return new TypedTree.LocationNode.SymbolLocation(node.Position, symbol, signature);
             }
           // NOTE: This should be impossible unless we forget to update the checker when adding locations
           default: throw new Exception($"Unknown location node type: {node.Kind}");

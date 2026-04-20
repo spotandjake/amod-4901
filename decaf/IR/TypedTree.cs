@@ -21,35 +21,46 @@ namespace Decaf.IR.TypedTree {
   // --- Code Units ---
   #region CodeUnits
   /// <summary>The root node of a typed tree, it represents an entire program.</summary>
-  public sealed record ProgramNode(Position Position, ModuleNode[] Modules, Scope<Signature.Signature> Scope) : Node(Position) {
+  public sealed record ProgramNode(
+    Position Position,
+    ModuleNode[] Modules,
+    Scope<Symbol, Signature.Signature> Scope,
+    IDGenerator SymbolIdGenerator
+  ) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ProgramNode;
     public ModuleNode[] Modules { get; } = Modules;
-    public Scope<Signature.Signature> Scope { get; } = Scope;
+    public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
+    public IDGenerator SymbolIdGenerator { get; } = SymbolIdGenerator;
   };
   /// <summary>A module declaration.</summary>
   public sealed record ModuleNode(
     Position Position,
-    string Name,
+    Symbol ID,
     ImportNode[] Imports,
     StatementNode.BlockNode Body,
-    Scope<Signature.Signature> Scope,
+    Scope<Symbol, Signature.Signature> Scope,
     Signature.Signature.ModuleSig Signature
   ) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ModuleNode;
-    public string Name { get; } = Name;
+    public Symbol ID { get; } = ID;
     public ImportNode[] Imports { get; } = Imports;
     public StatementNode.BlockNode Body { get; } = Body;
-    public Scope<Signature.Signature> Scope { get; } = Scope;
+    public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
     public Signature.Signature.ModuleSig Signature { get; } = Signature;
   }
   /// <summary>An import statement, `import wasm <name:id>: <type> from "<module:string>"`.</summary>
   public sealed record ImportNode(
-    Position Position, string Name, Signature.Signature Signature, string Module
+    Position Position,
+    Symbol ID,
+    Signature.Signature Signature,
+    string ExternalName,
+    string ExternalModule
   ) : Node(Position) {
     public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ImportNode;
-    public string Name { get; } = Name;
+    public Symbol ID { get; } = ID;
     public Signature.Signature Signature { get; } = Signature;
-    public string Module { get; } = Module;
+    public string ExternalName { get; } = ExternalName;
+    public string ExternalModule { get; } = ExternalModule;
   }
   #endregion
 
@@ -72,11 +83,11 @@ namespace Decaf.IR.TypedTree {
     public sealed record BlockNode(
       Position Position,
       StatementNode[] Statements,
-      Scope<Signature.Signature> Scope
+      Scope<Symbol, Signature.Signature> Scope
     ) : StatementNode(Position) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BlockStatementNode;
       public StatementNode[] Statements { get; } = Statements;
-      public Scope<Signature.Signature> Scope { get; } = Scope;
+      public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
     }
 
     // Variables
@@ -87,12 +98,12 @@ namespace Decaf.IR.TypedTree {
       // A single declaration bind.
       public sealed record BindNode(
         Position Position,
-        string Name,
+        Symbol ID,
         ExpressionNode InitExpr,
         Signature.Signature Signature
       ) : Node(Position) {
         public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BindNode;
-        public string Name { get; } = Name;
+        public Symbol ID { get; } = ID;
         public ExpressionNode InitExpr { get; } = InitExpr;
         public Signature.Signature Signature { get; } = Signature;
       }
@@ -294,27 +305,27 @@ namespace Decaf.IR.TypedTree {
       // A parameter node
       public sealed record ParameterNode(
         Position Position,
-        string Name,
+        Symbol ID,
         Signature.Signature Signature
       ) : Node(Position) {
         public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ParameterNode;
-        public string Name { get; } = Name;
+        public Symbol ID { get; } = ID;
         public Signature.Signature Signature { get; } = Signature;
       }
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.FunctionLiteralNode;
-      public string Name { get; }
+      public Symbol ID { get; }
       public ParameterNode[] Parameters { get; }
       public StatementNode.BlockNode Body { get; }
-      public Scope<Signature.Signature> Scope { get; }
+      public Scope<Symbol, Signature.Signature> Scope { get; }
       public FunctionNode(
         Position Position,
-        string Name,
+        Symbol ID,
         ParameterNode[] Parameters,
         StatementNode.BlockNode Body,
-        Scope<Signature.Signature> Scope,
+        Scope<Symbol, Signature.Signature> Scope,
         Signature.Signature.FunctionSig LiteralType
       ) : base(Position, LiteralType) {
-        this.Name = Name;
+        this.ID = ID;
         this.Parameters = Parameters;
         this.Body = Body;
         this.Scope = Scope;
@@ -327,8 +338,7 @@ namespace Decaf.IR.TypedTree {
   #region Locations
   /// <summary>The supertype for all location nodes.</summary>
   [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
-  [JsonDerivedType(typeof(LocationNode.MemberNode), "MemberLocationNode")]
-  [JsonDerivedType(typeof(LocationNode.IdentifierNode), "IdentifierLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.SymbolLocation), "SymbolLocationNode")]
   public abstract record LocationNode : Node {
     public Signature.Signature LocationType { get; }
     protected LocationNode(Position position, Signature.Signature locationType) : base(position) {
@@ -345,25 +355,14 @@ namespace Decaf.IR.TypedTree {
       public LocationNode Root { get; } = Root;
       public ExpressionNode IndexExpr { get; } = IndexExpr;
     };
-    /// <summary>A member location.</summary>
-    public sealed record MemberNode(
+    /// <summary>A symbolic location.</summary>
+    public sealed record SymbolLocation(
       Position Position,
-      LocationNode Root,
-      string Member,
-      Signature.Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.MemberLocationNode;
-      public LocationNode Root { get; } = Root;
-      public string Member { get; } = Member;
-    };
-    /// <summary>An identifier location.</summary>
-    public sealed record IdentifierNode(
-      Position Position,
-      string Name,
+      Symbol ID,
       Signature.Signature LocationType
     ) : LocationNode(Position, LocationType) {
       public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IdentifierLocationNode;
-      public string Name { get; } = Name;
+      public Symbol ID { get; } = ID;
     };
   }
   #endregion

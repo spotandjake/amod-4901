@@ -15,29 +15,29 @@ module Runtime {
     // Align the byteSize to 4 bytes
     let alignedByteSize: int = (byteSize + 3) & ~3;
     // Set the pointer value to the current heap end
-    let pointer: int = Runtime.HeapPointer;
+    let pointer: int = HeapPointer;
     // Determine the end of the block
     let end: int = pointer + alignedByteSize;
     // Fetch the page count
     let pageCount: int = @wasm.memory.size();
     // Determine if the program has enough memory
-    let size: int = pageCount * Runtime.PageSize;
+    let size: int = pageCount * PageSize;
     if (end <= size) {
       // Grow the memory if we need
       let neededSize: int = end - size;
       // Ceil int division
-      let neededPages: int = (neededSize + Runtime.PageSize - 1) / Runtime.PageSize;
+      let neededPages: int = (neededSize + PageSize - 1) / PageSize;
       @wasm.memory.grow(neededPages);
     }
     // Bump the heap pointer
-    Runtime.HeapPointer = end;
+    HeapPointer = end;
     // Return the block pointer
     return pointer;
   };
   // A function similar to malloc but clears the block to 0
   let calloc = (byteSize: int): int => {
     // Malloc the block
-    let pointer: int = Runtime.malloc(byteSize);
+    let pointer: int = malloc(byteSize);
     // Zero the region in case we used it before
     @wasm.memory.fill(pointer, 0, byteSize);
     // Return the block pointer
@@ -48,7 +48,7 @@ module Runtime {
     // Compute the byteSize
     let byteSize: int = 4 + (4 * length);
     // Allocate the block
-    let pointer: int = Runtime.calloc(byteSize);
+    let pointer: int = calloc(byteSize);
     // Store the length
     @wasm.i32.store(pointer, byteSize);
     // Return the pointer
@@ -58,7 +58,7 @@ module Runtime {
     // Compute the byteSize
     let byteSize: int = length + 4;
     // Allocate the block
-    let pointer: int = Runtime.malloc(byteSize);
+    let pointer: int = malloc(byteSize);
     // Store the length
     @wasm.i32.store(pointer, length);
     // Return the pointer
@@ -69,12 +69,12 @@ module Runtime {
     // Get the pointer for the string
     let ptr: int = @getPointer(str);
     // Create our iovec (<ptr>, <len>)
-    let iov: int = Runtime.malloc(8);
+    let iov: int = malloc(8);
     @wasm.i32.store(iov, ptr + 4); // ptr
     @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
     // The number of bytes written will be stored here, as fd_write may not write all the data
-    let written: int = Runtime.malloc(4); 
+    let written: int = malloc(4); 
     // Call fd_write
-    Program.fd_write(1, iov, 1, written);
+    fd_write(1, iov, 1, written);
   };
 }

@@ -1,7 +1,8 @@
-using Decaf.IR.Operators;
-using Decaf.Utils;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+
+using Decaf.IR.Operators;
+using Decaf.Utils;
 
 namespace Decaf.IR.ParseTree {
   /// <summary>

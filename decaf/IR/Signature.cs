@@ -24,11 +24,15 @@ namespace Decaf.IR.Signature {
   public abstract record Signature {
     public Position Position { get; }
     private Signature(Position Position) { this.Position = Position; }
-    public sealed record ModuleSig(Position Position, Dictionary<string, Signature> Members) : Signature(Position) {
+    public sealed record ModuleSig(
+      Position Position,
+      Dictionary<Symbol, Signature> Members,
+      Dictionary<string, Symbol> Resolutions
+    ) : Signature(Position) {
       public override string ToString() {
         var sb = new System.Text.StringBuilder();
         foreach (var member in Members) {
-          sb.Append($"{member.Key}: {member.Value}\n");
+          sb.Append($"{member.Key.Name}: {member.Value}\n");
         }
         return $"Module {{\n{sb.ToString()}}}";
       }

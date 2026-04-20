@@ -12,8 +12,8 @@ namespace Decaf.MiddleEnd {
   // NOTE: One downside of the recursive approach is theoretically we could blow the stack if we have very nested expressions.
   //       However if this were to ever become an issue we would switch to a work queue based approach.
   public static class AnfMapper {
-    private record AnfState(List<AnfTree.FunctionNode> ModuleFunctions) {
-      public int TempCounter { get; set; } = 0;
+    private record AnfState(IDGenerator SymbolGenerator, List<AnfTree.FunctionNode> ModuleFunctions) {
+      public IDGenerator SymbolGenerator { get; } = SymbolGenerator;
       public List<AnfTree.FunctionNode> ModuleFunctions { get; set; } = ModuleFunctions;
     }
     // A helper to generate temporary variables
@@ -23,12 +23,12 @@ namespace Decaf.MiddleEnd {
       // Create the binding name
       // TODO: Should we be adding this to the current scope?
       // TODO: Produce a better name (Maybe make it context aware???)
-      var tempName = "__anf_temp_" + state.TempCounter;
-      state.TempCounter += 1;
+      var tempName = "__anf_temp";
+      var tempID = Symbol.Create(state.SymbolGenerator, value.Position, false, tempName);
       // Create the temp location
-      var tempLocation = new AnfTree.LocationNode.IdentifierNode(value.Position, tempName, signature);
+      var tempLocation = new AnfTree.LocationNode.SymbolLocation(value.Position, tempID, signature);
       // Create the bind
-      var bind = new AnfTree.InstructionNode.BindNode(value.Position, tempLocation.Name, value);
+      var bind = new AnfTree.InstructionNode.BindNode(value.Position, tempLocation.ID, value);
       // Create the imm
       var imm = new AnfTree.ImmediateNode.LocationImmNode(value.Position, tempLocation, signature);
       // Return the bind and the imm
@@ -40,26 +40,26 @@ namespace Decaf.MiddleEnd {
       // No mapping is required on the program node, since it is just a container
       return new AnfTree.ProgramNode(
         node.Position,
-        node.Modules.Select((m) => FromModuleNode(new AnfState(null), m)).ToArray()
+        node.Modules.Select((m) => FromModuleNode(new AnfState(node.SymbolIdGenerator, null), m)).ToArray()
       );
     }
-    private static AnfTree.ModuleNode FromModuleNode(AnfState _, TypedTree.ModuleNode node) {
-      var moduleState = new AnfState([]);
+    private static AnfTree.ModuleNode FromModuleNode(AnfState state, TypedTree.ModuleNode node) {
+      var moduleState = new AnfState(state.SymbolGenerator, []);
       var instructions = new List<AnfTree.InstructionNode>();
       // Map the imports
       var imports = new List<AnfTree.ImportNode>();
       foreach (var imp in node.Imports) {
-        var mappedImp = new AnfTree.ImportNode(imp.Position, imp.Name, imp.Signature, imp.Module);
+        var mappedImp = new AnfTree.ImportNode(imp.Position, imp.ID, imp.Signature, imp.ExternalName, imp.ExternalModule);
         imports.Add(mappedImp);
         // We also need to add a setup instruction for the import to our module body
         var anfLiteral = new AnfTree.LiteralNode.FunctionReferenceNode(
           imp.Position,
-          imp.Name,
+          imp.ID,
           imp.Signature
         );
         var imm = new AnfTree.ImmediateNode.ConstantNode(node.Position, anfLiteral, imp.Signature);
         var expr = new AnfTree.SimpleExpressionNode.ImmediateExpressionNode(imp.Position, imm, imp.Signature);
-        instructions.Add(new AnfTree.InstructionNode.BindNode(imp.Position, imp.Name, expr));
+        instructions.Add(new AnfTree.InstructionNode.BindNode(imp.Position, imp.ID, expr));
       }
       // Map the body
       foreach (var stmt in node.Body.Statements) {
@@ -70,7 +70,7 @@ namespace Decaf.MiddleEnd {
       var body = new AnfTree.InstructionNode.BlockNode(node.Body.Position, instructions.ToArray());
       // Produce the new module node
       return new AnfTree.ModuleNode(
-        node.Position, node.Name, imports.ToArray(), moduleState.ModuleFunctions.ToArray(), body, node.Signature
+        node.Position, node.ID, imports.ToArray(), moduleState.ModuleFunctions.ToArray(), body, node.Signature
       );
     }
     #endregion
@@ -114,7 +114,7 @@ namespace Decaf.MiddleEnd {
         // Map the expression
         var (bindBinds, expr) = FromExpressionNodeAsSimpleExpr(state, bind.InitExpr);
         // Create the bind
-        var anfBind = new AnfTree.InstructionNode.BindNode(bind.Position, bind.Name, expr);
+        var anfBind = new AnfTree.InstructionNode.BindNode(bind.Position, bind.ID, expr);
         // Add the binds to our list of binds
         instructions.AddRange(bindBinds);
         instructions.Add(anfBind);
@@ -431,19 +431,19 @@ namespace Decaf.MiddleEnd {
         // Functions are a slightly more complex special case
         case TypedTree.LiteralNode.FunctionNode functionNode: {
             // Create a new state for the function
-            var newState = new AnfState([]);
+            var newState = new AnfState(state.SymbolGenerator, []);
             // Convert the parameters to the ANF tree variants
             var parameters = new List<AnfTree.FunctionNode.ParameterNode>();
             foreach (var param in functionNode.Parameters) {
               // Parameters map 1 to 1
-              parameters.Add(new AnfTree.FunctionNode.ParameterNode(param.Position, param.Name, param.Signature));
+              parameters.Add(new AnfTree.FunctionNode.ParameterNode(param.Position, param.ID, param.Signature));
             }
             // Convert the body to the ANF tree variant
             var body = FromBlockStatementNode(newState, functionNode.Body);
             // Create the ANF function literal
             var anfNode = new AnfTree.FunctionNode(
               functionNode.Position,
-              functionNode.Name,
+              functionNode.ID,
               parameters.ToArray(),
               body,
               // NOTE: This cast is safe because we refine the input on a function literal itself
@@ -454,7 +454,7 @@ namespace Decaf.MiddleEnd {
             // Return an immediate that references the function
             var anfLiteral = new AnfTree.LiteralNode.FunctionReferenceNode(
               functionNode.Position,
-              functionNode.Name,
+              functionNode.ID,
               functionNode.LiteralType
             );
             var imm = new AnfTree.ImmediateNode.ConstantNode(node.Position, anfLiteral, node.ExpressionType);
@@ -473,8 +473,7 @@ namespace Decaf.MiddleEnd {
     ) {
       return node switch {
         TypedTree.LocationNode.ArrayNode arrayNode => FromArrayLocationNode(state, arrayNode),
-        TypedTree.LocationNode.MemberNode memberNode => FromMemberLocationNode(state, memberNode),
-        TypedTree.LocationNode.IdentifierNode identifierNode => FromIdentifierLocationNode(state, identifierNode),
+        TypedTree.LocationNode.SymbolLocation symbolNode => FromSymbolLocationNode(state, symbolNode),
         // NOTE: The above cases should cover all of the location nodes, so if we hit this, then we have an error
         _ => throw new Exception($"Unknown location node: {node.Kind}"),
       };
@@ -493,21 +492,11 @@ namespace Decaf.MiddleEnd {
         new AnfTree.LocationNode.ArrayNode(node.Position, root, indexImm, node.LocationType)
       );
     }
-    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.MemberNode) FromMemberLocationNode(
-      AnfState state,
-      TypedTree.LocationNode.MemberNode node
-    ) {
-      var (binds, root) = FromLocationNode(state, node.Root);
-      return (
-        binds,
-        new AnfTree.LocationNode.MemberNode(node.Position, root, node.Member, node.LocationType)
-      );
-    }
-    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.IdentifierNode) FromIdentifierLocationNode(
+    private static (List<AnfTree.InstructionNode.BindNode>, AnfTree.LocationNode.SymbolLocation) FromSymbolLocationNode(
       AnfState _,
-      TypedTree.LocationNode.IdentifierNode node
+      TypedTree.LocationNode.SymbolLocation node
     ) {
-      return ([], new AnfTree.LocationNode.IdentifierNode(node.Position, node.Name, node.LocationType));
+      return ([], new AnfTree.LocationNode.SymbolLocation(node.Position, node.ID, node.LocationType));
     }
     #endregion
   }

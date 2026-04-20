@@ -65,9 +65,7 @@ namespace Decaf.IR.AnfTree {
     FunctionReferenceLiteralNode,
     // --- Locations ---
     ArrayLocationNode,
-    MemberLocationNode,
-    IdentifierLocationNode,
-    PrimitiveLocationNode,
+    SymbolLocationNode,
     // --- Other ---
     ParameterNode
   }
@@ -93,14 +91,14 @@ namespace Decaf.IR.AnfTree {
   /// <summary>A module declaration.</summary>
   public sealed record ModuleNode(
     Position Position,
-    string Name,
+    Symbol ID,
     ImportNode[] Imports,
     FunctionNode[] Functions,
     InstructionNode.BlockNode Body,
     Signature.Signature.ModuleSig Signature
   ) : Node(Position) {
     public override NodeKind Kind => NodeKind.ModuleNode;
-    public string Name { get; } = Name;
+    public Symbol ID { get; } = ID;
     public ImportNode[] Imports { get; } = Imports;
     public FunctionNode[] Functions { get; } = Functions;
     public InstructionNode.BlockNode Body { get; } = Body;
@@ -108,38 +106,39 @@ namespace Decaf.IR.AnfTree {
   }
   /// <summary>An import declaration.</summary>
   public sealed record ImportNode(
-    Position Position, string Name, Signature.Signature Signature, string Module
+    Position Position, Symbol ID, Signature.Signature Signature, string ExternalName, string ExternalModule
   ) : Node(Position) {
     public override NodeKind Kind => NodeKind.ImportNode;
-    public string Name { get; } = Name;
+    public Symbol ID { get; } = ID;
     public Signature.Signature Signature { get; } = Signature;
-    public string Module { get; } = Module;
+    public string ExternalName { get; } = ExternalName;
+    public string ExternalModule { get; } = ExternalModule;
   }
   /// <summary>A function declaration.</summary>
   public sealed record FunctionNode : Node {
     // NOTE: Functions are hoisted to the top level of the module this is because they are static
     public sealed record ParameterNode(
       Position Position,
-      string Name,
+      Symbol ID,
       Signature.Signature Signature
     ) : Node(Position) {
       public override NodeKind Kind => NodeKind.ParameterNode;
-      public string Name { get; } = Name;
+      public Symbol ID { get; } = ID;
       public Signature.Signature Signature { get; } = Signature;
     }
     public override NodeKind Kind => NodeKind.FunctionNode;
-    public string Name { get; }
+    public Symbol ID { get; }
     public ParameterNode[] Parameters { get; }
     public InstructionNode.BlockNode Body { get; }
     public Signature.Signature.FunctionSig Signature { get; }
     public FunctionNode(
       Position Position,
-      string Name,
+      Symbol ID,
       ParameterNode[] Parameters,
       InstructionNode.BlockNode Body,
       Signature.Signature.FunctionSig Signature
     ) : base(Position) {
-      this.Name = Name;
+      this.ID = ID;
       this.Parameters = Parameters;
       this.Body = Body;
       this.Signature = Signature;
@@ -173,9 +172,9 @@ namespace Decaf.IR.AnfTree {
     // Variables
 
     /// <summary>A bind instruction.</summary>
-    public sealed record BindNode(Position Position, string Name, SimpleExpressionNode SimpleExpression) : InstructionNode(Position) {
+    public sealed record BindNode(Position Position, Symbol ID, SimpleExpressionNode SimpleExpression) : InstructionNode(Position) {
       public override NodeKind Kind => NodeKind.BindInstructionNode;
-      public string Name { get; } = Name;
+      public Symbol ID { get; } = ID;
       public SimpleExpressionNode SimpleExpression { get; } = SimpleExpression;
     };
 
@@ -412,10 +411,10 @@ namespace Decaf.IR.AnfTree {
     };
     /// <summary>A function reference literal.</summary>
     public sealed record FunctionReferenceNode(
-      Position Position, string FunctionName, Signature.Signature LiteralType
+      Position Position, Symbol ID, Signature.Signature LiteralType
     ) : LiteralNode(Position, LiteralType) {
       public override NodeKind Kind => NodeKind.FunctionReferenceLiteralNode;
-      public string FunctionName { get; } = FunctionName;
+      public Symbol ID { get; } = ID;
     };
   }
   #endregion
@@ -424,8 +423,7 @@ namespace Decaf.IR.AnfTree {
   // TODO: Consider resolving locations to simple instructions at this level
   /// <summary>The supertype for all location nodes.</summary>
   [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
-  [JsonDerivedType(typeof(LocationNode.MemberNode), "MemberLocationNode")]
-  [JsonDerivedType(typeof(LocationNode.IdentifierNode), "IdentifierLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.SymbolLocation), "SymbolLocationNode")]
   public abstract record LocationNode : Node {
     public Signature.Signature LocationType { get; }
     protected LocationNode(Position position, Signature.Signature locationType) : base(position) {
@@ -442,25 +440,14 @@ namespace Decaf.IR.AnfTree {
       public LocationNode Root { get; } = Root;
       public ImmediateNode IndexImm { get; } = IndexImm;
     };
-    /// <summary>A member location.</summary>
-    public sealed record MemberNode(
+    /// <summary>A symbolic location.</summary>
+    public sealed record SymbolLocation(
       Position Position,
-      LocationNode Root,
-      string Member,
+      Symbol ID,
       Signature.Signature LocationType
     ) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.MemberLocationNode;
-      public LocationNode Root { get; } = Root;
-      public string Member { get; } = Member;
-    };
-    /// <summary>An identifier location.</summary>
-    public sealed record IdentifierNode(
-      Position Position,
-      string Name,
-      Signature.Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.IdentifierLocationNode;
-      public string Name { get; } = Name;
+      public override NodeKind Kind => NodeKind.SymbolLocationNode;
+      public Symbol ID { get; } = ID;
     };
   }
   #endregion

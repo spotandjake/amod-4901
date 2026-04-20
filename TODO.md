@@ -5,27 +5,13 @@ This document contains a list of all the major tasks that need to be done before
 ### Critical
 These are things directly related to deliverables or causing codegen issues that we must fix.
 
-* Fix references
-  * Currently to handle references we resolve them by name and during codegen we mangle the name.
-    * We should probably assign each reference a unique id during scope checking and then only use that to refer to them from then on.
 * WasmTree
   * Cleanup the wasm tree itself to ensure the ir is proper and matches wasm (We currently have some weird adaptions)
   * Implement a `ToWasm`
   * Cleanup our `ToWat`
 * ANF
-  * I think `ExprStatement` is causing us to generate intermediate binds to `void`s (we should correct this)
-  * Differentiate between a global and local in the top level bind
-    * Globals are used in other functions and need to be emitted as wasm globals
-    * locals are only used in the module body itself
   * Differentiate between a `call` and `call_ref`
-  * Perform symbol resolution in the anf tree
-    * This means replacing `AnfTree.Location` with more specific instructions like:
-      * `AnfTree.Local.Get`
-      * `AnfTree.Local.Set`
-      * `AnfTree.Global.Get`
-      * `AnfTree.Global.Set`
-      * `AnfTree.Array.Set`
-      * `AnfTree.Array.Get`
+    * Instead of doing this we could probably just track this at the symbol level???
 * Testing
   * Test Result of CodeGen by snapshot testing the generated WasmTree
   * Test the compiler end to end by running the produced modules and capturing the output
