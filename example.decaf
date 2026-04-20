@@ -6,8 +6,12 @@
 //   };
 // }
 module Program {
-  let arr: string[] = new string[10];
+  let test = (): int => {
+    return 1;
+  };
+  let arr: int[] = new int[10];
   let arrLen: int = @wasm.i32.load(@getPointer(arr));
+  arr[test()] = 1;
   //let i: int = 0;
   //while (i < arrLen) {
   //  arr[i] = i;

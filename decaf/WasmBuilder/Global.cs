@@ -6,7 +6,6 @@ namespace Decaf.WasmBuilder {
     Position Position,
     WasmLabel Label,
     WasmType Type,
-    // TODO: Is this meant to be on the wasm type???
     bool IsMutable,
 #nullable enable
     WasmExpression? Init

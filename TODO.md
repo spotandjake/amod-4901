@@ -7,13 +7,14 @@ These are things directly related to deliverables or causing codegen issues that
 
 * WasmTree
   * Cleanup the wasm tree itself to ensure the ir is proper and matches wasm (We currently have some weird adaptions)
-  * Implement a `ToWasm`
-  * Cleanup our `ToWat`
+  * Cleanup exports
+  * Cleanup the element section
+* Fixes
+  * If you tried using equality on a function it would cause a wasm validation error, we need ref.eq support (maybe ref casting).
+  * Fix operator precedence in the parser, currently it is just left to right which is not correct.
 * Testing
-  * Test Result of CodeGen by snapshot testing the generated WasmTree
   * Test the compiler end to end by running the produced modules and capturing the output
-* Documentation
-  * Ensure all the docs are to date.
+* Implement the CLI
 
 ### Less Critical
 * Anf Optimizations
