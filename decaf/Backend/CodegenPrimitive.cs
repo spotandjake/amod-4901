@@ -52,6 +52,20 @@ namespace Decaf.Backend {
             CompileImmediate(ctx, node.Arguments[0]),
             0
           ),
+        PrimDefinition.WasmI32RemS =>
+          new WasmExpression.I32.RemS(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1])
+          ),
+        PrimDefinition.WasmI32RemU =>
+          new WasmExpression.I32.RemU(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1])
+          ),
+        // --- @cast namespace ---
+        PrimDefinition.CastPtrToString => CompileImmediate(ctx, node.Arguments[0]),
         // Unknown
         _ => throw new Exception($"Unknown primitive: {node.Callee}"),
       };

@@ -4,35 +4,39 @@ module Runtime {
   // This is a WASI import that enables printing similar to posix fd_write
   import wasm fd_write: (int, int, int, int) => int from "wasi_snapshot_preview1";
 
-  // --- Declarations ---
-  // The heap pointer.
-  let HeapPointer: int = 0;
-  // The size of a page.
-  let PageSize: int = 65536;
   // --- Allocation ---
-  // An extremely simple implementation of malloc using a bump allocator
+  // This implements an extremely simple free list allocator, with no de-fragmentation schedule
+  let HEADER_SIZE: int = 4 * 2; // size | next | ...data
+  let freeList: int = 0;
+  let pageSize: int = 65536;
   let malloc = (byteSize: int): int => {
     // Align the byteSize to 4 bytes
-    let alignedByteSize: int = (byteSize + 3) & ~3;
-    // Set the pointer value to the current heap end
-    let pointer: int = HeapPointer;
-    // Determine the end of the block
-    let end: int = pointer + alignedByteSize;
-    // Fetch the page count
-    let pageCount: int = @wasm.memory.size();
-    // Determine if the program has enough memory
-    let size: int = pageCount * PageSize;
-    if (end >= size) {
-      // Grow the memory if we need
-      let neededSize: int = end - size;
-      // Ceil int division
-      let neededPages: int = (neededSize + PageSize - 1) / PageSize;
-      @wasm.memory.grow(neededPages);
+    let size: int = (byteSize + 3) & ~3;
+    // Setup for malloc
+    let prev: int = 0;
+    let curr: int = freeList;
+    // first-fit search
+    while (curr != 0) {
+      let blockSize: int = @wasm.i32.load(curr);
+      if (blockSize >= size) {
+        let next: int = @wasm.i32.load(curr + 4);
+        // remove from free list
+        if (prev == 0) {
+          freeList = next;
+        } else {
+          @wasm.i32.store(prev + 4, next);
+        }
+        return curr + HEADER_SIZE;
+      }
+      prev = curr;
+      curr = @wasm.i32.load(curr + 4);
     }
-    // Bump the heap pointer
-    HeapPointer = end;
-    // Return the block pointer
-    return pointer;
+    // fallback: grow heap (very naive)
+    // TODO: Support growth when allocating more than a page
+    let ptr: int = @wasm.memory.size() * pageSize;
+    @wasm.memory.grow(1);
+    @wasm.i32.store(ptr, size);
+    return ptr + HEADER_SIZE;
   };
   // A function similar to malloc but clears the block to 0
   let calloc = (byteSize: int): int => {
@@ -42,6 +46,14 @@ module Runtime {
     @wasm.memory.fill(pointer, 0, byteSize);
     // Return the block pointer
     return pointer;
+  };
+  // free
+  let free = (ptr: int): void => {
+    if (ptr == 0) return;
+    let block: int = ptr - HEADER_SIZE;
+    // push to front of free list
+    @wasm.i32.store(block + 4, freeList);
+    freeList = block;
   };
   // --- Primitive Data Type Allocation ---
   let allocateArray = (length: int): int => {
@@ -65,16 +77,63 @@ module Runtime {
     return pointer;
   };
   // --- General ---
+  let itoa = (num: int): string => {
+    let isNegative: boolean = false;
+    let digitCount: int = 0;
+    let n: int = num;
+
+    if (num == 0) return "0";
+    
+    if (num < 0) {
+      isNegative = true;
+      digitCount = digitCount + 1;
+      n = num * -1;
+    };
+    // Count the digits
+    let tmp: int = n;
+    while (tmp != 0) {
+      tmp = tmp / 10;
+      digitCount = digitCount + 1;
+    };
+    // Allocate a block that is guaranteed to hold our string
+    let str: int = malloc(4 + digitCount);
+    // Write the length
+    @wasm.i32.store(str, digitCount);
+    digitCount = digitCount - 1;
+    // Write out negative sign
+    if (isNegative) @wasm.i32.store8(str + 4, @getPointer('-'));
+    // Extract the digits
+    while (n != 0) {
+      let digit: int = @wasm.i32.remS(n, 10);
+      n = n / 10;
+      @wasm.i32.store8(str + 4 + digitCount, @getPointer('0') + digit);
+      digitCount = digitCount - 1;
+    };
+    // Cast to a str
+    return @cast.ptrToString(str);
+  };
   let print = (str: string): void => {
+    // Setup
+    let iov: int = malloc(12); // <ptr to str> | <len of str> | <bytes written out>
     // Get the pointer for the string
     let ptr: int = @getPointer(str);
     // Create our iovec (<ptr>, <len>)
-    let iov: int = malloc(8);
     @wasm.i32.store(iov, ptr + 4); // ptr
     @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
-    // The number of bytes written will be stored here, as fd_write may not write all the data
-    let written: int = malloc(4); 
-    // Call fd_write
-    fd_write(1, iov, 1, written);
+    // Write
+    fd_write(1, iov, 1, iov + 8);
+    // Cleanup
+    free(iov);
+  };
+  let printInt = (num: int): void => {
+    // Setup
+    let str: string = itoa(num);
+    let newline: string = "\n";
+    // Print
+    Runtime.print(str);
+    Runtime.print(newline);
+    // Cleanup
+    free(@getPointer(str));
+    free(@getPointer(newline));
   };
 }

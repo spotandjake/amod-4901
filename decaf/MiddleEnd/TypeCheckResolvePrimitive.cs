@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using ParseTree = Decaf.IR.ParseTree;
 using TypedTree = Decaf.IR.TypedTree;
@@ -36,6 +35,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
       ["@getPointer"] => PrimDefinition.GetPointer,
       // We found the wasm namespace, so we can delegate to the wasm resolver
       ["@wasm", .. var rest] => ResolveWasmPrimitive(position, node, rest),
+      // We found the cast namespace, so we can delegate to the cast resolver
+      ["@cast", .. var rest] => ResolveCastNameSpace(position, node, rest),
         // Unknown primitive call
         _ => throw new UnknownPrimitiveCall(position, node.ToString()),
       };
@@ -65,9 +66,22 @@ namespace Decaf.MiddleEnd.TypeChecker {
       ["store16"] => PrimDefinition.WasmI32Store16,
       // ptr: int => int
       ["load"] => PrimDefinition.WasmI32Load,
+      // (val: int) => int
+      ["remS"] => PrimDefinition.WasmI32RemS,
+      // (val: int) => int
+      ["remU"] => PrimDefinition.WasmI32RemU,
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },
+        // Unknown
+        _ => throw new UnknownPrimitiveCall(position, node.ToString())
+      };
+    }
+    // --- Wasm Primitives ---
+    // NOTE: This resolver resolves anything in the @cast namespace, which contains primitives that perform type level casting
+    private static PrimDefinition ResolveCastNameSpace(Position position, ParseTree.LocationNode node, List<string> path) {
+      return path switch {
+      ["ptrToString"] => PrimDefinition.CastPtrToString,
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       };

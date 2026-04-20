@@ -125,14 +125,14 @@ namespace Decaf.Frontend {
     private static ParseTree.StatementNode.IfNode MapIfStatement(DecafParser.If_stmtContext ctx) {
       var position = MapPositionContext(ctx);
       var condition = MapExpression(ctx.condition);
-      var trueBranch = MapBlockStatement(ctx.trueBranch);
-      var falseBranch = ctx.falseBranch != null ? MapBlockStatement(ctx.falseBranch) : null;
+      var trueBranch = MapStatementNode(ctx.trueBranch);
+      var falseBranch = ctx.falseBranch != null ? MapStatementNode(ctx.falseBranch) : null;
       return new ParseTree.StatementNode.IfNode(position, condition, trueBranch, falseBranch);
     }
     private static ParseTree.StatementNode.WhileNode MapWhileStatement(DecafParser.While_stmtContext ctx) {
       var position = MapPositionContext(ctx);
       var condition = MapExpression(ctx.condition);
-      var body = MapBlockStatement(ctx.body);
+      var body = MapStatementNode(ctx.body);
       return new ParseTree.StatementNode.WhileNode(position, condition, body);
     }
     // Others

@@ -1,7 +1,25 @@
 module Program {
-  let i: int = 0;
-  while (i < 10) {
-    Runtime.print("Hello World!\n");
-    i = i + 1;
+  //Runtime.printInt(123456789);
+  //Runtime.printInt(0);
+  Runtime.printInt(-123456789);
+  let counter: int = 0;
+  while (counter < 10) {
+    Runtime.printInt(counter);
+    counter = counter + 1;
   };
+
+
+  //let hello_world = (): void => {
+  //  Runtime.print("Hello World!\n");
+  //};
+  //let x: () => void = hello_world;
+  //let apply = (f: () => void): void => {
+  //  f();
+  //};
+  //apply(hello_world);
+  //let i: int = 0;
+  //while (i < 1000) {
+  //  Runtime.print("Hello World!\n");
+  //  i = i + 1;
+  //};
 }

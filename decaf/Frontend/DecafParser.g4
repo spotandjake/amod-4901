@@ -42,8 +42,8 @@ var_bind: name=id_location (COLON typ=type)? (ASSIGN init=expr)?;
 assign_stmt: location ASSIGN expr SEMI;
 
 // Control Flow
-if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block_stmt (ELSE falseBranch=block_stmt)? SEMI?;
-while_stmt: WHILE LPAREN condition=expr RPAREN body=block_stmt SEMI?;
+if_stmt: IF LPAREN condition=expr RPAREN trueBranch=statement (ELSE falseBranch=statement)?;
+while_stmt: WHILE LPAREN condition=expr RPAREN body=statement;
 
 // Other
 return_stmt: RETURN value=expr? SEMI;

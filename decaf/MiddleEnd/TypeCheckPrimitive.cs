@@ -80,6 +80,20 @@ namespace Decaf.MiddleEnd.TypeChecker {
             [Signature.PrimitiveType.Int],
             Signature.PrimitiveType.Int
           ),
+        // (val: int, val: int) => int
+        PrimDefinition.WasmI32RemS or PrimDefinition.WasmI32RemU =>
+          MakeSimpleFunc(
+            node.Position,
+            [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+            Signature.PrimitiveType.Int
+          ),
+        // --- @cast namespace ---
+        PrimDefinition.CastPtrToString =>
+          MakeSimpleFunc(
+            node.Position,
+            [Signature.PrimitiveType.Int],
+            Signature.PrimitiveType.String
+          ),
         // NOTE: We can never encounter this case because we are exhausting all possible cases of PrimDefinition, 
         // but we need it to satisfy the compiler.
         _ => throw new Exception("Unreachable code in TypePrimitiveCallExpressionNode"),
