@@ -44,7 +44,7 @@ namespace Decaf.Backend {
       // Create our wasm module
       var module = new WasmModule(node.Position);
       // Find the runtime class
-      var runtimeModule = node.Modules.First(m => m.ID.Name == CodegenUtils.Runtime.RuntimeModuleName);
+      var runtimeModule = node.Modules.FirstOrDefault(m => m.ID.Name == CodegenUtils.Runtime.RuntimeModuleName);
       if (runtimeModule == null)
         throw new Exception($"Could not find runtime module with name {CodegenUtils.Runtime.RuntimeModuleName}");
       var runtime = new CodegenUtils.Runtime(runtimeModule.Signature);
@@ -260,7 +260,7 @@ namespace Decaf.Backend {
     }
     private static WasmExpression.Br CompileBreakInstruction(CodegenContext ctx, AnfTree.InstructionNode.BreakNode node) {
       // NOTE: Impossible due to semantic analysis
-      if (ctx.BreakLabel == null) throw new Exception("Continue statement not within a loop");
+      if (ctx.BreakLabel == null) throw new Exception("Break statement not within a loop");
       return new WasmExpression.Br(node.Position, ctx.BreakLabel);
     }
     private static WasmExpression CompileSimpleExprInstruction(
