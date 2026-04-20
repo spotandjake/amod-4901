@@ -22,7 +22,7 @@ module Runtime {
     let pageCount: int = @wasm.memory.size();
     // Determine if the program has enough memory
     let size: int = pageCount * PageSize;
-    if (end <= size) {
+    if (end >= size) {
       // Grow the memory if we need
       let neededSize: int = end - size;
       // Ceil int division
