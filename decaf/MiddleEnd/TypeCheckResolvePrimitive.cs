@@ -55,6 +55,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
       ["grow"] => PrimDefinition.WasmMemoryGrow,
       // (pointer: int, value: int, byteCount: int) => int
       ["fill"] => PrimDefinition.WasmMemoryFill,
+      // (dest: int, src: int, byteCount: int) => void
+      ["copy"] => PrimDefinition.WasmMemoryCopy,
         // Unknown
         _ => throw new UnknownPrimitiveCall(position, node.ToString())
       },

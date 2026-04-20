@@ -165,6 +165,9 @@ namespace Decaf.WasmBuilder {
       public sealed record Fill(Position Position, WasmExpression Ptr, WasmExpression Value, WasmExpression Length) : Memory(Position) {
         internal override string ToWat(WasmBuildCtx ctx) => $"(memory.fill {Ptr.ToWat(ctx)} {Value.ToWat(ctx)} {Length.ToWat(ctx)})";
       }
+      public sealed record Copy(Position Position, WasmExpression DestPtr, WasmExpression SrcPtr, WasmExpression Length) : Memory(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) => $"(memory.copy {DestPtr.ToWat(ctx)} {SrcPtr.ToWat(ctx)} {Length.ToWat(ctx)})";
+      }
       public sealed record Init(
         Position Position, WasmLabel DataSegment, WasmExpression DestPtr, WasmExpression SrcOffset, WasmExpression Length
       ) : Memory(Position) {

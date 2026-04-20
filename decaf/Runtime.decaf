@@ -98,6 +98,37 @@ module Runtime {
     return true;
   };
   // --- General ---
+  let stringConcat = (str1: string, str2: string): string => {
+    // Get the string pointers
+    let strPtr1: int = @getPointer(str1);
+    let strPtr2: int = @getPointer(str2);
+    // Get the string length
+    let strLen1: int = @wasm.i32.load(strPtr1);
+    let strLen2: int = @wasm.i32.load(strPtr2);
+    // Compute the finished length
+    let strLen: int = strLen1 + strLen2;
+    // Allocate a string
+    let strPtr: int = malloc(strLen);
+    // Write the string data
+    @wasm.i32.store(strPtr, strLen);
+    @wasm.memory.copy(strPtr + 4, strPtr1 + 4, strLen1);
+    @wasm.memory.copy(strPtr + 4 + strLen1, strPtr2 + 4, strLen2);
+    // Return the string
+    return @cast.ptrToString(strPtr);
+  };
+  let panic = (errorMsg: string): void => {
+    // Setup
+    let iov: int = malloc(12); // <ptr to str> | <len of str> | <bytes written out>
+    // Get the pointer for the string
+    let ptr: int = @getPointer(errorMsg);
+    // Create our iovec (<ptr>, <len>)
+    @wasm.i32.store(iov, ptr + 4); // ptr
+    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
+    // Write to stderr
+    fd_write(2, iov, 1, iov + 8);
+    // Crash the program with a trap
+    @wasm.unreachable();
+  };
   let itoa = (num: int): string => {
     let isNegative: boolean = false;
     let digitCount: int = 0;

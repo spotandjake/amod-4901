@@ -26,6 +26,13 @@ namespace Decaf.Backend {
             CompileImmediate(ctx, node.Arguments[1]),
             CompileImmediate(ctx, node.Arguments[2])
           ),
+        PrimDefinition.WasmMemoryCopy =>
+          new WasmExpression.Memory.Copy(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            CompileImmediate(ctx, node.Arguments[2])
+          ),
         // I32 sub namespace
         PrimDefinition.WasmI32Store =>
           new WasmExpression.I32.Store(

@@ -6,20 +6,24 @@
 //   };
 // }
 module Program {
-  let test = (): int => {
-    return 1;
-  };
-  let arr: int[] = new int[10];
-  let arrLen: int = @wasm.i32.load(@getPointer(arr));
-  arr[test()] = 1
-  //let i: int = 0;
-  //while (i < arrLen) {
-  //  arr[i] = i;
-  //  i += 1;
-  //}
-  //let j: int = 0;
-  //while (j < arrLen) {
-  //  Runtime.printInt(arr[j]);
-  //  j += 1;
-  //}
+  if (2 + 3 * 4 != 14) @wasm.unreachable();
+  if (2 * 3 + 4 != 10) @wasm.unreachable();
+
+  if (10 - 2 * 3 != 4) @wasm.unreachable();
+  if (10 * 2 - 3 != 17) @wasm.unreachable();
+
+  if (20 / 2 + 5 != 15) @wasm.unreachable();
+  if (20 + 10 / 2 != 25) @wasm.unreachable();
+
+  if (20 / 2 * 5 != 50) @wasm.unreachable();     // (20 / 2) * 5
+  if (20 * 2 / 5 != 8) @wasm.unreachable();      // (20 * 2) / 5
+
+  if (20 - 10 - 5 != 5) @wasm.unreachable();     // (20 - 10) - 5
+  if (20 / 5 / 2 != 2) @wasm.unreachable();      // (20 / 5) / 2
+
+  if (2 + 3 * 4 - 5 != 9) @wasm.unreachable();   // 2 + (3*4) - 5
+  if (2 * 3 + 4 * 5 != 26) @wasm.unreachable();  // (2*3) + (4*5)
+
+  if (100 / 10 * 2 + 3 != 23) @wasm.unreachable(); // ((100/10)*2) + 3
+  if (100 / (10 * 2 + 3) != 4) @wasm.unreachable(); // optional sanity check if parens exist
 }

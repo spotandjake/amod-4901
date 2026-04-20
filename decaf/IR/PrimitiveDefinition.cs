@@ -9,6 +9,7 @@ namespace Decaf.IR.PrimitiveDefinition {
     WasmMemorySize,
     WasmMemoryGrow,
     WasmMemoryFill,
+    WasmMemoryCopy,
     // I32 sub namespace
     WasmI32Store,
     WasmI32Store8,

@@ -69,6 +69,13 @@ namespace Decaf.MiddleEnd.TypeChecker {
             [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
             Signature.PrimitiveType.Void
           ),
+        // (destPtr: int, srcPtr: int, byteCount: int) => void
+        PrimDefinition.WasmMemoryCopy =>
+          MakeSimpleFunc(
+            node.Position,
+            [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
+            Signature.PrimitiveType.Void
+          ),
         // I32 sub namespace
         // (ptr: int, value: int) => void
         PrimDefinition.WasmI32Store or PrimDefinition.WasmI32Store8 or PrimDefinition.WasmI32Store16 =>
