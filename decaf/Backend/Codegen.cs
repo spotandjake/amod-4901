@@ -198,7 +198,6 @@ namespace Decaf.Backend {
       return new WasmExpression.Block(node.Position, null, instructions);
     }
     private static WasmExpression CompileBindInstruction(CodegenContext ctx, AnfTree.InstructionNode.BindNode node) {
-      // TODO: Investigate weather register allocation would be beneficial here
       // Compile the expression
       var compiledExpr = CompileSimpleExpr(ctx, node.SimpleExpression);
       // If this is a top level bind, we need to create a global variable for it
@@ -253,7 +252,7 @@ namespace Decaf.Backend {
       // Compile the body
       var compiledBody = CompileInstruction(newCtx, node.Body);
       // Create the wasm loop
-      var compiledLoop = new WasmExpression.Loop(node.Position, loop_label, [compiledBody]);
+      var compiledLoop = new WasmExpression.Loop(node.Position, loop_label, [compiledBody, new WasmExpression.Br(node.Position, loop_label)]);
       // Create the outer block
       var compiledBlock = new WasmExpression.Block(node.Position, block_label, [compiledLoop]);
       // Return the block

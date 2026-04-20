@@ -21,8 +21,6 @@ namespace Decaf.MiddleEnd {
       AnfState state, AnfTree.SimpleExpressionNode value, Signature.Signature signature
     ) {
       // Create the binding name
-      // TODO: Should we be adding this to the current scope?
-      // TODO: Produce a better name (Maybe make it context aware???)
       var tempName = "__anf_temp";
       var tempID = Symbol.Create(state.SymbolGenerator, value.Position, false, tempName);
       // Create the temp location

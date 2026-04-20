@@ -24,7 +24,6 @@ namespace Decaf.Utils {
     }
     public override bool Equals(object? obj) => obj is Symbol other && this.ID == other.ID;
     public override int GetHashCode() => ID.GetHashCode();
-    // TODO: Is this reasonable
     public string GetUniqueName() => $"sym_{this.Name}_{this.ID}";
     public static Symbol Create(IDGenerator generator, Position position, bool isGlobal, string? name = null) {
       var id = generator.GenerateID();

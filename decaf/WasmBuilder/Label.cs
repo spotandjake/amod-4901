@@ -13,7 +13,7 @@ namespace Decaf.WasmBuilder {
       private string GetUniqueName(WasmBuildCtx ctx, string baseName) {
         // Generate a unique ID for this label if we haven't already
         this._uniqueID ??= ctx.GetUniqueID();
-        return $"{baseName}#{this._uniqueID}";
+        return $"{baseName}@{this._uniqueID}";
       }
       internal override string ToWat(WasmBuildCtx ctx) => $"${GetUniqueName(ctx, Name)}";
     }

@@ -357,7 +357,6 @@ namespace Decaf.IR.AnfTree {
     /// <summary>
     /// A variable access node, this is used to represent variable accesses.
     /// </summary>
-    // TODO: Get rid of locations convert them to basic binds at this level
     public record LocationImmNode(
       Position Position, LocationNode Location, Signature.Signature Signature
     ) : ImmediateNode(Position, Signature) {
@@ -420,7 +419,6 @@ namespace Decaf.IR.AnfTree {
   #endregion
   // --- Locations ---
   #region Locations
-  // TODO: Consider resolving locations to simple instructions at this level
   /// <summary>The supertype for all location nodes.</summary>
   [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
   [JsonDerivedType(typeof(LocationNode.SymbolLocation), "SymbolLocationNode")]

@@ -4,8 +4,6 @@ using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils;
 using Decaf.Utils.Errors.ScopeErrors;
 
-// TODO: This should assign a unique LocationReference to every location so we are not using strings to track variable usage, this should also resolve primitives
-
 namespace Decaf.Frontend {
   /// <summary>
   /// The ScopeChecker is responsible for traversing the parse tree and validating variable usage.
