@@ -27,6 +27,7 @@ LET      : 'l' 'e' 't' ;
 IF      : 'i' 'f' ;
 ELSE    : 'e' 'l' 's' 'e' ;
 WHILE   : 'w' 'h' 'i' 'l' 'e';
+FOR     : 'f' 'o' 'r' ;
 
 // Keywords - Values
 TRUE     : 't' 'r' 'u' 'e' ;
@@ -51,6 +52,10 @@ DOT         : '.' ;
 COLON       : ':' ;
 ARROW       : '=>' ;
 ASSIGN      : '=' ;
+ASSIGN_ADD  : '+=' ;
+ASSIGN_SUB  : '-=' ;
+ASSIGN_MUL  : '*=' ;
+ASSIGN_DIV  : '/=' ;
 // Prefix Operators
 NOT         : '!' ;
 BNOT        : '~' ;

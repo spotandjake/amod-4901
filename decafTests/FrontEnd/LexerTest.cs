@@ -27,7 +27,7 @@ public class LexerTest : VerifyBase {
   public void TestEnsureLexerTestUpdated() {
     // NOTE: This isn't an actual test of the lexer, but if a rule is added or removed 
     //       it ensures that the tests are also looked at / not forgotten about.
-    Assert.HasCount(63, DecafLexer.ruleNames);
+    Assert.HasCount(68, DecafLexer.ruleNames);
   }
   // Unit Test Keywords
   [TestMethod]
@@ -61,10 +61,11 @@ public class LexerTest : VerifyBase {
   }
   [TestMethod]
   public void TestControlFlowKeywords() {
-    var lexer = Lex("if else while");
+    var lexer = Lex("if else while for");
     Assert.AreEqual(DecafLexer.IF, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ELSE, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.WHILE, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.FOR, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
   }
   [TestMethod]
@@ -77,7 +78,7 @@ public class LexerTest : VerifyBase {
   // Unit Test Operators
   [TestMethod]
   public void TestPunctuation() {
-    var lexer = Lex("() {} [] ; , . : =>");
+    var lexer = Lex("() {} [] ; , . : => = += -= *= /=");
     Assert.AreEqual(DecafLexer.LPAREN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.RPAREN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.LBRACE, lexer.NextToken().Type);
@@ -89,6 +90,11 @@ public class LexerTest : VerifyBase {
     Assert.AreEqual(DecafLexer.DOT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.COLON, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.ARROW, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ASSIGN, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ASSIGN_ADD, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ASSIGN_SUB, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ASSIGN_MUL, lexer.NextToken().Type);
+    Assert.AreEqual(DecafLexer.ASSIGN_DIV, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
   }
   [TestMethod]
@@ -137,12 +143,6 @@ public class LexerTest : VerifyBase {
     Assert.AreEqual(DecafLexer.BOR, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.BLSHIFT, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.BRSHIFT, lexer.NextToken().Type);
-    Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
-  }
-  [TestMethod]
-  public void TestAssignmentOperator() {
-    var lexer = Lex("=");
-    Assert.AreEqual(DecafLexer.ASSIGN, lexer.NextToken().Type);
     Assert.AreEqual(DecafLexer.Eof, lexer.NextToken().Type);
   }
   // Unit Test Literals

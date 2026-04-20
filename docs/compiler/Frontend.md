@@ -39,6 +39,7 @@ Below is a list of tokens defined by the lexer, these are the different componen
     * IF: "if"
     * ELSE: "else"
     * WHILE: "while"
+    * FOR: "for"
   * Values
     * TRUE: "true"
     * FALSE: "false"
@@ -80,6 +81,10 @@ Below is a list of tokens defined by the lexer, these are the different componen
       * COLON: ":"
       * ARROW: "=>"
       * ASSIGN: "="
+      * ASSIGN_ADD: "+="
+      * ASSIGN_SUB: "-="
+      * ASSIGN_MUL: "*="
+      * ASSIGN_DIV: "/="
   * Literals
     * Integer Literals: A sequence of digits (e.g. `123`)
     * NOTE: We lex the bool tokens so we don't need a bool literal token itself

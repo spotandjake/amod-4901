@@ -5,7 +5,7 @@ module Program {
   let counter: int = 0;
   while (counter < 10) {
     Runtime.printInt(counter);
-    counter = counter + 1;
+    counter += 1;
   };
 
 

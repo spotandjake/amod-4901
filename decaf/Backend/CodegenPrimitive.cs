@@ -14,6 +14,8 @@ namespace Decaf.Backend {
         // General purpose primitives
         PrimDefinition.GetPointer => CompileImmediate(ctx, node.Arguments[0]),
         // --- @wasm namespace ---
+        // general purpose namespace
+        PrimDefinition.Unreachable => new WasmExpression.Unreachable(node.Position),
         // memory sub namespace
         PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
         PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(ctx, node.Arguments[0])),

@@ -39,7 +39,14 @@ var_decl_stmt: LET binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
 var_bind: name=id_location (COLON typ=type)? (ASSIGN init=expr)?;
 
-assign_stmt: location ASSIGN expr SEMI;
+assign_stmt: location op=assign_stmt_op expr SEMI;
+assign_stmt_op
+  : ASSIGN # Assign
+  | ASSIGN_ADD # AssignAdd
+  | ASSIGN_SUB # AssignSub
+  | ASSIGN_MUL # AssignMul
+  | ASSIGN_DIV # AssignDiv
+  ;
 
 // Control Flow
 if_stmt: IF LPAREN condition=expr RPAREN trueBranch=statement (ELSE falseBranch=statement)?;

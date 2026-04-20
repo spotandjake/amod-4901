@@ -86,28 +86,28 @@ module Runtime {
     
     if (num < 0) {
       isNegative = true;
-      digitCount = digitCount + 1;
-      n = num * -1;
+      digitCount += 1;
+      n *= -1;
     };
     // Count the digits
     let tmp: int = n;
     while (tmp != 0) {
-      tmp = tmp / 10;
-      digitCount = digitCount + 1;
+      tmp /= 10;
+      digitCount += 1;
     };
     // Allocate a block that is guaranteed to hold our string
     let str: int = malloc(4 + digitCount);
     // Write the length
     @wasm.i32.store(str, digitCount);
-    digitCount = digitCount - 1;
+    digitCount -= 1;
     // Write out negative sign
     if (isNegative) @wasm.i32.store8(str + 4, @getPointer('-'));
     // Extract the digits
     while (n != 0) {
       let digit: int = @wasm.i32.remS(n, 10);
-      n = n / 10;
+      n /= 10;
       @wasm.i32.store8(str + 4 + digitCount, @getPointer('0') + digit);
-      digitCount = digitCount - 1;
+      digitCount -= 1;
     };
     // Cast to a str
     return @cast.ptrToString(str);

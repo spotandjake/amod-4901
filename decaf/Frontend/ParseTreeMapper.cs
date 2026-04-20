@@ -7,6 +7,7 @@ using ParseTree = Decaf.IR.ParseTree;
 using Signature = Decaf.IR.Signature;
 using Decaf.Utils;
 using Decaf.Utils.Errors.SemanticErrors;
+using System.Security.Permissions;
 
 namespace Decaf.Frontend {
   /// <summary>
@@ -119,7 +120,20 @@ namespace Decaf.Frontend {
       var position = MapPositionContext(ctx);
       var location = MapLocation(ctx.location());
       var expression = MapExpression(ctx.expr());
-      return new ParseTree.StatementNode.AssignmentNode(position, location, expression);
+      var locationExpr = new ParseTree.ExpressionNode.LocationExprNode(position, location);
+      var assignmentExpr = ctx.op switch {
+        DecafParser.AssignContext => expression,
+        DecafParser.AssignAddContext =>
+          new ParseTree.ExpressionNode.BinopNode(position, locationExpr, BinaryOperator.Add, expression),
+        DecafParser.AssignSubContext =>
+          new ParseTree.ExpressionNode.BinopNode(position, locationExpr, BinaryOperator.Minus, expression),
+        DecafParser.AssignMulContext =>
+          new ParseTree.ExpressionNode.BinopNode(position, locationExpr, BinaryOperator.Multiply, expression),
+        DecafParser.AssignDivContext =>
+          new ParseTree.ExpressionNode.BinopNode(position, locationExpr, BinaryOperator.Divide, expression),
+        _ => throw new InvalidProgramException("Impossible assignment operator at AssignmentNode.FromContext")
+      };
+      return new ParseTree.StatementNode.AssignmentNode(position, location, assignmentExpr);
     }
     // Control Flow
     private static ParseTree.StatementNode.IfNode MapIfStatement(DecafParser.If_stmtContext ctx) {

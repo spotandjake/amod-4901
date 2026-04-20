@@ -45,6 +45,8 @@ namespace Decaf.MiddleEnd.TypeChecker {
     // NOTE: This resolver resolves anything in the @wasm namespace, which contains primitives that map to wasm instructions
     private static PrimDefinition ResolveWasmPrimitive(Position position, ParseTree.LocationNode node, List<string> path) {
       return path switch {
+      // General namespace
+      ["unreachable"] => PrimDefinition.Unreachable,
       // Memory namespace
       ["memory", .. var subPath] => subPath switch {
       // () => int

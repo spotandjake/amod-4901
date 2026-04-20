@@ -9,9 +9,6 @@ These are things directly related to deliverables or causing codegen issues that
   * Cleanup the wasm tree itself to ensure the ir is proper and matches wasm (We currently have some weird adaptions)
   * Implement a `ToWasm`
   * Cleanup our `ToWat`
-* ANF
-  * Differentiate between a `call` and `call_ref`
-    * Instead of doing this we could probably just track this at the symbol level???
 * Testing
   * Test Result of CodeGen by snapshot testing the generated WasmTree
   * Test the compiler end to end by running the produced modules and capturing the output

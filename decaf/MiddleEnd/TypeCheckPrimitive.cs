@@ -54,6 +54,9 @@ namespace Decaf.MiddleEnd.TypeChecker {
             new Signature.Signature.PrimitiveSig(node.Position, Signature.PrimitiveType.Int)
           ),
         // --- @wasm namespace ---
+        // () => void
+        PrimDefinition.Unreachable =>
+          MakeSimpleFunc(node.Position, [], Signature.PrimitiveType.Void),
         // memory sub namespace
         // () => int
         PrimDefinition.WasmMemorySize => MakeSimpleFunc(node.Position, [], Signature.PrimitiveType.Int),

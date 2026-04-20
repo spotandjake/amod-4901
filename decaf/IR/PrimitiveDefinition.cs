@@ -4,6 +4,7 @@ namespace Decaf.IR.PrimitiveDefinition {
     // General purpose primitives
     GetPointer,
     // --- @wasm namespace ---
+    Unreachable,
     // memory sub namespace
     WasmMemorySize,
     WasmMemoryGrow,
