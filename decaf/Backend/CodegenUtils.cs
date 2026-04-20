@@ -20,6 +20,8 @@ namespace Decaf.Backend {
       // Allocation APIs
       public readonly Symbol RuntimeAllocateArray = ModuleSig.Resolutions["allocateArray"];
       public readonly Symbol RuntimeAllocateString = ModuleSig.Resolutions["allocateString"];
+      // Equality
+      public readonly Symbol RuntimeStringEqual = ModuleSig.Resolutions["stringEqual"];
     }
   }
 }

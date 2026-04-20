@@ -14,6 +14,10 @@ namespace Decaf.IR.PrimitiveDefinition {
     WasmI32Store8,
     WasmI32Store16,
     WasmI32Load,
+    WasmI32Load8S,
+    WasmI32Load8U,
+    WasmI32Load16S,
+    WasmI32Load16U,
     WasmI32RemS,
     WasmI32RemU,
     // --- @cast namespace ---

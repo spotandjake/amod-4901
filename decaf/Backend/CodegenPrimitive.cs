@@ -54,6 +54,30 @@ namespace Decaf.Backend {
             CompileImmediate(ctx, node.Arguments[0]),
             0
           ),
+        PrimDefinition.WasmI32Load8U =>
+          new WasmExpression.I32.Load8U(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load8S =>
+          new WasmExpression.I32.Load8S(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load16U =>
+          new WasmExpression.I32.Load16U(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load16S =>
+          new WasmExpression.I32.Load16S(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
         PrimDefinition.WasmI32RemS =>
           new WasmExpression.I32.RemS(
             node.Position,

@@ -1,5 +1,5 @@
 using System;
-
+using Decaf.IR.Signature;
 using Decaf.WasmBuilder;
 using AnfTree = Decaf.IR.AnfTree;
 using Ops = Decaf.IR.Operators;
@@ -13,7 +13,7 @@ namespace Decaf.Backend {
       WasmExpression lhs = CompileImmediate(ctx, node.Lhs);
       WasmExpression rhs = CompileImmediate(ctx, node.Rhs);
       // Determine what operator we are mapping
-      return (node.Operator, node.ExpressionType) switch {
+      return (node.Operator, node.Lhs.Signature) switch {
         // (int, int) => int - note as there is only one type we don't match it
         (Ops.BinaryOperator.Add, _) => new WasmExpression.I32.Add(node.Position, lhs, rhs),
         (Ops.BinaryOperator.Minus, _) => new WasmExpression.I32.Sub(node.Position, lhs, rhs),
@@ -24,7 +24,13 @@ namespace Decaf.Backend {
         (Ops.BinaryOperator.GreaterThan, _) => new WasmExpression.I32.GtS(node.Position, lhs, rhs),
         (Ops.BinaryOperator.LessThanOrEqual, _) => new WasmExpression.I32.LeS(node.Position, lhs, rhs),
         (Ops.BinaryOperator.GreaterThanOrEqual, _) => new WasmExpression.I32.GeS(node.Position, lhs, rhs),
-        // (a, a) => boolean - note as every literal currently is an i32 with no structural component we don't match the type
+        // (a, a) => boolean
+        (Ops.BinaryOperator.Equal, Signature.PrimitiveSig { Type: PrimitiveType.String }) =>
+          new WasmExpression.Call(
+            node.Position,
+            CompileSymbol(node.Position, ctx.Runtime.RuntimeStringEqual),
+            [lhs, rhs]
+          ),
         (Ops.BinaryOperator.Equal, _) => new WasmExpression.I32.Eq(node.Position, lhs, rhs),
         (Ops.BinaryOperator.NotEqual, _) => new WasmExpression.I32.Ne(node.Position, lhs, rhs),
         // (boolean, boolean) => boolean

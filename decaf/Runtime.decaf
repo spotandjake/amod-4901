@@ -76,6 +76,27 @@ module Runtime {
     // Return the pointer
     return pointer;
   };
+  // --- Equality ---
+  let stringEqual = (str1: string, str2: string): boolean => {
+    // Get the pointers
+    let strPtr1: int = @getPointer(str1);
+    let strPtr2: int = @getPointer(str2);
+    // Compare the lengths
+    let strLen1: int = @wasm.i32.load(strPtr1);
+    let strLen2: int = @wasm.i32.load(strPtr2);
+    strPtr1 += 4;
+    strPtr2 += 4;
+    if (strLen1 != strLen2) return false;
+    // Compare the characters
+    let ptr: int = 0;
+    while (ptr < strLen1) {
+      let char1: int = @wasm.i32.load8_s(strPtr1 + ptr);
+      let char2: int = @wasm.i32.load8_s(strPtr2 + ptr);
+      if (char1 != char2) return false;
+      ptr += 1;
+    };
+    return true;
+  };
   // --- General ---
   let itoa = (num: int): string => {
     let isNegative: boolean = false;
@@ -135,5 +156,16 @@ module Runtime {
     // Cleanup
     free(@getPointer(str));
     free(@getPointer(newline));
+  };
+  let printBool = (val: boolean): void => {
+    if (val) {
+      let trueStr: string = "true";
+      Runtime.print(trueStr);
+      free(@getPointer(trueStr));
+    } else {
+      let falseStr: string = "false";
+      Runtime.print(falseStr);
+      free(@getPointer(falseStr));
+    }
   };
 }

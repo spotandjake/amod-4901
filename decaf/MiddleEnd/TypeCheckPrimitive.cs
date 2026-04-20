@@ -77,7 +77,7 @@ namespace Decaf.MiddleEnd.TypeChecker {
             [Signature.PrimitiveType.Int, Signature.PrimitiveType.Int],
             Signature.PrimitiveType.Void
           ),
-        PrimDefinition.WasmI32Load =>
+        PrimDefinition.WasmI32Load or PrimDefinition.WasmI32Load8U or PrimDefinition.WasmI32Load8S or PrimDefinition.WasmI32Load16U or PrimDefinition.WasmI32Load16S =>
           MakeSimpleFunc(
             node.Position,
             [Signature.PrimitiveType.Int],

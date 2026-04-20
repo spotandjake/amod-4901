@@ -68,6 +68,10 @@ namespace Decaf.MiddleEnd.TypeChecker {
       ["store16"] => PrimDefinition.WasmI32Store16,
       // ptr: int => int
       ["load"] => PrimDefinition.WasmI32Load,
+      ["load8_s"] => PrimDefinition.WasmI32Load8S,
+      ["load8_u"] => PrimDefinition.WasmI32Load8U,
+      ["load16_s"] => PrimDefinition.WasmI32Load16S,
+      ["load16_u"] => PrimDefinition.WasmI32Load16U,
       // (val: int) => int
       ["remS"] => PrimDefinition.WasmI32RemS,
       // (val: int) => int
