@@ -1,7 +1,21 @@
+// module Program {
+//   let counter: int = 0;
+//   while (counter <= 100) {
+//     Runtime.printInt(counter);
+//     counter += 1;
+//   };
+// }
 module Program {
-  let counter: int = 0;
-  while (counter <= 0) {
-    Runtime.printInt(counter);
-    counter += 1;
-  };
+  let arr: string[] = new string[10];
+  let arrLen: int = @wasm.i32.load(@getPointer(arr));
+  //let i: int = 0;
+  //while (i < arrLen) {
+  //  arr[i] = i;
+  //  i += 1;
+  //}
+  //let j: int = 0;
+  //while (j < arrLen) {
+  //  Runtime.printInt(arr[j]);
+  //  j += 1;
+  //}
 }

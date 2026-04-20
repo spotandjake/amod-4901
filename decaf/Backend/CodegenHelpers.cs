@@ -31,11 +31,13 @@ namespace Decaf.Backend {
         0 // length is at offset 0
       );
       // Compare the index to the length
-      var compiledBoundsCheck = new WasmExpression.I32.GeS(position, index, compiledLength);
+      var lowerCheck = new WasmExpression.I32.LtS(position, index, new WasmExpression.I32.Const(position, 0));
+      var upperCheck = new WasmExpression.I32.GeS(position, index, compiledLength);
+      var check = new WasmExpression.I32.Or(position, lowerCheck, upperCheck);
       // If in bounds, continue with the original expression, otherwise execute the alternative (which should be a trap)
       return new WasmExpression.If(
         position,
-        compiledBoundsCheck,
+        check,
         // If the index is out of bounds, we currently just throw using `unreachable`
         // TODO: Use a proper wasm exception
         new WasmExpression.Unreachable(position),

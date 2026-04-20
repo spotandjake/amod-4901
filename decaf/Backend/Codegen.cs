@@ -420,9 +420,9 @@ namespace Decaf.Backend {
             var compiledByteOffset = CompileArrayByteIndex(arrNode.Position, compiledIndex);
             var compiledByteIndex = new WasmExpression.I32.Add(arrNode.Position, compiledRoot, compiledByteOffset);
             // Compile a statement for a bounds check
-            var compiledBoundsCheck = CompileArrayBoundsCheck(node.Position, compiledRoot, compiledByteIndex);
+            var compiledBoundsCheck = CompileArrayBoundsCheck(node.Position, compiledRoot, compiledIndex);
             // Compile a statement to set the value
-            var compiledSet = new WasmExpression.I32.Store(node.Position, compiledRoot, value, 0);
+            var compiledSet = new WasmExpression.I32.Store(node.Position, compiledByteIndex, value, 0);
             // Wrap everything up
             return new WasmExpression.Block(
               node.Position,
@@ -460,14 +460,15 @@ namespace Decaf.Backend {
             var compiledByteOffset = CompileArrayByteIndex(arrNode.Position, compiledIndex);
             var compiledByteIndex = new WasmExpression.I32.Add(arrNode.Position, compiledRoot, compiledByteOffset);
             // Compile a statement for a bounds check
-            var compiledBoundsCheck = CompileArrayBoundsCheck(arrNode.Position, compiledRoot, compiledByteOffset);
+            var compiledBoundsCheck = CompileArrayBoundsCheck(arrNode.Position, compiledRoot, compiledIndex);
             // Compile a statement to get the value
             var compiledGet = new WasmExpression.I32.Load(arrNode.Position, compiledByteIndex, 0);
             // Wrap everything up
             return new WasmExpression.Block(
               arrNode.Position,
               new WasmLabel.UniqueLabel(arrNode.Position, "arr_get"),
-              [compiledBoundsCheck, compiledGet]
+              [compiledBoundsCheck, compiledGet],
+              new WasmType.I32(arrNode.Position)
             );
           }
         case AnfTree.LocationNode.SymbolLocation symbolNode: {

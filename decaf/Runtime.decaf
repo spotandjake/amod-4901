@@ -62,7 +62,7 @@ module Runtime {
     // Allocate the block
     let pointer: int = calloc(byteSize);
     // Store the length
-    @wasm.i32.store(pointer, byteSize);
+    @wasm.i32.store(pointer, length);
     // Return the pointer
     return pointer;
   };
