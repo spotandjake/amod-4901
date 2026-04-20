@@ -1,0 +1,29 @@
+module Program {
+  // This example implements a random number generator using wasi
+  // See: https://wasix.org/docs/api-reference/wasi/random_get
+  import wasm random_get: (int, int) => int from "wasi_snapshot_preview1";
+
+  let getRandomInt = (): int => {
+    // Allocate a block large enough to hold an i32
+    let outputBuf: int = Runtime.malloc(4);
+    // Call the WASI function which will write to the output buffer
+    let success: int = random_get(outputBuf, 4);
+    if (success != 0) {
+      // If the wasi call failed (maybe the function was stubbed?)
+      Runtime.print("The WASI random call failed");
+      @wasm.unreachable();
+    };
+    // Read the random value from the buffer
+    let randInt: int = @wasm.i32.load(outputBuf);
+    // Cleanup the allocated block
+    Runtime.free(outputBuf);
+    // Return the result
+    return randInt;
+  };
+  // Generate a few random numbers
+  let i: int = 0;
+  while (i < 10) {
+    Runtime.printInt(getRandomInt());
+    i += 1;
+  };
+};

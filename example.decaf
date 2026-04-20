@@ -11,7 +11,7 @@ module Program {
   };
   let arr: int[] = new int[10];
   let arrLen: int = @wasm.i32.load(@getPointer(arr));
-  arr[test()] = 1;
+  arr[test()] = 1
   //let i: int = 0;
   //while (i < arrLen) {
   //  arr[i] = i;

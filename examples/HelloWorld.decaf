@@ -1,0 +1,6 @@
+// This is a simple hello world program
+module Program {
+  let text: string = "Hello World!\n";
+  Runtime.print(text);
+  Runtime.free(@getPointer(text));
+}

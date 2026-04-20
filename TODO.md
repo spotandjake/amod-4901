@@ -15,15 +15,6 @@ These are things directly related to deliverables or causing codegen issues that
 * Testing
   * Test the compiler end to end by running the produced modules and capturing the output
 * Implement the CLI
-* Create some example programs
-  * Hello World
-  * Math
-  * Looping
-  * Arrays
-  * Recursion
-  * First Class Functions
-  * Maybe something slightly more advanced like reading from a file???
-  * NOTE: These examples should be used in our end to end tests as well
 
 ### Less Critical
 * Anf Optimizations
