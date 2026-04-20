@@ -10,7 +10,7 @@ namespace Decaf.WasmBuilder {
     Dictionary<WasmLabel, WasmType> Params,
     List<WasmType> Results,
     Dictionary<WasmLabel, WasmType> Locals,
-    WasmExpression.Block Body
+    WasmExpression[] Body
   ) {
     internal string ToWat(WasmBuildCtx ctx) {
       // Compile the function signature
@@ -29,9 +29,12 @@ namespace Decaf.WasmBuilder {
         localSB.Append($"(local {local.Key.ToWat(ctx)} {local.Value.ToWat(ctx)}) ");
       }
       // Compile the body
-      var body = this.Body.ToWat(ctx);
+      var bodyStr = new System.Text.StringBuilder();
+      foreach (var expr in this.Body) {
+        bodyStr.Append(expr.ToWat(ctx));
+      }
       // Form the function
-      return $"(func {this.Label.ToWat(ctx)} {paramSB.ToString()} {resultSB.ToString()} {localSB.ToString()} {body})";
+      return $"(func {this.Label.ToWat(ctx)} {paramSB.ToString()} {resultSB.ToString()} {localSB.ToString()} {bodyStr.ToString()})";
     }
   }
 }

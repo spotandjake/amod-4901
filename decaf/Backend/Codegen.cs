@@ -62,11 +62,7 @@ namespace Decaf.Backend {
         startCalls.Add(mainFuncLabel);
       }
       // Create a start function that calls each of the `main` functions and add it to the module
-      var body = new WasmExpression.Block(
-        node.Position,
-        null,
-        startCalls.ConvertAll(label => new WasmExpression.Call(node.Position, label, []))
-      );
+      var body = startCalls.ConvertAll(label => new WasmExpression.Call(node.Position, label, []));
       var startLabel = new WasmLabel.Label(node.Position, "_start");
       var startFunc = new WasmFunction(
         Position: node.Position,
@@ -74,7 +70,7 @@ namespace Decaf.Backend {
         Params: [],
         Results: [],
         Locals: new Dictionary<WasmLabel, WasmType>(),
-        Body: body
+        Body: body.ToArray()
       );
       module.AddFunction(startFunc);
       if (config.UseStartSection) module.SetStartFunction(startLabel);
@@ -118,7 +114,7 @@ namespace Decaf.Backend {
         Params: [],
         Results: [],
         Locals: locals,
-        Body: body
+        Body: [body]
       );
       ctx.WasmModule.AddFunction(mainFunc);
       // Return the name of the `main` function for the start function to call
@@ -132,16 +128,11 @@ namespace Decaf.Backend {
         ContinueLabel = null
       };
       // Compile the body of the function
-      var body = CompileBlockInstruction(funcCtx, node.Body);
-      // TODO: This is a bit hacky, we should probably do the right analysis to avoid needing this
-      // NOTE: All wasm functions must leave the return on the stack, however we pop it using `return` as if it were an early return, to ensure that the function validates we just leave a default value on the stack however it is never going to be hit, an optimizer should be able to easily remove it later (The downside is we could hide control flow bugs if we are not careful)
+      var body = new List<WasmExpression> {
+        CompileBlockInstruction(funcCtx, node.Body)
+      };
       if (node.Signature.ReturnType is not Signature.Signature.PrimitiveSig { Type: Signature.PrimitiveType.Void }) {
-        body = new WasmExpression.Block(
-          node.Position,
-          null,
-          [body, GetDefaultValueFromSignature(funcCtx, node.Signature.ReturnType)],
-          GetWasmTypeFromSignature(funcCtx, node.Signature.ReturnType)
-        );
+        body.Add(new WasmExpression.Unreachable(node.Position));
       }
       // Collect the parameters
       var parameters = new Dictionary<WasmLabel, WasmType>();
@@ -165,7 +156,7 @@ namespace Decaf.Backend {
         Params: parameters,
         Results: returnTypes,
         Locals: locals,
-        Body: body
+        Body: body.ToArray()
       );
     }
     #endregion
