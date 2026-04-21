@@ -30,7 +30,7 @@ module Runtime {
       }
       prev = curr;
       curr = @wasm.i32.load(curr + 4);
-    }
+    };
     // fallback: grow heap (very naive)
     // TODO: Support growth when allocating more than a page
     let ptr: int = @wasm.memory.size() * pageSize;

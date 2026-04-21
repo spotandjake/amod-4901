@@ -15,6 +15,7 @@ These are things directly related to deliverables or causing codegen issues that
 * Testing
   * Test the compiler end to end by running the produced modules and capturing the output
 * Implement the CLI
+* Add a `demo.sh` and `demo.bat` for BP
 
 ### Less Critical
 * Anf Optimizations
