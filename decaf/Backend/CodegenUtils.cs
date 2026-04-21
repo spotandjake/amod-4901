@@ -22,6 +22,7 @@ namespace Decaf.Backend {
       public readonly Symbol RuntimeAllocateString = ModuleSig.Resolutions["allocateString"];
       // Equality
       public readonly Symbol RuntimeStringEqual = ModuleSig.Resolutions["stringEqual"];
+      public readonly Symbol RuntimeStringNotEqual = ModuleSig.Resolutions["stringNotEqual"];
     }
   }
 }

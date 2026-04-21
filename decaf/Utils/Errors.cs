@@ -274,8 +274,21 @@ namespace Decaf.Utils.Errors {
         $"The bind `{bindName}` is expected to have an explicit type annotation, inference is only supported on functions."
       )
     ) { }
-    // Code Generation Errors
+    /// <summary>
+    /// An exception to be thrown when equality operations are performed on functions during type checking, 
+    /// as functions cannot be compared for equality in the language.
+    /// </summary>
+    /// <param name="position">The position where the error occurred.</param>
+    public class UnsupportedEqualityOnFunction(
+      Position position
+    ) : Exception(
+      ErrorConstructor.CreateError(
+        position,
+        $"Functions cannot be compared for equality."
+      )
+    ) { }
   }
+  // Code Generation Errors
 
 
   public static class ErrorHandler {
@@ -312,6 +325,7 @@ namespace Decaf.Utils.Errors {
         case TypeCheckingErrors.InvalidArrayType:
         case TypeCheckingErrors.InvalidVoidBind:
         case TypeCheckingErrors.ExpectedBindToHaveAType:
+        case TypeCheckingErrors.UnsupportedEqualityOnFunction:
           Console.WriteLine(exn.Message);
           break;
         // Unknown

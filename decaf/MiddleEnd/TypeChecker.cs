@@ -367,6 +367,14 @@ namespace Decaf.MiddleEnd.TypeChecker {
       var lhs = TypeExpressionNode(parentCtx, node.Lhs);
       // Map the right hand side
       var rhs = TypeExpressionNode(parentCtx, node.Rhs);
+      // We do a quick check to disallow equality checks on functions
+      if (
+        (node.Operator == IR.Operators.BinaryOperator.Equal || node.Operator == IR.Operators.BinaryOperator.NotEqual) &&
+        (
+          rhs.ExpressionType is Signature.Signature.FunctionSig ||
+          lhs.ExpressionType is Signature.Signature.FunctionSig
+        )
+      ) throw new UnsupportedEqualityOnFunction(node.Position);
       // Get the expected signature of the operation based on the operator
       var expectedSignature = node.Operator switch {
         // Arithmetic operators: (int, int) => int

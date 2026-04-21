@@ -97,6 +97,9 @@ module Runtime {
     };
     return true;
   };
+  let stringNotEqual = (str1: string, str2: string): boolean => {
+    return !stringEqual(str1, str2);
+  };
   // --- General ---
   let stringConcat = (str1: string, str2: string): string => {
     // Get the string pointers

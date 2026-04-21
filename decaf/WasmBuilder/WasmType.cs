@@ -21,6 +21,9 @@ namespace Decaf.WasmBuilder {
       // TODO: Figure out if this fits into the hierarchy
       internal override string ToWat(WasmBuildCtx ctx) => $"(ref null {Label.ToWat(ctx)})";
     }
+    public sealed record EqRef(Position Position) : WasmType(Position) {
+      internal override string ToWat(WasmBuildCtx ctx) => "(ref eq)";
+    }
     public sealed record Func(Position Position, List<WasmType> ParamTypes, List<WasmType> ReturnTypes) : WasmType(Position) {
       internal override string ToWat(WasmBuildCtx ctx) {
         // TODO: This could have two different formats depending on if this is being used in a type decl or type use

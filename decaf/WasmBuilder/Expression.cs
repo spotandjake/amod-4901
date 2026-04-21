@@ -217,7 +217,9 @@ namespace Decaf.WasmBuilder {
       }
       // TODO: ref.is_null
       // TODO: ref.as_non_null
-      // TODO: ref.eq
+      public sealed record Eq(Position Position, WasmExpression LHS, WasmExpression RHS) : Ref(Position) {
+        internal override string ToWat(WasmBuildCtx ctx) => $"(ref.eq {LHS.ToWat(ctx)} {RHS.ToWat(ctx)})";
+      }
       // TODO: ref.test
       // TODO: ref.cast
     }

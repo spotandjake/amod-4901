@@ -31,7 +31,15 @@ namespace Decaf.Backend {
             CompileSymbol(node.Position, ctx.Runtime.RuntimeStringEqual),
             [lhs, rhs]
           ),
+        (Ops.BinaryOperator.Equal, Signature.FunctionSig) => throw new Exception("Cannot compare functions for equality"),
         (Ops.BinaryOperator.Equal, _) => new WasmExpression.I32.Eq(node.Position, lhs, rhs),
+        (Ops.BinaryOperator.NotEqual, Signature.PrimitiveSig { Type: PrimitiveType.String }) =>
+          new WasmExpression.Call(
+            node.Position,
+            CompileSymbol(node.Position, ctx.Runtime.RuntimeStringNotEqual),
+            [lhs, rhs]
+          ),
+        (Ops.BinaryOperator.NotEqual, Signature.FunctionSig) => throw new Exception("Cannot compare functions for equality"),
         (Ops.BinaryOperator.NotEqual, _) => new WasmExpression.I32.Ne(node.Position, lhs, rhs),
         // (boolean, boolean) => boolean
         (Ops.BinaryOperator.And, _) =>
