@@ -1,0 +1,30 @@
+// This file is responsible for testing arithmetic
+module Program {
+  // 2 + (3 * 4)
+  if (2 + 3 * 4 != 14) Runtime.panic("Arithmetic test 1 Failed");
+  // (2 * 3) + 4
+  if (2 * 3 + 4 != 10) Runtime.panic("Arithmetic test 2 Failed");
+  // 10 - (2 * 3)
+  if (10 - 2 * 3 != 4) Runtime.panic("Arithmetic test 3 Failed");
+  // (10 * 2) - 3
+  if (10 * 2 - 3 != 17) Runtime.panic("Arithmetic test 4 Failed");
+  // (20 /2) + 5
+  if (20 / 2 + 5 != 15) Runtime.panic("Arithmetic test 5 Failed");
+  if (20 + 10 / 2 != 25) Runtime.panic("Arithmetic test 6 Failed");
+  // (20 / 2) * 5
+  if (20 / 2 * 5 != 50) Runtime.panic("Arithmetic test 7 Failed");
+  // (20 * 2) / 5
+  if (20 * 2 / 5 != 8) Runtime.panic("Arithmetic test 8 Failed");
+  // (20 - 10) - 5
+  if (20 - 10 - 5 != 5) Runtime.panic("Arithmetic test 9 Failed");
+  // (20 / 5) / 2
+  if (20 / 5 / 2 != 2) Runtime.panic("Arithmetic test 10 Failed");
+  // 2 + (3*4) - 5
+  if (2 + 3 * 4 - 5 != 9) Runtime.panic("Arithmetic test 11 Failed");
+  // (2*3) + (4*5)
+  if (2 * 3 + 4 * 5 != 26) Runtime.panic("Arithmetic test 12 Failed");
+  // ((100/10)*2) + 3
+  if (100 / 10 * 2 + 3 != 23) Runtime.panic("Arithmetic test 13 Failed");
+  // optional sanity check if parens exist
+  if (100 / (10 * 2 + 3) != 4) Runtime.panic("Arithmetic test 14 Failed");
+}

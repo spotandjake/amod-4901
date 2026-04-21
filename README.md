@@ -10,6 +10,8 @@ The compiler is built using a minimal set of dependencies defined below:
   * This is required to build and the run the compiler as it's implemented in c#.
 * [ANTLR](https://www.antlr.org/) (semi-required)
   * This is used for generating the lexer and parser, if you do not have this installed you can use the pre generated lexer and parser but if you make changes to the grammar and do not have ANTLR installed your changes will not be reflected in the compiler.
+* [WasmTime](https://wasmtime.dev/) (semi-optional)
+  * This is used for running the generated WebAssembly code, both by the task system and in our test suite. It's semi optional however as our cli doesn't have any direct dependency on it and our test suite will skip any tests that require it if it's not installed, however if you want to run the generated WebAssembly code you will need this installed or an alternative WebAssembly runtime.
 * [Taskfile](https://taskfile.dev/) (semi-optional)
   * This is used for running shell commands, however if you do not have this installed you can copy the commands from the taskfile directly and run them in bash or the corresponding commands on your platform.
 * [Spectre Console](https://spectreconsole.net/) (required)
