@@ -14,7 +14,7 @@ namespace decafTests.EndToEnd;
 //       cases there.
 [TestClass]
 public class EndToEndTest : VerifyBase {
-  private static string CompileAndRun(string sourceFile) {
+  private static string CompileAndRun(string sourceFile, int exitCode = 0, int timeout = 2000) {
     // Read the file
     var path = Path.Combine("EndToEnd", "Inputs", sourceFile);
     if (!File.Exists(path)) Assert.Fail($"File {path} does not exist");
@@ -48,8 +48,12 @@ public class EndToEndTest : VerifyBase {
       process.Start();
       string output = process.StandardOutput.ReadToEnd();
       string error = process.StandardError.ReadToEnd();
-      process.WaitForExit(2000); // A 2 second timeout to prevent hanging tests
-      if (process.ExitCode != 0) Assert.Fail($"Process exited with code {process.ExitCode}");
+      process.WaitForExit(timeout);
+      Assert.AreEqual(
+        exitCode,
+        process.ExitCode,
+        $"Process exited with code {process.ExitCode}. Output: {output}, Error: {error}"
+      );
       return output + error;
     }
     catch (System.ComponentModel.Win32Exception) {
@@ -59,7 +63,19 @@ public class EndToEndTest : VerifyBase {
   }
   [TestMethod]
   public void TestValidCompileAndRun() {
+    // Test that we can hello world
+    Assert.AreEqual("Hello World!\n", CompileAndRun("HelloWorld.decaf"));
+    // Test that primitives and binds compile
+    Assert.IsEmpty(CompileAndRun("Primitives.decaf"));
     // Test Basic Arithmetic works (includes precedence and associativity)
     Assert.IsEmpty(CompileAndRun("Arithmetic.decaf"));
+    // Test Array negative size fails
+    CompileAndRun("Array0.Fail.decaf", exitCode: 134);
+    // Test Array negative index fails
+    CompileAndRun("Array1.Fail.decaf", exitCode: 134);
+    // Test Array out of bounds index fails
+    CompileAndRun("Array2.Fail.decaf", exitCode: 134);
+    // Test Malloc
+    CompileAndRun("Malloc.decaf");
   }
 }

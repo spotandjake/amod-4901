@@ -1,0 +1,18 @@
+module Program {
+  let intVar1: int = 1;
+  let intVar2: int = 0;
+  let intVar3: int = -1;
+  let intVar4: int = 2000000000;
+  let intVar5: int = -2000000000;
+
+  let boolVar1: boolean = true;
+  let boolVar2: boolean = false;
+
+  let charVar1: char = 'a';
+
+  let strVar1: string = "Hello World";
+
+  let arrVar1: int[] = new int[10];
+  let arrVar2: boolean[] = new boolean[10];
+  let arrVar3: char[] = new char[10];
+}

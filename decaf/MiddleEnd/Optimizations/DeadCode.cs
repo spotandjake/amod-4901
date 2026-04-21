@@ -71,6 +71,8 @@ namespace Decaf.MiddleEnd.Optimizations {
         case AnfTree.InstructionNode.IfNode ifNode: {
             var optimizedTrueBranch = OptimizeInstruction(ifNode.TrueBranch);
             var optimizedFalseBranch = ifNode.FalseBranch != null ? OptimizeInstruction(ifNode.FalseBranch) : null;
+            // If both branches were optimized away, we can remove the entire if statement
+            if (optimizedTrueBranch == null && optimizedFalseBranch == null) return null;
             return ifNode.Condition switch {
               // In the case that the condition is a constant true, we are always going to take the true branch
               AnfTree.ImmediateNode.ConstantNode { Value: AnfTree.LiteralNode.BooleanNode { Value: true } } =>

@@ -1,0 +1,6 @@
+// This file exists to test arrays fail with negative sizes
+module Program {
+  let a: int[] = new int[10];
+  let x: int = -1;
+  a[x] = 1;
+}

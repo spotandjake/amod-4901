@@ -57,6 +57,7 @@ module Runtime {
   };
   // --- Primitive Data Type Allocation ---
   let allocateArray = (length: int): int => {
+    if (length < 0) @wasm.unreachable();
     // Compute the byteSize
     let byteSize: int = 4 + (4 * length);
     // Allocate the block

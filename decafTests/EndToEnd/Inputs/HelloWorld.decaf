@@ -1,0 +1,4 @@
+// Test a simple hello world program
+module Program {
+  Runtime.print("Hello World!\n");
+}
