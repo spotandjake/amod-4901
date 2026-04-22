@@ -1,6 +1,6 @@
-using System;
-
 namespace Decaf.Utils.Errors {
+  using System;
+
   class ErrorConstructor {
     public static string CreateError(Position position, string message) {
       var header = $"\u001b[1mFile \"{position.fileName}\":{position.line}:{position.column}\u001b[0m:";

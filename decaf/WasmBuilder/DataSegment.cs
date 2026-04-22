@@ -1,7 +1,7 @@
-using System.Linq;
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System.Linq;
+  using Decaf.Utils;
+
   // A wasm data segment, which is used to initialize linear memory with data.
   public record WasmDataSegment(
     Position Position,

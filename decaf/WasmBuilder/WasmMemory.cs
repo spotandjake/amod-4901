@@ -1,6 +1,6 @@
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using Decaf.Utils;
+
   // A memory in wasm
   public record WasmMemory(
     Position Position,

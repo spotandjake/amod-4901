@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-using Decaf.IR.Operators;
-using Decaf.Utils;
-
 namespace Decaf.IR.ParseTree {
+  using System.Collections.Generic;
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.Utils;
+
   /// <summary>
   /// An enumeration of every kind of parse tree node we have in our IR.
   /// This mainly exists so our snapshots have a more readable name for each node kind, and each node has a unique kind 

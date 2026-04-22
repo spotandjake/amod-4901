@@ -1,12 +1,11 @@
-using System;
+namespace decafTests.EndToEnd;
+
 using System.IO;
 using System.Diagnostics;
 using VerifyMSTest;
 
 using Decaf.Compiler;
 using Decaf.Utils;
-
-namespace decafTests.EndToEnd;
 
 // NOTE: This file exists todo basic testing on the lexer,
 //       we don't need to do a ton of testing here, we just validate that keywords, operators and literals match correctly

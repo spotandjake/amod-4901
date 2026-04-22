@@ -1,10 +1,9 @@
-using System;
-using System.Linq;
-
-using ParseTree = Decaf.IR.ParseTree;
-using Decaf.Utils.Errors.SemanticErrors;
-
 namespace Decaf.Frontend {
+  using System;
+  using System.Linq;
+
+  using ParseTree = Decaf.IR.ParseTree;
+  using Decaf.Utils.Errors.SemanticErrors;
   /// <summary>
   /// Ensures that the program is semantically valid. We could check some of this stuff while parsing however we 
   /// can provide better errors and simplify our parser by checking that certain constructs make logical sense instead of 

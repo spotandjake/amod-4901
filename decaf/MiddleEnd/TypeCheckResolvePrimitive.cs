@@ -1,14 +1,14 @@
-using System;
-using System.Collections.Generic;
-
-using ParseTree = Decaf.IR.ParseTree;
-using TypedTree = Decaf.IR.TypedTree;
-using Decaf.IR.PrimitiveDefinition;
-using Decaf.Utils.Errors.TypeCheckingErrors;
-using Decaf.Utils;
-
 // This file contains logic responsible for resolving a primitive call
 namespace Decaf.MiddleEnd.TypeChecker {
+  using System;
+  using System.Collections.Generic;
+
+  using ParseTree = Decaf.IR.ParseTree;
+  using TypedTree = Decaf.IR.TypedTree;
+  using Decaf.IR.PrimitiveDefinition;
+  using Decaf.Utils.Errors.TypeCheckingErrors;
+  using Decaf.Utils;
+
   public static class PrimitiveTypes {
     // A small helper function to get the path from a location
     private static List<string> GetLocationPath(Position position, ParseTree.LocationNode node, List<string> acc) {

@@ -1,9 +1,3 @@
-using System.Text.Json.Serialization;
-
-using Decaf.IR.Operators;
-using Decaf.IR.PrimitiveDefinition;
-using Decaf.Utils;
-
 /// <summary>
 /// This file contains the definition of the ANF tree, which is the intermediate representation used in
 /// the ANF pass. The ANF tree is a simplified version of the typed tree, where all expressions are flattened.
@@ -26,6 +20,12 @@ using Decaf.Utils;
 /// More information on ANF can be found here: https://en.wikipedia.org/wiki/A-normal_form
 /// </summary>
 namespace Decaf.IR.AnfTree {
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.IR.PrimitiveDefinition;
+  using Decaf.Utils;
+
   /// <summary>
   /// An enum representing the different kinds of node in the ANF tree.
   /// 

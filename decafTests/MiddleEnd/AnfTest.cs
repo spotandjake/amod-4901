@@ -1,17 +1,17 @@
+namespace decafTests.MiddleEnd;
+
 using VerifyMSTest;
 using VerifyTests;
+using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 using Decaf.Compiler;
 using Signature = Decaf.IR.Signature;
 using AnfTree = Decaf.IR.AnfTree;
 using Decaf.MiddleEnd.Optimizations;
 using Decaf.Utils;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-
-namespace decafTests.MiddleEnd;
 
 
 [TestClass]

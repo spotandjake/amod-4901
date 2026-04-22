@@ -1,10 +1,10 @@
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-using Decaf.IR.Operators;
-using Decaf.Utils;
-
 namespace Decaf.IR.TypedTree {
+  using System.Collections.Generic;
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.Utils;
+
   /// <summary>A base typed tree node that all other parse tree nodes inherit from.</summary>
   public abstract record Node {
     /// <summary>The kind of the node.</summary>

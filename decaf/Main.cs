@@ -1,22 +1,20 @@
-using System;
-using System.ComponentModel;
-using System.IO;
-using System.Threading;
-
-using Spectre.Console;
-using Spectre.Console.Cli;
-
-using Decaf.Utils.Errors;
-using Decaf.Utils;
-
 /// <summary>
 /// This is the main entry point for the Decaf Command Line Interface (CLI).
 /// 
 /// It handles the user interactions and calls the appropriate functions from the compiler and error handling modules.
 /// </summary>
 namespace Decaf.CLI {
-  using System.Diagnostics;
+  using System;
+  using System.ComponentModel;
+  using System.IO;
+  using System.Threading;
+
+  using Spectre.Console;
+  using Spectre.Console.Cli;
+
   using Decaf.Compiler;
+  using Decaf.Utils.Errors;
+  using Decaf.Utils;
   // The settings for our CLI application.
   public class Settings : CommandSettings {
     [CommandArgument(0, "<input file>")]

@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using Decaf.WasmBuilder;
-using Decaf.Utils;
-using AnfTree = Decaf.IR.AnfTree;
-using Signature = Decaf.IR.Signature;
-using System.Linq;
-
 // TODO: It would probably make sense to using binaryen for code generation, we get pretty much nothing from doing it ourselves, and it would prevent a lot of subtle semantic bugs. However we are doing it this way for the learning experience as of now.
 
 // This is the core of the code generation phase. It takes an AnfTree and produces a WasmTree.
 // The WasmTree can then independently be transformed directly into a wasm module.
 namespace Decaf.Backend {
+  using System;
+  using System.Collections.Generic;
+  using Decaf.WasmBuilder;
+  using Decaf.Utils;
+  using AnfTree = Decaf.IR.AnfTree;
+  using Signature = Decaf.IR.Signature;
+  using System.Linq;
+
   public static partial class Codegen {
 #nullable enable
     private record struct CodegenContext {

@@ -1,13 +1,10 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
-
-using Signature = Decaf.IR.Signature;
-using Decaf.WasmBuilder;
-using Decaf.IR.AnfTree;
-using System.Reflection.Emit;
-
 namespace Decaf.Backend {
+  using System;
+  using System.Collections.Generic;
+
+  using Signature = Decaf.IR.Signature;
+  using Decaf.WasmBuilder;
+
   public static partial class Codegen {
     private static WasmType GetWasmFunctionTypeFromSignature(CodegenContext ctx, Signature.Signature.FunctionSig signature, bool returnRef) {
       // Handle parameters

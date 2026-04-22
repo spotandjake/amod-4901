@@ -1,11 +1,10 @@
-using System;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System;
+  using System.Collections.Concurrent;
+  using System.Text;
+  using System.Threading;
+  using Decaf.Utils;
+
   // A context used when building a module.
   internal record WasmBuildCtx {
     // Unique Label Counter - used to generate unique labels across the module.

@@ -1,18 +1,18 @@
-using System;
-using System.Collections.Generic;
-
-using ParseTree = Decaf.IR.ParseTree;
-using TypedTree = Decaf.IR.TypedTree;
-using Signature = Decaf.IR.Signature;
-using Decaf.Utils;
-using Decaf.Utils.Errors.TypeCheckingErrors;
-
 /// <summary>
 /// This the plumbing for the type checker, the core type checking logic itself is implemented in `TypeCheckerCore`,
 /// this file is responsible for traversing the tree, mapping the signatures and scopes. 
 /// And finally emitting the typed tree with the correct signature on each node.
 /// </summary>
 namespace Decaf.MiddleEnd.TypeChecker {
+  using System;
+  using System.Collections.Generic;
+
+  using ParseTree = Decaf.IR.ParseTree;
+  using TypedTree = Decaf.IR.TypedTree;
+  using Signature = Decaf.IR.Signature;
+  using Decaf.Utils;
+  using Decaf.Utils.Errors.TypeCheckingErrors;
+
   // The type checker itself
   public static partial class TypeChecker {
     // The context used for type checking

@@ -1,8 +1,8 @@
-using System.Linq;
-
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System.Linq;
+
+  using Decaf.Utils;
+
   // An import in the module.
   public record WasmImport(
     Position Position,

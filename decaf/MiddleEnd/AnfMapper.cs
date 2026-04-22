@@ -1,14 +1,14 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
-
-using AnfTree = Decaf.IR.AnfTree;
-using TypedTree = Decaf.IR.TypedTree;
-using Signature = Decaf.IR.Signature;
-using Decaf.Utils;
-
 // The purpose of this file is to map from the typed tree to the ANF tree.
 namespace Decaf.MiddleEnd {
+  using System;
+  using System.Linq;
+  using System.Collections.Generic;
+
+  using AnfTree = Decaf.IR.AnfTree;
+  using TypedTree = Decaf.IR.TypedTree;
+  using Signature = Decaf.IR.Signature;
+  using Decaf.Utils;
+
   // NOTE: One downside of the recursive approach is theoretically we could blow the stack if we have very nested expressions.
   //       However if this were to ever become an issue we would switch to a work queue based approach.
   public static class AnfMapper {

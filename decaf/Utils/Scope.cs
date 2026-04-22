@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Text;
-using Decaf.Utils.Errors.ScopeErrors;
-
 namespace Decaf.Utils {
+  using System.Collections.Generic;
+  using System.Text;
+  using Decaf.Utils.Errors.ScopeErrors;
+
   // A shared generator for unique IDs
   public sealed record IDGenerator {
     private uint Counter { get; set; } = 0;

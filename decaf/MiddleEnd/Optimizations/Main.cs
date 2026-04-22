@@ -1,9 +1,9 @@
-using System;
-
-using AnfTree = Decaf.IR.AnfTree;
-using Decaf.Utils;
-
 namespace Decaf.MiddleEnd.Optimizations {
+  using System;
+
+  using AnfTree = Decaf.IR.AnfTree;
+  using Decaf.Utils;
+
   /// <summary>The different optimization passes that can be run on the ANF tree.</summary>
   public enum OptimizationPasses {
     DeadCodeElimination,

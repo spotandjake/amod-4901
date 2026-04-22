@@ -1,11 +1,11 @@
+namespace decafTests.FrontEnd;
+
 using VerifyMSTest;
 
 using Decaf.Compiler;
 using ParseTree = Decaf.IR.ParseTree;
 using Decaf.Utils.Errors.SemanticErrors;
-using System;
 
-namespace decafTests.FrontEnd;
 
 
 [TestClass]

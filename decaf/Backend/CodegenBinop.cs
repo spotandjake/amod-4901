@@ -1,10 +1,10 @@
-using System;
-using Decaf.IR.Signature;
-using Decaf.WasmBuilder;
-using AnfTree = Decaf.IR.AnfTree;
-using Ops = Decaf.IR.Operators;
-
 namespace Decaf.Backend {
+  using System;
+  using Decaf.IR.Signature;
+  using Decaf.WasmBuilder;
+  using AnfTree = Decaf.IR.AnfTree;
+  using Ops = Decaf.IR.Operators;
+
   public static partial class Codegen {
     private static WasmExpression CompileBinopSimpleExpr(
       CodegenContext ctx,

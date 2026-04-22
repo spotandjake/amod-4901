@@ -1,8 +1,9 @@
-using System.Collections.Generic;
-using System.Text;
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System.Collections.Generic;
+  using System.Text;
+  using Decaf.Utils;
+
+
   public abstract record WasmExpression(Position Position) {
     public Position Position { get; } = Position;
     // TODO: We should remove these debug only public versions

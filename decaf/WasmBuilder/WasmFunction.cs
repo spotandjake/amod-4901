@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System.Collections.Generic;
+  using Decaf.Utils;
+
   // A function in the wasm module.
   public record WasmFunction(
     Position Position,

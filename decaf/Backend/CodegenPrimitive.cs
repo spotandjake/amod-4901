@@ -1,10 +1,10 @@
-using System;
-
-using Decaf.WasmBuilder;
-using AnfTree = Decaf.IR.AnfTree;
-using Decaf.IR.PrimitiveDefinition;
-
 namespace Decaf.Backend {
+  using System;
+
+  using Decaf.WasmBuilder;
+  using AnfTree = Decaf.IR.AnfTree;
+  using Decaf.IR.PrimitiveDefinition;
+
   public static partial class Codegen {
     private static WasmExpression CompilePrimCallSimpleExpr(
       CodegenContext ctx,

@@ -1,10 +1,9 @@
-using System;
-
-using ParseTree = Decaf.IR.ParseTree;
-using Decaf.Utils;
-using Decaf.Utils.Errors.ScopeErrors;
-
 namespace Decaf.Frontend {
+  using System;
+
+  using ParseTree = Decaf.IR.ParseTree;
+  using Decaf.Utils;
+  using Decaf.Utils.Errors.ScopeErrors;
   /// <summary>
   /// The ScopeChecker is responsible for traversing the parse tree and validating variable usage.
   /// 

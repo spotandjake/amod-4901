@@ -1,21 +1,3 @@
-using System.Reflection;
-using System.IO;
-using System.Linq;
-
-using Antlr4.Runtime;
-
-using Decaf.Frontend;
-using Decaf.MiddleEnd.TypeChecker;
-using Decaf.MiddleEnd.Optimizations;
-using Decaf.MiddleEnd;
-using Decaf.Backend;
-using Decaf.Utils;
-
-using ParseTree = Decaf.IR.ParseTree;
-using TypedTree = Decaf.IR.TypedTree;
-using AnfTree = Decaf.IR.AnfTree;
-using Wasm = Decaf.WasmBuilder;
-
 /// <summary>
 /// This file contains the main API for interacting with the compiler.
 /// 
@@ -27,6 +9,23 @@ using Wasm = Decaf.WasmBuilder;
 /// - In the future, a formatter
 /// </summary>
 namespace Decaf.Compiler {
+  using System.Reflection;
+  using System.IO;
+
+  using Antlr4.Runtime;
+
+  using Decaf.Frontend;
+  using Decaf.MiddleEnd.TypeChecker;
+  using Decaf.MiddleEnd.Optimizations;
+  using Decaf.MiddleEnd;
+  using Decaf.Backend;
+  using Decaf.Utils;
+
+  using ParseTree = Decaf.IR.ParseTree;
+  using TypedTree = Decaf.IR.TypedTree;
+  using AnfTree = Decaf.IR.AnfTree;
+  using Wasm = Decaf.WasmBuilder;
+
   public static class Compiler {
     // --- Generic ---
 

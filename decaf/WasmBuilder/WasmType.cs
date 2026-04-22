@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using System.Collections.Generic;
+
+  using Decaf.Utils;
+
   public abstract record WasmType(Position Position) {
     internal abstract string ToWat(WasmBuildCtx ctx);
     public sealed record I32(Position Position) : WasmType(Position) {

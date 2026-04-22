@@ -1,11 +1,11 @@
+namespace Decaf.Frontend;
+
 using Antlr4.Runtime;
 using Antlr4.Runtime.Misc;
 
 using LexerErrors = Decaf.Utils.Errors.LexingErrors;
 using ParserErrors = Decaf.Utils.Errors.ParsingErrors;
 using Decaf.Utils;
-
-namespace Decaf.Frontend;
 
 public sealed class LexerErrorListener : IAntlrErrorListener<int> {
   public static readonly LexerErrorListener Instance = new();

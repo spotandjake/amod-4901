@@ -1,6 +1,6 @@
-using Decaf.Utils;
-
 namespace Decaf.WasmBuilder {
+  using Decaf.Utils;
+
   // A global variable in the module.
   public record WasmGlobal(
     Position Position,

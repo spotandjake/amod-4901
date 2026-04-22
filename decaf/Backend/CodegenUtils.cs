@@ -1,8 +1,8 @@
-using Decaf.IR.Signature;
-using Decaf.Utils;
-using Decaf.WasmBuilder;
-
 namespace Decaf.Backend {
+  using Decaf.IR.Signature;
+  using Decaf.Utils;
+  using Decaf.WasmBuilder;
+
   /// <summary>Helper methods for code generation.</summary>
   public static class CodegenUtils {
     private static string GetMemberName(string moduleName, string memberName) {

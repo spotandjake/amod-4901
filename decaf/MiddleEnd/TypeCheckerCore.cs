@@ -1,9 +1,9 @@
-using System;
-
-using Signature = Decaf.IR.Signature;
-using Decaf.Utils.Errors.TypeCheckingErrors;
-
 namespace Decaf.MiddleEnd.TypeChecker {
+  using System;
+
+  using Signature = Decaf.IR.Signature;
+  using Decaf.Utils.Errors.TypeCheckingErrors;
+
   /// <summary>
   /// The small core of the type checker.
   /// This is where the actual signature checking logic lives, and all the type rules are encoded.

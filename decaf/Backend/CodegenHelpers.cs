@@ -1,7 +1,7 @@
-using Decaf.Utils;
-using Decaf.WasmBuilder;
-
 namespace Decaf.Backend {
+  using Decaf.Utils;
+  using Decaf.WasmBuilder;
+
   public static partial class Codegen {
     // --- Array Compilation Helpers ---
     private static WasmExpression.I32.Add CompileArrayByteIndex(

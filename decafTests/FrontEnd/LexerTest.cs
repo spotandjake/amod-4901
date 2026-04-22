@@ -1,3 +1,5 @@
+namespace decafTests.FrontEnd;
+
 using System.Threading.Tasks;
 using Antlr4.Runtime;
 using VerifyMSTest;
@@ -8,8 +10,6 @@ using System.Data;
 
 using Decaf.Compiler;
 using Decaf.Utils.Errors.LexingErrors;
-
-namespace decafTests.FrontEnd;
 
 // NOTE: This file exists todo basic testing on the lexer,
 //       we don't need to do a ton of testing here, we just validate that keywords, operators and literals match correctly

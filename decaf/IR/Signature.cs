@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-using Decaf.Utils;
-
 namespace Decaf.IR.Signature {
+  using System;
+  using System.Collections.Generic;
+  using System.Text.Json.Serialization;
+
+  using Decaf.Utils;
+
   // The primitive types in our language
   public enum PrimitiveType {
     Int,
