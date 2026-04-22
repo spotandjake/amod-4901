@@ -5,7 +5,7 @@
       Name: {
         Kind: IdentifierLocationNode,
         IsPrimitive: false,
-        Name: Main
+        Name: Program
       },
       Body: {
         Kind: BlockStatementNode,
@@ -16,21 +16,22 @@
               {
                 Kind: BindNode,
                 Signature: {
-                  Type: Boolean
+                  ParameterTypes: [
+                    {},
+                    {}
+                  ],
+                  ReturnType: {}
                 },
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
-                  Name: booly
+                  Name: x
                 },
                 InitExpr: {
-                  Kind: PrefixExpressionNode,
-                  Operand: {
-                    Kind: LiteralExpressionNode,
-                    Literal: {
-                      Kind: BooleanLiteralNode,
-                      Value: true
-                    }
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode,
+                    Value: 1
                   }
                 }
               }

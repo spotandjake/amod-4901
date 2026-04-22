@@ -94,8 +94,6 @@ namespace Decaf.WasmBuilder {
         // We also need to keep track of the order of functions for the output since the order matters in wasm
         FunctionOrder.Enqueue(id);
       }
-      // TODO: Should this add the type to the module????
-      // TODO: This should possibly return a funcref that we can use to refer to the function later on????
     }
     // TODO: There is a better way of handling exports
     public void AddExport(WasmLabel label, string exportName, WasmExportType exportType) {

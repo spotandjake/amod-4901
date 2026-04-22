@@ -6,7 +6,6 @@ namespace Decaf.WasmBuilder {
 
   public abstract record WasmExpression(Position Position) {
     public Position Position { get; } = Position;
-    // TODO: We should remove these debug only public versions
     public string ToWat() => ToWat(new WasmBuildCtx());
     internal abstract string ToWat(WasmBuildCtx ctx);
     // Wasm Expression subtypes

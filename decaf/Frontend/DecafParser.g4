@@ -1,4 +1,3 @@
-// TODO: Document this file
 parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
@@ -60,7 +59,6 @@ expr_stmt: expr SEMI;
 
 // --- Expressions ---
 expr
-  // TODO: Test Precedence
   // Parenthesized expressions
   : LPAREN expr RPAREN                 # ParenExpr // NOTE: This is only for grouping, not in the IR
   // Prefix Expr

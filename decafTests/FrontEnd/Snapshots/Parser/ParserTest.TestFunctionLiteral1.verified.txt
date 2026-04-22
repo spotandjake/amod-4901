@@ -5,7 +5,7 @@
       Name: {
         Kind: IdentifierLocationNode,
         IsPrimitive: false,
-        Name: Main
+        Name: Program
       },
       Body: {
         Kind: BlockStatementNode,
@@ -18,7 +18,7 @@
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
-                  Name: foo
+                  Name: x
                 },
                 InitExpr: {
                   Kind: LiteralExpressionNode,
@@ -27,31 +27,11 @@
                     Name: {
                       Kind: IdentifierLocationNode,
                       IsPrimitive: false,
-                      Name: foo
+                      Name: x
                     },
                     ReturnType: {
                       Type: Void
                     },
-                    Parameters: [
-                      {
-                        Kind: ParameterNode,
-                        Signature: {},
-                        Name: {
-                          Kind: IdentifierLocationNode,
-                          IsPrimitive: false,
-                          Name: x
-                        }
-                      },
-                      {
-                        Kind: ParameterNode,
-                        Signature: {},
-                        Name: {
-                          Kind: IdentifierLocationNode,
-                          IsPrimitive: false,
-                          Name: y
-                        }
-                      }
-                    ],
                     Body: {
                       Kind: BlockStatementNode
                     }

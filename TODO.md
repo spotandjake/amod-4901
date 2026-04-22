@@ -20,14 +20,3 @@ These are things directly related to deliverables or causing codegen issues that
     * Check if a variable is ever consumed, if not remove it
     * Check if a function is ever called, if not remove it
     * NOTE: These passes iterate blocks and modules in reverse
-* Testing
-  * FrontEnd
-    * Parsing
-      * We should rewrite these to match the new grammar
-      * Proper precedence tests
-  * MiddleEnd
-    * We should rewrite the type checking tests to be more specific and less snapshot based
-  * Backend
-    * Write tests for codegen (likely just snapshot tests)
-  * End to End
-    * Everything

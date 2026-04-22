@@ -5,7 +5,7 @@
       Name: {
         Kind: IdentifierLocationNode,
         IsPrimitive: false,
-        Name: Main
+        Name: Program
       },
       Body: {
         Kind: BlockStatementNode,
@@ -18,7 +18,7 @@
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
-                  Name: testMethod
+                  Name: x
                 },
                 InitExpr: {
                   Kind: LiteralExpressionNode,
@@ -27,31 +27,24 @@
                     Name: {
                       Kind: IdentifierLocationNode,
                       IsPrimitive: false,
-                      Name: testMethod
+                      Name: x
                     },
                     ReturnType: {
                       Type: Void
                     },
-                    Body: {
-                      Kind: BlockStatementNode,
-                      Statements: [
-                        {
-                          Kind: ExprStatementNode,
-                          Expression: {
-                            Kind: CallExpressionNode,
-                            Callee: {
-                              Kind: MemberLocationNode,
-                              IsPrimitive: false,
-                              Root: {
-                                Kind: IdentifierLocationNode,
-                                IsPrimitive: false,
-                                Name: Base
-                              },
-                              Member: foo
-                            }
-                          }
+                    Parameters: [
+                      {
+                        Kind: ParameterNode,
+                        Signature: {},
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: x
                         }
-                      ]
+                      }
+                    ],
+                    Body: {
+                      Kind: BlockStatementNode
                     }
                   }
                 }

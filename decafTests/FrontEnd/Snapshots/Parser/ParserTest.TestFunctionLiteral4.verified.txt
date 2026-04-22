@@ -5,7 +5,7 @@
       Name: {
         Kind: IdentifierLocationNode,
         IsPrimitive: false,
-        Name: Main
+        Name: Program
       },
       Body: {
         Kind: BlockStatementNode,
@@ -18,7 +18,7 @@
                 Name: {
                   Kind: IdentifierLocationNode,
                   IsPrimitive: false,
-                  Name: testMethod
+                  Name: x
                 },
                 InitExpr: {
                   Kind: LiteralExpressionNode,
@@ -27,30 +27,20 @@
                     Name: {
                       Kind: IdentifierLocationNode,
                       IsPrimitive: false,
-                      Name: testMethod
+                      Name: x
                     },
-                    ReturnType: {
-                      Type: Void
-                    },
+                    ReturnType: {},
                     Body: {
                       Kind: BlockStatementNode,
                       Statements: [
                         {
-                          Kind: WhileStatementNode,
-                          Condition: {
+                          Kind: ReturnStatementNode,
+                          Value: {
                             Kind: LiteralExpressionNode,
                             Literal: {
-                              Kind: BooleanLiteralNode,
-                              Value: true
+                              Kind: IntegerLiteralNode,
+                              Value: 1
                             }
-                          },
-                          Body: {
-                            Kind: BlockStatementNode,
-                            Statements: [
-                              {
-                                Kind: ContinueStatementNode
-                              }
-                            ]
                           }
                         }
                       ]

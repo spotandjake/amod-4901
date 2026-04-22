@@ -1,0 +1,245 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Program
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: IfStatementNode,
+            Condition: {
+              Kind: LiteralExpressionNode,
+              Literal: {
+                Kind: BooleanLiteralNode,
+                Value: true
+              }
+            },
+            TrueBranch: {
+              Kind: VariableDeclNode,
+              Binds: [
+                {
+                  Kind: BindNode,
+                  Signature: {},
+                  Name: {
+                    Kind: IdentifierLocationNode,
+                    IsPrimitive: false,
+                    Name: x
+                  },
+                  InitExpr: {
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
+                      Value: 1
+                    }
+                  }
+                }
+              ]
+            },
+            FalseBranch: {
+              Kind: VariableDeclNode,
+              Binds: [
+                {
+                  Kind: BindNode,
+                  Signature: {},
+                  Name: {
+                    Kind: IdentifierLocationNode,
+                    IsPrimitive: false,
+                    Name: y
+                  },
+                  InitExpr: {
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
+                      Value: 2
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            Kind: IfStatementNode,
+            Condition: {
+              Kind: LiteralExpressionNode,
+              Literal: {
+                Kind: BooleanLiteralNode,
+                Value: true
+              }
+            },
+            TrueBranch: {
+              Kind: BlockStatementNode,
+              Statements: [
+                {
+                  Kind: VariableDeclNode,
+                  Binds: [
+                    {
+                      Kind: BindNode,
+                      Signature: {},
+                      Name: {
+                        Kind: IdentifierLocationNode,
+                        IsPrimitive: false,
+                        Name: x
+                      },
+                      InitExpr: {
+                        Kind: LiteralExpressionNode,
+                        Literal: {
+                          Kind: IntegerLiteralNode,
+                          Value: 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            FalseBranch: {
+              Kind: BlockStatementNode,
+              Statements: [
+                {
+                  Kind: VariableDeclNode,
+                  Binds: [
+                    {
+                      Kind: BindNode,
+                      Signature: {},
+                      Name: {
+                        Kind: IdentifierLocationNode,
+                        IsPrimitive: false,
+                        Name: y
+                      },
+                      InitExpr: {
+                        Kind: LiteralExpressionNode,
+                        Literal: {
+                          Kind: IntegerLiteralNode,
+                          Value: 2
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            Kind: IfStatementNode,
+            Condition: {
+              Kind: LiteralExpressionNode,
+              Literal: {
+                Kind: BooleanLiteralNode,
+                Value: true
+              }
+            },
+            TrueBranch: {
+              Kind: VariableDeclNode,
+              Binds: [
+                {
+                  Kind: BindNode,
+                  Signature: {},
+                  Name: {
+                    Kind: IdentifierLocationNode,
+                    IsPrimitive: false,
+                    Name: x
+                  },
+                  InitExpr: {
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
+                      Value: 1
+                    }
+                  }
+                }
+              ]
+            },
+            FalseBranch: {
+              Kind: BlockStatementNode,
+              Statements: [
+                {
+                  Kind: VariableDeclNode,
+                  Binds: [
+                    {
+                      Kind: BindNode,
+                      Signature: {},
+                      Name: {
+                        Kind: IdentifierLocationNode,
+                        IsPrimitive: false,
+                        Name: y
+                      },
+                      InitExpr: {
+                        Kind: LiteralExpressionNode,
+                        Literal: {
+                          Kind: IntegerLiteralNode,
+                          Value: 2
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            Kind: IfStatementNode,
+            Condition: {
+              Kind: LiteralExpressionNode,
+              Literal: {
+                Kind: BooleanLiteralNode,
+                Value: true
+              }
+            },
+            TrueBranch: {
+              Kind: BlockStatementNode,
+              Statements: [
+                {
+                  Kind: VariableDeclNode,
+                  Binds: [
+                    {
+                      Kind: BindNode,
+                      Signature: {},
+                      Name: {
+                        Kind: IdentifierLocationNode,
+                        IsPrimitive: false,
+                        Name: x
+                      },
+                      InitExpr: {
+                        Kind: LiteralExpressionNode,
+                        Literal: {
+                          Kind: IntegerLiteralNode,
+                          Value: 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            FalseBranch: {
+              Kind: VariableDeclNode,
+              Binds: [
+                {
+                  Kind: BindNode,
+                  Signature: {},
+                  Name: {
+                    Kind: IdentifierLocationNode,
+                    IsPrimitive: false,
+                    Name: y
+                  },
+                  InitExpr: {
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
+                      Value: 2
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
