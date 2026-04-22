@@ -23,10 +23,6 @@ tasks:
       - wasm-tools print example.wasm -p -f --indent 2 > example.wat
       # Validate the wasm
       - wasm-tools validate example.wasm
-      # Optimize the wasm
-      - wasm-opt example.wasm --enable-reference-types --enable-gc --enable-bulk-memory --enable-bulk-memory-opt -O3 -O3 -O3 -o example_opt.wasm
-      # Decompile the optimize wasm
-      - wasm-tools print example_opt.wasm -p -f --indent 2 > example_opt.wat
       # Run the wasm
       - wasmtime run --wasm reference-types --wasm function-references example.wasm
   # Library Commands

@@ -1,9 +1,15 @@
 namespace Decaf.WasmBuilder {
   using System;
   using System.Collections.Concurrent;
+  using System.Diagnostics.Contracts;
   using System.Text;
   using System.Threading;
   using Decaf.Utils;
+
+  public enum WasmExportType {
+    Func,
+    Memory
+  }
 
   // A context used when building a module.
   internal record WasmBuildCtx {
@@ -27,6 +33,8 @@ namespace Decaf.WasmBuilder {
     private ConcurrentQueue<int> GlobalOrder { get; } = new ConcurrentQueue<int>();
     private ConcurrentDictionary<int, WasmFunction> Functions { get; } = new ConcurrentDictionary<int, WasmFunction>();
     private ConcurrentQueue<int> FunctionOrder { get; } = new ConcurrentQueue<int>();
+    private ConcurrentDictionary<WasmLabel, (string ExportName, WasmExportType ExportType)> Exports { get; } = new ConcurrentDictionary<WasmLabel, (string ExportName, WasmExportType ExportType)>();
+    private ConcurrentQueue<WasmLabel> ExportOrder { get; } = new ConcurrentQueue<WasmLabel>();
 #nullable enable
     private WasmLabel? StartFunction { get; set; } = null;
 #nullable restore
@@ -89,6 +97,15 @@ namespace Decaf.WasmBuilder {
       // TODO: Should this add the type to the module????
       // TODO: This should possibly return a funcref that we can use to refer to the function later on????
     }
+    // TODO: There is a better way of handling exports
+    public void AddExport(WasmLabel label, string exportName, WasmExportType exportType) {
+      if (!Exports.TryAdd(label, (exportName, exportType))) {
+        throw new Exception($"Export with label {label.ToWat(new WasmBuildCtx())} already exists in module");
+      }
+      else {
+        ExportOrder.Enqueue(label);
+      }
+    }
     public void SetStartFunction(WasmLabel label) {
       this.StartFunction = label;
     }
@@ -150,13 +167,26 @@ namespace Decaf.WasmBuilder {
         var func = this.Functions[funcID];
         functionSection.AppendLine(func.ToWat(ctx));
       }
-      // TODO: We should handle exports properly but this is just for an experiment
-      var memoryExportStr = "(export \"memory\" (memory 0))";
-      var startExport = "(export \"_start\" (func $_start))";
+      // Compile the export section
+      // TODO: This isn't the best way todo exports but it works for now
+      var exportSection = new StringBuilder();
+      foreach (var exportLabel in this.ExportOrder) {
+        var (exportName, exportType) = this.Exports[exportLabel];
+        switch (exportType) {
+          case WasmExportType.Func:
+            exportSection.AppendLine($"(export \"{exportName}\" (func {exportLabel.ToWat(ctx)}))");
+            break;
+          case WasmExportType.Memory:
+            exportSection.AppendLine($"(export \"{exportName}\" (memory {exportLabel.ToWat(ctx)}))");
+            break;
+          default:
+            throw new Exception($"Unsupported export type {exportType} for export {exportName}");
+        }
+      }
       // Compile the start section if it exists
       var startSection = this.StartFunction != null ? $"(start {this.StartFunction.ToWat(ctx)})" : "";
       // Package the entire module
-      return $"(module{typeSection}{importSection}{memorySection}{memoryExportStr}{dataSegmentSection}{elementSection}{globalSection}{functionSection}{startExport}{startSection})";
+      return $"(module{typeSection}{importSection}{memorySection}{dataSegmentSection}{elementSection}{globalSection}{functionSection}{exportSection}{startSection})";
     }
   }
 }

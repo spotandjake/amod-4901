@@ -5,16 +5,9 @@ This document contains a list of all the major tasks that need to be done before
 ### Critical
 These are things directly related to deliverables or causing codegen issues that we must fix.
 
-* WasmTree
-  * Cleanup the wasm tree itself to ensure the ir is proper and matches wasm (We currently have some weird adaptions)
-  * Cleanup exports
-  * Cleanup the element section
-* Fixes
-  * If you tried using equality on a function it would cause a wasm validation error, we need ref.eq support (maybe ref casting).
-  * Fix operator precedence in the parser, currently it is just left to right which is not correct.
 * Testing
   * Test the compiler end to end by running the produced modules and capturing the output
-* Implement the CLI
+  * Test Precedence in the parser.
 * Add a `demo.sh` and `demo.bat` for BP
 
 ### Less Critical

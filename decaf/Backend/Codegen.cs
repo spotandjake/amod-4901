@@ -52,6 +52,7 @@ namespace Decaf.Backend {
       // Add the memory to the module
       var memory = new WasmMemory(node.Position, new WasmLabel.Label(node.Position, "memory"), InitialPages: 1);
       ctx.WasmModule.AddMemory(memory);
+      ctx.WasmModule.AddExport(memory.Label, "memory", WasmExportType.Memory);
       // Generate code for each module
       var startCalls = new List<WasmLabel>();
       foreach (var mod in node.Modules) {
@@ -74,7 +75,7 @@ namespace Decaf.Backend {
       module.AddFunction(startFunc);
       if (config.UseStartSection) module.SetStartFunction(startLabel);
       else {
-        // TODO: export this module as `_start` so that it gets called when the module is instantiated
+        module.AddExport(startLabel, "_start", WasmExportType.Func);
       }
       return module;
     }
