@@ -4,6 +4,8 @@ This repo contains a simple programming language for Trent's AMOD-4901 course. T
 
 ## Getting Started
 
+If you are just looking to get started you can find some syntax examples in `./examples/`, which includes a few example decaf files ranging from hello world to more complex examples that test various features of the language. You can compile these examples using `dotnet run --project=../decaf -- ./<name>.decaf --wat ./<name>.wat` in the examples directory where `<name>` is the file name you are trying to compile. This will produce a WebAssembly text format file that you can then run using a WebAssembly runtime such as [WasmTime](https://wasmtime.dev/). We highly recommend using WasmTime for running the generated WebAssembly code as it's important you are using a runtime that supports function references. The code can be run using `wasmtime run --wasm reference-types --wasm function-references <name>.wat`.
+
 ### Dependencies
 The compiler is built using a minimal set of dependencies defined below:
 * [.NET SDK](https://dotnet.microsoft.com/en-us/) (required)

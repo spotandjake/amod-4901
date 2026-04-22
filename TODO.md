@@ -8,7 +8,6 @@ These are things directly related to deliverables or causing codegen issues that
 * Testing
   * Test the compiler end to end by running the produced modules and capturing the output
   * Test Precedence in the parser.
-* Add a `demo.sh` and `demo.bat` for BP
 
 ### Less Critical
 * Anf Optimizations
