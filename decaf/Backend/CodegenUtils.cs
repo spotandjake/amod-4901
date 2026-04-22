@@ -1,4 +1,5 @@
 namespace Decaf.Backend {
+  using System;
   using Decaf.IR.Signature;
   using Decaf.Utils;
   using Decaf.WasmBuilder;
@@ -12,17 +13,21 @@ namespace Decaf.Backend {
       return new WasmLabel.Label(position, GetMemberName(moduleName, memberName));
     }
     // We need to be able to refer to the runtime module so we can call its functions.
-    public class Runtime(Signature.ModuleSig ModuleSig) {
+#nullable enable
+    public class Runtime(Signature.ModuleSig? ModuleSig) {
+      private static Symbol RuntimeModuleNotFound() => throw new Exception($"Runtime module `{RuntimeModuleName}` not found");
+
       public static readonly string RuntimeModuleName = "Runtime";
       // Allocation API
-      public readonly Symbol RuntimeMallocName = ModuleSig.Resolutions["malloc"];
-      public readonly Symbol RuntimeCallocName = ModuleSig.Resolutions["calloc"];
+      public Symbol RuntimeMallocName => ModuleSig?.Resolutions["malloc"] ?? RuntimeModuleNotFound();
+      public Symbol RuntimeCallocName => ModuleSig?.Resolutions["calloc"] ?? RuntimeModuleNotFound();
       // Allocation APIs
-      public readonly Symbol RuntimeAllocateArray = ModuleSig.Resolutions["allocateArray"];
-      public readonly Symbol RuntimeAllocateString = ModuleSig.Resolutions["allocateString"];
+      public Symbol RuntimeAllocateArray => ModuleSig?.Resolutions["allocateArray"] ?? RuntimeModuleNotFound();
+      public Symbol RuntimeAllocateString => ModuleSig?.Resolutions["allocateString"] ?? RuntimeModuleNotFound();
       // Equality
-      public readonly Symbol RuntimeStringEqual = ModuleSig.Resolutions["stringEqual"];
-      public readonly Symbol RuntimeStringNotEqual = ModuleSig.Resolutions["stringNotEqual"];
+      public Symbol RuntimeStringEqual => ModuleSig?.Resolutions["stringEqual"] ?? RuntimeModuleNotFound();
+      public Symbol RuntimeStringNotEqual => ModuleSig?.Resolutions["stringNotEqual"] ?? RuntimeModuleNotFound();
     }
+#nullable restore
   }
 }

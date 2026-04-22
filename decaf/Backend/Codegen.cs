@@ -14,7 +14,7 @@ namespace Decaf.Backend {
   public static partial class Codegen {
 #nullable enable
     private record struct CodegenContext {
-      public CodegenUtils.Runtime Runtime;
+      public CodegenUtils.Runtime? Runtime;
       public WasmModule WasmModule; // The module we are currently building itself
       public Dictionary<Signature.Signature, WasmLabel> WasmTypes; // A mapping from signatures to the labels of their corresponding types in the module
       public Dictionary<WasmLabel, WasmType>? WasmLocals; // A list of locals in the current function
@@ -45,9 +45,8 @@ namespace Decaf.Backend {
       var module = new WasmModule(node.Position);
       // Find the runtime class
       var runtimeModule = node.Modules.FirstOrDefault(m => m.ID.Name == CodegenUtils.Runtime.RuntimeModuleName);
-      if (runtimeModule == null)
-        throw new Exception($"Could not find runtime module with name {CodegenUtils.Runtime.RuntimeModuleName}");
-      var runtime = new CodegenUtils.Runtime(runtimeModule.Signature);
+      var runtime = new CodegenUtils.Runtime(runtimeModule?.Signature);
+      if (runtime == null) throw new Exception($"Runtime module `{CodegenUtils.Runtime.RuntimeModuleName}` not found");
       // Create our initial codegen context
       var ctx = CodegenContext.CreateInitialContext(runtime, module);
       // Add the memory to the module
