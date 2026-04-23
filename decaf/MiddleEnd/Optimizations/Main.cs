@@ -7,6 +7,7 @@ namespace Decaf.MiddleEnd.Optimizations {
   /// <summary>The different optimization passes that can be run on the ANF tree.</summary>
   public enum OptimizationPasses {
     DeadCodeElimination,
+    ConstantOptimization,
   }
   /// <summary>
   /// This is the main entry pointer for running all optimizations on the ANF tree.
@@ -22,8 +23,10 @@ namespace Decaf.MiddleEnd.Optimizations {
     public static string[] GetDefaultPasses() => [
       // We run this first because it can cut down the size of the tree immediately and is very cheap
       Enum.GetName(OptimizationPasses.DeadCodeElimination),
-      // TODO: Run constant folding and propogation to open up more opportunities for dead code elimination
-      // TODO: Re-run dead code elimination to cut down the new opportunities created by constant folding and propagation
+      // Run constant folding and propogation to open up more opportunities for dead code elimination
+      Enum.GetName(OptimizationPasses.ConstantOptimization),
+      // Re-run dead code elimination to cut down the new opportunities created by constant folding and propagation
+      Enum.GetName(OptimizationPasses.DeadCodeElimination),
     ];
     public static AnfTree.ProgramNode Optimize(CompilationConfig config, AnfTree.ProgramNode node) {
       /*
@@ -42,6 +45,7 @@ namespace Decaf.MiddleEnd.Optimizations {
         if (config.SkipOptimizationPasses.Contains(Enum.GetName(pass))) continue;
         node = pass switch {
           OptimizationPasses.DeadCodeElimination => DeadCodeOptimization.Optimize(node),
+          OptimizationPasses.ConstantOptimization => ConstantOptimization.Optimize(node),
           // NOTE: This will never be hit
           _ => throw new Exception($"Unknown optimization pass: {pass}"),
         };

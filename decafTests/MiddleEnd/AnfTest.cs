@@ -35,6 +35,10 @@ public class AnfTest : VerifyBase {
     Optimizer.GetDefaultPasses().Where(
       p => p != Enum.GetName(OptimizationPasses.DeadCodeElimination)
     ).ToList();
+  private static List<string> OnlyConstantFoldingAndPropagation =>
+    Optimizer.GetDefaultPasses().Where(
+      p => p != Enum.GetName(OptimizationPasses.ConstantOptimization)
+    ).ToList();
   // --- Basic Anf Test --
   [TestMethod]
   public Task TestValidAnf() {
@@ -244,6 +248,151 @@ public class AnfTest : VerifyBase {
     Assert.IsNotNull(programModule);
     // NOTE: Because DCE got rid of the while statement, we expect the body to be empty
     Assert.HasCount(0, programModule.Body.Instructions);
+  }
+  #endregion
+  // --- Test Constant Propagation And Folding ---
+  #region ConstantFoldingAndPropagation
+  [TestMethod]
+  public void TestConstantFoldingAddition() {
+    var result = Test(@"
+        module Program {
+          let x: int = 1 + 50;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    Assert.IsNotNull(result);
+    Assert.HasCount(1, result.Modules);
+    var programModule = result.Modules[0];
+    Assert.IsNotNull(programModule);
+    Assert.HasCount(0, programModule.Functions);
+    Assert.HasCount(1, programModule.Body.Instructions);
+    var instr = programModule.Body.Instructions[0];
+    Assert.IsTrue(instr is AnfTree.InstructionNode.BindNode);
+    var bindNode = instr as AnfTree.InstructionNode.BindNode;
+    Assert.IsNotNull(bindNode);
+    Assert.AreEqual("x", bindNode.ID.Name);
+    Assert.IsTrue(bindNode.SimpleExpression is AnfTree.SimpleExpressionNode.ImmediateExpressionNode);
+    var immExpr = bindNode.SimpleExpression as AnfTree.SimpleExpressionNode.ImmediateExpressionNode;
+    Assert.IsTrue(immExpr.Imm is AnfTree.ImmediateNode.ConstantNode);
+    var constNode = immExpr.Imm as AnfTree.ImmediateNode.ConstantNode;
+    Assert.IsTrue(constNode.Value is AnfTree.LiteralNode.IntegerNode);
+    var intNode = constNode.Value as AnfTree.LiteralNode.IntegerNode;
+    // NOTE: This is the part that actually matters
+    Assert.AreEqual(51, intNode.Value);
+  }
+  [TestMethod]
+  public void TestConstantFoldingMultiplicationOnZero() {
+    var result = Test(@"
+        module Program {
+          let x: int = 0 * 50;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    Assert.IsNotNull(result);
+    Assert.HasCount(1, result.Modules);
+    var programModule = result.Modules[0];
+    Assert.IsNotNull(programModule);
+    Assert.HasCount(0, programModule.Functions);
+    Assert.HasCount(1, programModule.Body.Instructions);
+    var instr = programModule.Body.Instructions[0];
+    Assert.IsTrue(instr is AnfTree.InstructionNode.BindNode);
+    var bindNode = instr as AnfTree.InstructionNode.BindNode;
+    Assert.IsNotNull(bindNode);
+    Assert.AreEqual("x", bindNode.ID.Name);
+    Assert.IsTrue(bindNode.SimpleExpression is AnfTree.SimpleExpressionNode.ImmediateExpressionNode);
+    var immExpr = bindNode.SimpleExpression as AnfTree.SimpleExpressionNode.ImmediateExpressionNode;
+    Assert.IsTrue(immExpr.Imm is AnfTree.ImmediateNode.ConstantNode);
+    var constNode = immExpr.Imm as AnfTree.ImmediateNode.ConstantNode;
+    Assert.IsTrue(constNode.Value is AnfTree.LiteralNode.IntegerNode);
+    var intNode = constNode.Value as AnfTree.LiteralNode.IntegerNode;
+    // NOTE: This is the part that matters
+    Assert.AreEqual(0, intNode.Value);
+  }
+  [TestMethod]
+  public void TestConstantFoldingMultiplicativeIdentityProperty() {
+    var result = Test(@"
+        module Program {
+          let x: int = 10;
+          let y: int = x / x;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    Assert.IsNotNull(result);
+    Assert.HasCount(1, result.Modules);
+    var programModule = result.Modules[0];
+    Assert.IsNotNull(programModule);
+    Assert.HasCount(0, programModule.Functions);
+    Assert.HasCount(2, programModule.Body.Instructions);
+    var instr = programModule.Body.Instructions[1];
+    Assert.IsTrue(instr is AnfTree.InstructionNode.BindNode);
+    var bindNode = instr as AnfTree.InstructionNode.BindNode;
+    Assert.IsNotNull(bindNode);
+    Assert.AreEqual("y", bindNode.ID.Name);
+    Assert.IsTrue(bindNode.SimpleExpression is AnfTree.SimpleExpressionNode.ImmediateExpressionNode);
+    var immExpr = bindNode.SimpleExpression as AnfTree.SimpleExpressionNode.ImmediateExpressionNode;
+    Assert.IsTrue(immExpr.Imm is AnfTree.ImmediateNode.ConstantNode);
+    var constNode = immExpr.Imm as AnfTree.ImmediateNode.ConstantNode;
+    Assert.IsTrue(constNode.Value is AnfTree.LiteralNode.IntegerNode);
+    var intNode = constNode.Value as AnfTree.LiteralNode.IntegerNode;
+    // NOTE: This is the part that matters
+    Assert.AreEqual(1, intNode.Value);
+  }
+  [TestMethod]
+  public Task TestConstantPropagation() {
+    var result = Test(@"
+        module Program {
+          let x: int = 5;
+          let y: int = x + 1;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    // NOTE: After propagation, `x` is substituted into `y = x + 1`, then folding reduces it to `y = 6`
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
+  }
+  [TestMethod]
+  public Task TestConstantPropagationLoop() {
+    var result = Test(@"
+        module Program {
+          let x: int = 5;
+          while (true) {
+            let y: int = x + 1;
+            x = 2;
+          }
+          let z: int = x + 1;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    // NOTE: We can't propagate into loops as they are instanced multiple times, so we expect `y` to still be `x + 1` and not `6`
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
+  }
+  [TestMethod]
+  public Task TestConstantPropagationIf() {
+    var result = Test(@"
+        module Program {
+          let x: int = 5;
+          if (true) {
+            let y: int = x + 1;
+            x = 3;
+          }
+          let z: int = x + 1;
+        }
+      ",
+      OnlyConstantFoldingAndPropagation
+    );
+    // NOTE: We can't propogate after the `if` because we don't know if the `if` will execute and change the value of `x`, so we expect 
+    // `z` to still be `x + 1` and not `6`
+    return Verify(result, CreateSettings())
+      .IgnoreMembersWithType<Position>()
+      .IgnoreInstance<Signature.Signature>(x => true);
   }
   #endregion
 }
