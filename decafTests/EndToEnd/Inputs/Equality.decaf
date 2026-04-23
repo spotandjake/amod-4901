@@ -1,0 +1,73 @@
+// This file is responsible for testing equality precedence
+module Program {
+  // 2 + (3 * 4) == 14  => true
+  if (!(2 + 3 * 4 == 14)) Runtime.panic("Equality test 1 Failed");
+
+  // (2 * 3) + 4 != 9  => 10 != 9 => true
+  if (!(2 * 3 + 4 != 9)) Runtime.panic("Equality test 2 Failed");
+
+  // 10 - (2 * 3) == 4  => true
+  if (!(10 - 2 * 3 == 4)) Runtime.panic("Equality test 3 Failed");
+
+  // (10 * 2) - 3 != 18  => 17 != 18 => true
+  if (!(10 * 2 - 3 != 18)) Runtime.panic("Equality test 4 Failed");
+
+  // 20 / 2 + 5 == 15  => true
+  if (!(20 / 2 + 5 == 15)) Runtime.panic("Equality test 5 Failed");
+
+  // 20 + (10 / 2) != 24  => 25 != 24 => true
+  if (!(20 + 10 / 2 != 24)) Runtime.panic("Equality test 6 Failed");
+
+  // (20 / 2) * 5 == 50  => true
+  if (!(20 / 2 * 5 == 50)) Runtime.panic("Equality test 7 Failed");
+
+  // (20 * 2) / 5 != 9  => 8 != 9 => true
+  if (!(20 * 2 / 5 != 9)) Runtime.panic("Equality test 8 Failed");
+
+  // (20 - 10) - 5 == 5  => true
+  if (!(20 - 10 - 5 == 5)) Runtime.panic("Equality test 9 Failed");
+
+  // (20 / 5) / 2 != 3  => 2 != 3 => true
+  if (!(20 / 5 / 2 != 3)) Runtime.panic("Equality test 10 Failed");
+
+  // 2 + (3 * 4) - 5 == 9  => true
+  if (!(2 + 3 * 4 - 5 == 9)) Runtime.panic("Equality test 11 Failed");
+
+  // (2 * 3) + (4 * 5) != 25  => 26 != 25 => true
+  if (!(2 * 3 + 4 * 5 != 25)) Runtime.panic("Equality test 12 Failed");
+
+  // ((100 / 10) * 2) + 3 == 23  => true
+  if (!(100 / 10 * 2 + 3 == 23)) Runtime.panic("Equality test 13 Failed");
+
+  // 100 / (10 * 2 + 3) != 5  => 4 != 5 => true
+  if (!(100 / (10 * 2 + 3) != 5)) Runtime.panic("Equality test 14 Failed");
+
+  // --- precedence traps (these catch real bugs) ---
+
+  // Should parse as: (2 + 3 * 4) == 14  => true
+  // Wrong parse: 2 + (3 * (4 == 14))
+  if (!(2 + 3 * 4 == 14)) Runtime.panic("Equality test 15 Failed");
+
+  // Should parse as: (20 - 10 - 5) == 5  => true
+  if (!(20 - 10 - 5 == 5)) Runtime.panic("Equality test 16 Failed");
+
+  // Should parse as: (20 / 2 * 5) != 40  => 50 != 40 => true
+  if (!(20 / 2 * 5 != 40)) Runtime.panic("Equality test 17 Failed");
+
+  // Should parse as: (100 / 10 * 2 + 3) == 23  => true
+  if (!(100 / 10 * 2 + 3 == 23)) Runtime.panic("Equality test 18 Failed");
+
+  // --- relational + equality interaction (very common failure point) ---
+
+  // Should parse as: (2 + 3 * 4) < 20 == true  => true == true => true
+  if (!((2 + 3 * 4 < 20) == true)) Runtime.panic("Equality test 19 Failed");
+
+  // Should parse as: (10 - 2 * 3) >= 4 != false  => true != false => true
+  if (!((10 - 2 * 3 >= 4) != false)) Runtime.panic("Equality test 20 Failed");
+
+  // Should parse as: ((100 / 10) * 2 + 3 > 22) == true  => true
+  if (!((100 / 10 * 2 + 3 > 22) == true)) Runtime.panic("Equality test 21 Failed");
+
+  // Should parse as: ((20 / 2 * 5) == 50) != false  => true != false => true
+  if (!((20 / 2 * 5 == 50) != false)) Runtime.panic("Equality test 22 Failed");
+}

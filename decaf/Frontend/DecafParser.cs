@@ -1204,10 +1204,10 @@ public partial class DecafParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NEQ() { return GetToken(DecafParser.NEQ, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode AND() { return GetToken(DecafParser.AND, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode OR() { return GetToken(DecafParser.OR, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BAND() { return GetToken(DecafParser.BAND, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOR() { return GetToken(DecafParser.BOR, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BLSHIFT() { return GetToken(DecafParser.BLSHIFT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BRSHIFT() { return GetToken(DecafParser.BRSHIFT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BAND() { return GetToken(DecafParser.BAND, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOR() { return GetToken(DecafParser.BOR, 0); }
 		public BinopExprContext(ExprContext context) { CopyFrom(context); }
 	}
 
@@ -1437,7 +1437,7 @@ public partial class DecafParser : Parser {
 						State = 234;
 						((BinopExprContext)_localctx).op = TokenStream.LT(1);
 						_la = TokenStream.LA(1);
-						if ( !(_la==BAND || _la==BOR) ) {
+						if ( !(_la==BLSHIFT || _la==BRSHIFT) ) {
 							((BinopExprContext)_localctx).op = ErrorHandler.RecoverInline(this);
 						}
 						else {
@@ -1458,7 +1458,7 @@ public partial class DecafParser : Parser {
 						State = 237;
 						((BinopExprContext)_localctx).op = TokenStream.LT(1);
 						_la = TokenStream.LA(1);
-						if ( !(_la==BLSHIFT || _la==BRSHIFT) ) {
+						if ( !(_la==BAND || _la==BOR) ) {
 							((BinopExprContext)_localctx).op = ErrorHandler.RecoverInline(this);
 						}
 						else {
@@ -2758,7 +2758,7 @@ public partial class DecafParser : Parser {
 		4,38,356,8,38,11,38,12,38,357,1,39,1,39,3,39,362,8,39,1,40,1,40,1,40,0,
 		1,32,41,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,
 		46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,0,7,1,0,44,45,1,
-		0,42,43,1,0,46,49,1,0,50,51,1,0,54,55,1,0,56,57,1,0,19,20,381,0,83,1,0,
+		0,42,43,1,0,46,49,1,0,50,51,1,0,56,57,1,0,54,55,1,0,19,20,381,0,83,1,0,
 		0,0,2,87,1,0,0,0,4,106,1,0,0,0,6,124,1,0,0,0,8,126,1,0,0,0,10,137,1,0,
 		0,0,12,141,1,0,0,0,14,149,1,0,0,0,16,158,1,0,0,0,18,168,1,0,0,0,20,170,
 		1,0,0,0,22,179,1,0,0,0,24,185,1,0,0,0,26,191,1,0,0,0,28,194,1,0,0,0,30,

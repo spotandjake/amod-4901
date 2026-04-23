@@ -68,6 +68,16 @@ public class EndToEndTest : VerifyBase {
     Assert.IsEmpty(CompileAndRun("Primitives.decaf"));
     // Test Basic Arithmetic works (includes precedence and associativity)
     Assert.IsEmpty(CompileAndRun("Arithmetic.decaf"));
+    // Test Basic Relational operators work
+    Assert.IsEmpty(CompileAndRun("Relational.decaf"));
+    // Test Basic Equality operators work
+    Assert.IsEmpty(CompileAndRun("Equality.decaf"));
+    // Test Basic Conditional operators work
+    Assert.IsEmpty(CompileAndRun("Conditional.decaf"));
+    // Test Basic Bitwise operators work
+    Assert.IsEmpty(CompileAndRun("Bitwise.decaf"));
+    // Test Full Precedence and associativity works
+    Assert.IsEmpty(CompileAndRun("Precedence.decaf"));
     // Test Array negative size fails
     CompileAndRun("Array0.Fail.decaf", exitCode: 134);
     // Test Array negative index fails
@@ -76,5 +86,11 @@ public class EndToEndTest : VerifyBase {
     CompileAndRun("Array2.Fail.decaf", exitCode: 134);
     // Test Malloc
     CompileAndRun("Malloc.decaf");
+    // Test module execution order
+    Assert.AreEqual("123", CompileAndRun("MultiModuleEntrySelection.decaf"));
+    // Test recursion
+    Assert.AreEqual("55\n", CompileAndRun("Recursive.decaf"));
+    // Test function references
+    Assert.AreEqual("3\n", CompileAndRun("Apply.decaf"));
   }
 }

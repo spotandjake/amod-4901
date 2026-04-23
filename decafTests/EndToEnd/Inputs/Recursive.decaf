@@ -1,0 +1,10 @@
+// This file tests recursion we expect to see 55\n as an output
+module Program {
+  // A recursive implementation of fibonacci
+  let fib = (n: int): int => {
+    if (n <= 2) return 1;
+    else return fib(n - 1) + fib(n - 2);
+  };
+  Runtime.printInt(fib(10));
+}
+

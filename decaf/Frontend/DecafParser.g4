@@ -75,8 +75,8 @@ expr
   | lhs=expr op=AND rhs=expr                   # BinopExpr
   | lhs=expr op=OR rhs=expr                    # BinopExpr
   // Binary expressions - Bitwise
-  | lhs=expr op=(BAND | BOR) rhs=expr          # BinopExpr
   | lhs=expr op=(BLSHIFT | BRSHIFT) rhs=expr   # BinopExpr
+  | lhs=expr op=(BAND | BOR) rhs=expr          # BinopExpr
   // Other expressions
   | call_expr                          # CallExpr
   | array_init_expr                    # ArrayInitExpr

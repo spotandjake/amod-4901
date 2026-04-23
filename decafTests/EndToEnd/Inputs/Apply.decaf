@@ -1,0 +1,10 @@
+// This tests first class functions work
+module Program {
+  let apply = (f: (int, int) => int, a: int, b: int): int => {
+    return f(a, b);
+  };
+  let add = (a: int, b: int): int => {
+    return a + b;
+  };
+  Runtime.printInt(apply(add, 1, 2));
+}

@@ -2,13 +2,6 @@
 
 This document contains a list of all the major tasks that need to be done before we consider assignment 5 complete. These tasks have been broken down into a few categories based on their importance.
 
-### Critical
-These are things directly related to deliverables or causing codegen issues that we must fix.
-
-* Testing
-  * Test the compiler end to end by running the produced modules and capturing the output
-  * Test Precedence in the parser.
-
 ### Less Critical
 * Anf Optimizations
   * Constant folding and propagation
