@@ -1,3 +1,3 @@
 module Program {
-  printFunc("Hello World!\n");
+  Runtime.print("Hello World!\n");
 }
