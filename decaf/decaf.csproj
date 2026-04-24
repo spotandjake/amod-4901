@@ -12,6 +12,6 @@
   </ItemGroup>
   <!-- Include the runtime as a file -->
   <ItemGroup>
-    <EmbeddedResource Include="./Runtime.decaf" />
+    <EmbeddedResource Include="Runtime.decaf" />
   </ItemGroup>
 </Project>
