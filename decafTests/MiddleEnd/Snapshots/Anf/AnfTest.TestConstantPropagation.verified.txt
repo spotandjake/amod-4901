@@ -1,0 +1,76 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BindInstructionNode,
+            ID: {
+              Name: x,
+              IsGlobal: true,
+              ID: 1
+            },
+            SimpleExpression: {
+              Kind: ImmExpressionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  Value: 5,
+                  LiteralType: {}
+                },
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
+          },
+          {
+            Kind: BindInstructionNode,
+            ID: {
+              Name: y,
+              IsGlobal: true,
+              ID: 2
+            },
+            SimpleExpression: {
+              Kind: ImmExpressionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  Value: 6,
+                  LiteralType: {}
+                },
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
+          }
+        ]
+      },
+      Signature: {
+        Members: {
+          Decaf.Utils.Symbol: {},
+          Decaf.Utils.Symbol: {}
+        },
+        Resolutions: {
+          x: {
+            Name: x,
+            IsGlobal: true,
+            ID: 1
+          },
+          y: {
+            Name: y,
+            IsGlobal: true,
+            ID: 2
+          }
+        }
+      }
+    }
+  ]
+}

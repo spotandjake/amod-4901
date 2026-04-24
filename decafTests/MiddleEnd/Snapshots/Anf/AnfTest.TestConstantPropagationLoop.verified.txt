@@ -1,0 +1,181 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BindInstructionNode,
+            ID: {
+              Name: x,
+              IsGlobal: true,
+              ID: 1
+            },
+            SimpleExpression: {
+              Kind: ImmExpressionNode,
+              Imm: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  Value: 5,
+                  LiteralType: {}
+                },
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
+          },
+          {
+            Kind: LoopInstructionNode,
+            Body: {
+              Kind: BlockInstructionNode,
+              Instructions: [
+                {
+                  Kind: IfInstructionNode,
+                  Condition: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: BooleanLiteralNode,
+                      Value: true,
+                      LiteralType: {
+                        Type: Boolean
+                      }
+                    },
+                    Signature: {
+                      Type: Boolean
+                    }
+                  },
+                  TrueBranch: {
+                    Kind: BlockInstructionNode,
+                    Instructions: [
+                      {
+                        Kind: BindInstructionNode,
+                        ID: {
+                          Name: y,
+                          IsGlobal: false,
+                          ID: 2
+                        },
+                        SimpleExpression: {
+                          Kind: BinopExpressionNode,
+                          Lhs: {
+                            Kind: LocationImmediate,
+                            Location: {
+                              Kind: SymbolLocationNode,
+                              ID: {
+                                Name: x,
+                                IsGlobal: true,
+                                ID: 1
+                              },
+                              LocationType: {}
+                            },
+                            Signature: {}
+                          },
+                          Rhs: {
+                            Kind: ConstantImmediate,
+                            Value: {
+                              Kind: IntegerLiteralNode,
+                              Value: 1,
+                              LiteralType: {}
+                            },
+                            Signature: {}
+                          },
+                          ExpressionType: {}
+                        }
+                      },
+                      {
+                        Kind: AssignmentInstructionNode,
+                        Location: {
+                          Kind: SymbolLocationNode,
+                          ID: {
+                            Name: x,
+                            IsGlobal: true,
+                            ID: 1
+                          },
+                          LocationType: {}
+                        },
+                        Imm: {
+                          Kind: ConstantImmediate,
+                          Value: {
+                            Kind: IntegerLiteralNode,
+                            Value: 2,
+                            LiteralType: {}
+                          },
+                          Signature: {}
+                        }
+                      }
+                    ]
+                  },
+                  FalseBranch: {
+                    Kind: BlockInstructionNode,
+                    Instructions: [
+                      {
+                        Kind: BreakInstructionNode
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            Kind: BindInstructionNode,
+            ID: {
+              Name: z,
+              IsGlobal: true,
+              ID: 3
+            },
+            SimpleExpression: {
+              Kind: BinopExpressionNode,
+              Lhs: {
+                Kind: LocationImmediate,
+                Location: {
+                  Kind: SymbolLocationNode,
+                  ID: {
+                    Name: x,
+                    IsGlobal: true,
+                    ID: 1
+                  },
+                  LocationType: {}
+                },
+                Signature: {}
+              },
+              Rhs: {
+                Kind: ConstantImmediate,
+                Value: {
+                  Kind: IntegerLiteralNode,
+                  Value: 1,
+                  LiteralType: {}
+                },
+                Signature: {}
+              },
+              ExpressionType: {}
+            }
+          }
+        ]
+      },
+      Signature: {
+        Members: {
+          Decaf.Utils.Symbol: {},
+          Decaf.Utils.Symbol: {}
+        },
+        Resolutions: {
+          x: {
+            Name: x,
+            IsGlobal: true,
+            ID: 1
+          },
+          z: {
+            Name: z,
+            IsGlobal: true,
+            ID: 3
+          }
+        }
+      }
+    }
+  ]
+}
