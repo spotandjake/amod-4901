@@ -1,4 +1,3 @@
 module Program {
-  let printFunc: (string) => void = Runtime.print;
   printFunc("Hello World!\n");
 }
