@@ -1,0 +1,88 @@
+// This file is responsible for testing bitwise and shift precedence
+module Program {
+  // --- basic bitwise ops ---
+
+  // (6 & 3) => 2
+  if ((6 & 3) != 2) Runtime.panic("Bitwise test 1 Failed");
+
+  // (6 | 3) => 7
+  if ((6 | 3) != 7) Runtime.panic("Bitwise test 2 Failed");
+
+  // --- shifts ---
+
+  // (1 << 3) => 8
+  if ((1 << 3) != 8) Runtime.panic("Bitwise test 3 Failed");
+
+  // (8 >> 2) => 2
+  if ((8 >> 2) != 2) Runtime.panic("Bitwise test 4 Failed");
+
+  // --- arithmetic + shift interaction ---
+
+  // (1 + 2) << 3 => 3 + 3 = 24
+  if ((1 + 2 << 3) != 24) Runtime.panic("Bitwise test 5 Failed");
+
+  // (1 + 2) << 3 => 3 << 3 = 24
+  if (((1 + 2) << 3) != 24) Runtime.panic("Bitwise test 6 Failed");
+
+  // 8 >> (2 + 1) => 8 >> 3  = 1
+  if ((8 >> 2 + 1) != 1) Runtime.panic("Bitwise test 7 Failed");
+
+  // --- shift associativity ---
+
+  // (1 << 2) << 1 => 4 << 1 = 8
+  if ((1 << 2 << 1) != 8) Runtime.panic("Bitwise test 8 Failed");
+
+  // (16 >> 2) >> 1 => 4 >> 1 = 2
+  if ((16 >> 2 >> 1) != 2) Runtime.panic("Bitwise test 9 Failed");
+
+  // --- bitwise AND vs OR precedence ---
+
+  // 6 & 3 | 1 => (6 & 3) | 1 => 2 | 1 = 3
+  if ((6 & 3 | 1) != 3) Runtime.panic("Bitwise test 10 Failed");
+
+  // 6 | 3 & 1 => (6 | 3) & 1 => 7 | 1 = 7
+  if ((6 | 3 & 1) != 1) Runtime.panic("Bitwise test 11 Failed");
+
+  // --- arithmetic + bitwise ---
+
+  // (2 + 4) & 3 => 6 & 3 = 2
+  if ((2 + 4 & 3) != 2) Runtime.panic("Bitwise test 12 Failed");
+
+  // 2 + (4 & 3) => 2 + 0 = 2
+  if ((2 + (4 & 3)) != 2) Runtime.panic("Bitwise test 13 Failed");
+
+  // (2 + 4) | 1 => 6 | 1 = 7
+  if ((2 + 4 | 1) != 7) Runtime.panic("Bitwise test 14 Failed");
+
+  // --- combined precedence traps ---
+
+  // ((1 + 2) << 3) & 7
+  // => (3 << 3) & 7 => 24 & 7 = 0
+  if ((1 + 2 << 3 & 7) != 0) Runtime.panic("Bitwise test 15 Failed");
+
+  // (1 + 2) << (3 & 1)
+  // => 3 << 1 = 6
+  if (((1 + 2) << (3 & 1)) != 6) Runtime.panic("Bitwise test 16 Failed");
+
+  // (8 >> 2) & 3 => 2 & 3 = 2
+  if ((8 >> 2 & 3) != 2) Runtime.panic("Bitwise test 17 Failed");
+
+  // 8 >> (2 & 1) => 8 >> 0 = 8
+  if ((8 >> (2 & 1)) != 8) Runtime.panic("Bitwise test 18 Failed");
+
+  // --- full chain stress ---
+
+  // 1 + 2 << 3 & 7 | 1
+  // step-by-step:
+  // 2 << 3 = 16
+  // 1 + 16 = 17
+  // 17 & 7 = 1
+  // 1 | 1 = 1
+  if ((1 + 2 << 3 & 7 | 1) != 1) Runtime.panic("Bitwise test 19 Failed");
+
+  // (1 | 2) & (3 << 2)
+  // 1 | 2 = 3
+  // 3 << 2 = 12
+  // 3 & 12 = 0
+  if ((1 | 2 & 3 << 2) != 0) Runtime.panic("Bitwise test 20 Failed");
+}

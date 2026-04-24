@@ -1,0 +1,11 @@
+// The goal of this file is to test the entry order, it should be in the order of module definitions
+// We expect to see 123
+module First {
+  Runtime.print("1");
+}
+module Second {
+  Runtime.print("2");
+}
+module Program {
+  Runtime.print("3");
+}

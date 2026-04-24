@@ -1,0 +1,107 @@
+namespace Decaf.Backend {
+  using System;
+
+  using Decaf.WasmBuilder;
+  using AnfTree = Decaf.IR.AnfTree;
+  using Decaf.IR.PrimitiveDefinition;
+
+  public static partial class Codegen {
+    private static WasmExpression CompilePrimCallSimpleExpr(
+      CodegenContext ctx,
+      AnfTree.SimpleExpressionNode.PrimCallNode node
+    ) {
+      return node.Callee switch {
+        // General purpose primitives
+        PrimDefinition.GetPointer => CompileImmediate(ctx, node.Arguments[0]),
+        // --- @wasm namespace ---
+        // general purpose namespace
+        PrimDefinition.Unreachable => new WasmExpression.Unreachable(node.Position),
+        // memory sub namespace
+        PrimDefinition.WasmMemorySize => new WasmExpression.Memory.Size(node.Position),
+        PrimDefinition.WasmMemoryGrow => new WasmExpression.Memory.Grow(node.Position, CompileImmediate(ctx, node.Arguments[0])),
+        PrimDefinition.WasmMemoryFill =>
+          new WasmExpression.Memory.Fill(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            CompileImmediate(ctx, node.Arguments[2])
+          ),
+        PrimDefinition.WasmMemoryCopy =>
+          new WasmExpression.Memory.Copy(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            CompileImmediate(ctx, node.Arguments[2])
+          ),
+        // I32 sub namespace
+        PrimDefinition.WasmI32Store =>
+          new WasmExpression.I32.Store(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            0
+          ),
+        PrimDefinition.WasmI32Store8 =>
+          new WasmExpression.I32.Store8(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            0
+          ),
+        PrimDefinition.WasmI32Store16 =>
+          new WasmExpression.I32.Store16(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1]),
+            0
+          ),
+        PrimDefinition.WasmI32Load =>
+          new WasmExpression.I32.Load(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load8U =>
+          new WasmExpression.I32.Load8U(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load8S =>
+          new WasmExpression.I32.Load8S(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load16U =>
+          new WasmExpression.I32.Load16U(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32Load16S =>
+          new WasmExpression.I32.Load16S(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            0
+          ),
+        PrimDefinition.WasmI32RemS =>
+          new WasmExpression.I32.RemS(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1])
+          ),
+        PrimDefinition.WasmI32RemU =>
+          new WasmExpression.I32.RemU(
+            node.Position,
+            CompileImmediate(ctx, node.Arguments[0]),
+            CompileImmediate(ctx, node.Arguments[1])
+          ),
+        // --- @cast namespace ---
+        PrimDefinition.CastPtrToString => CompileImmediate(ctx, node.Arguments[0]),
+        // Unknown
+        _ => throw new Exception($"Unknown primitive: {node.Callee}"),
+      };
+    }
+  }
+}

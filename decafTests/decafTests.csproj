@@ -21,6 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="EndToEnd\Inputs\**\*.decaf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\decaf\decaf.csproj" />
   </ItemGroup>
 </Project>

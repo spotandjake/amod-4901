@@ -1,6 +1,4 @@
-class Program {
-  void Main() {
-    int x;
-    x = 1 + 2 + 3;
-  }
+module Program {
+  let printFunc: (string) => void = Runtime.print;
+  printFunc("Hello World!\n");
 }

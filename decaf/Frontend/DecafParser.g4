@@ -2,99 +2,130 @@ parser grammar DecafParser;
 
 // Disable cSharp CLS compliance warnings
 @parser::header {#pragma warning disable 3021}
-options {
-  tokenVocab=DecafLexer;
-}
+options { tokenVocab=DecafLexer; }
 
-program: class_decl+;
+// --- Code Units ---
 
-class_decl: CLASS name=ID (EXTENDS superClassName=ID)? LBRACE var_decl* method_decl* RBRACE;
+// A program is a list of modules.
+program: module_decl+;
 
-var_decl: typ=type binds=var_bind_list SEMI;
+// A module is a named collection of statements, it serves as a container for functions and variables.
+module_decl: MODULE name=id_location LBRACE imports=import_stmt* stmts=statement* RBRACE SEMI?;
+
+// An import statement is a special top level statement that represents a WebAssembly import.
+import_stmt: IMPORT WASM name=id_location COLON typ=type FROM source=STRINGLIT SEMI;
+
+// --- Statements ---
+statement
+  : block_stmt # BlockStmt
+  // Variables
+  | var_decl_stmt # VarDeclStmt
+  | assign_stmt # AssignStmt
+  // Control Flow
+  | if_stmt # IfStmt
+  | while_stmt # WhileStmt
+  // Other statements
+  | return_stmt # ReturnStmt
+  | continue_stmt # ContinueStmt
+  | break_stmt # BreakStmt
+  | expr_stmt # ExprStmt;
+  
+block_stmt: LBRACE statement* RBRACE SEMI?;
+
+// Variables
+// TODO: Add a mechanism for marking variables as public
+var_decl_stmt: LET binds=var_bind_list SEMI;
 var_bind_list: var_bind (COMMA var_bind)*;
-var_bind: name=ID (LBRACK INTLIT? RBRACK)?;
+var_bind: name=id_location (COLON typ=type)? (ASSIGN init=expr)?;
 
-method_decl: returnType=type name=ID LPAREN parameters=method_decl_param_list? RPAREN body=block;
-method_decl_param_list: method_decl_param (COMMA method_decl_param)*;
-method_decl_param: typ=type name=ID (LBRACK RBRACK)?;
-
-block: LBRACE var_decl* statement* RBRACE;
-
-// NOTE: Because this takes id maybe we should just restrict semantically later
-type: 
-  INT # IntType
-  | BOOLEAN # BooleanType
-  | VOID # VoidType
-  | ID # CustomType
+assign_stmt: location op=assign_stmt_op expr SEMI;
+assign_stmt_op
+  : ASSIGN # Assign
+  | ASSIGN_ADD # AssignAdd
+  | ASSIGN_SUB # AssignSub
+  | ASSIGN_MUL # AssignMul
+  | ASSIGN_DIV # AssignDiv
   ;
 
-statement:
-  assign_stmt # AssignStatement
-  | expression_stmt # ExpressionStatement
-  | if_stmt # IfStatement
-  | while_stmt # WhileStatement
-  | return_stmt # ReturnStatement
-  | continue_stmt # ContinueStatement
-  | break_stmt # BreakStatement
-  | return_stmt # ReturnStatement
-  | block # BlockStatement
-  ;
+// Control Flow
+if_stmt: IF LPAREN condition=expr RPAREN trueBranch=statement (ELSE falseBranch=statement)?;
+while_stmt: WHILE LPAREN condition=expr RPAREN body=statement;
 
-assign_stmt: location ASSIGN expr SEMI;
-expression_stmt: call_expr SEMI # CallExpressionStatement;
-if_stmt: IF LPAREN condition=expr RPAREN trueBranch=block (ELSE falseBranch=block)?;
-while_stmt: WHILE LPAREN condition=expr RPAREN body=block;
+// Other
+return_stmt: RETURN value=expr? SEMI;
 continue_stmt: CONTINUE SEMI;
 break_stmt: BREAK SEMI;
-return_stmt: RETURN value=expr? SEMI;
+expr_stmt: expr SEMI;
 
-call_expr: 
-  method_call # MethodCallExpr
-  | prim_callout # PrimCalloutExpr
-  ;
-method_call: methodPath=location LPAREN args=method_call_args? RPAREN;
-method_call_args: expr (COMMA expr)*;
-prim_callout: CALLOUT LPAREN primId=STRINGLIT args=prim_callout_args RPAREN;
-prim_callout_args: (COMMA (expr | STRINGLIT))*;
+// --- Expressions ---
+expr
+  // Parenthesized expressions
+  : LPAREN expr RPAREN                 # ParenExpr // NOTE: This is only for grouping, not in the IR
+  // Prefix Expr
+  | op=NOT operand=expr                # PrefixExpr
+  | op=BNOT operand=expr               # PrefixExpr
+  // Binary expressions - Arithmetic
+  | lhs=expr op=(MULT | DIV) rhs=expr          # BinopExpr
+  | lhs=expr op=(PLUS | MINUS) rhs=expr        # BinopExpr
+  // Binary expressions - Relational
+  | lhs=expr op=(LT | GT | LEQ | GEQ) rhs=expr # BinopExpr
+  // Binary expressions - Equality
+  | lhs=expr op=(EQ | NEQ) rhs=expr            # BinopExpr
+  // Binary expressions - Conditional
+  | lhs=expr op=AND rhs=expr                   # BinopExpr
+  | lhs=expr op=OR rhs=expr                    # BinopExpr
+  // Binary expressions - Bitwise
+  | lhs=expr op=(BLSHIFT | BRSHIFT) rhs=expr   # BinopExpr
+  | lhs=expr op=(BAND | BOR) rhs=expr          # BinopExpr
+  // Other expressions
+  | call_expr                          # CallExpr
+  | array_init_expr                    # ArrayInitExpr
+  | location_expr                      # LocationExpr
+  | literal_expr                       # LiteralExpr;
 
-expr:
-  simple_expr # SimpleExpr
-  | NEW ID LPAREN RPAREN # NewObjectExpr
-  | NEW type LBRACK expr RBRACK # NewArrayExpr
-  | literal # LiteralExpr
-  | op=NOT operand=expr # NotExpr
-  | lhs=expr op=bin_op rhs=expr # BinaryOpExpr
-  | LPAREN expr RPAREN # ParenExpr
-  ;
+// NOTE: We treat `@` as a primitive callout, this way we can support callouts without needing special syntax
+call_expr: callee=location LPAREN args=call_expr_args? RPAREN;
+call_expr_args: expr (COMMA expr)*;
 
-simple_expr:
-  location # LocationExpr
-  | THIS # ThisExpr
-  | call_expr # CallExpr
-  ;
+array_init_expr: NEW typ=type LBRACK size=expr RBRACK;
 
-// TODO: make root an expr
-location: root=ID (path=location_path | indexExpr=location_array_index)?;
-location_path: DOT ID;
-location_array_index: LBRACK expr RBRACK;
+location_expr: location;
 
-bin_op:
-  arith_op | rel_op | eq_op | cond_op;
+literal_expr: literal;
 
-arith_op: PLUS | MINUS | MULT | DIV;
-
-rel_op: LT | GT | LEQ | GEQ;
-
-eq_op: EQ | NEQ;
-
-cond_op: AND | OR;
-
-// Literals
-literal:
-  INTLIT # IntLit
-  | CHARLIT # CharLit
+// --- Literals ---
+literal
+  : int_literal # IntLit
   | bool_literal # BoolLit
-  | NULL # NullLit
-  ;
-
+  | char_literal # CharLit
+  | string_literal # StringLit
+  | func_literal # FuncLit;
+int_literal: INTLIT;
 bool_literal: TRUE | FALSE;
+char_literal: CHARLIT;
+string_literal: STRINGLIT;
+
+func_literal: func_literal_params COLON returnType=type ARROW block_stmt;
+func_literal_params: LPAREN func_param_list? RPAREN;
+func_param_list: func_param (COMMA func_param)*;
+func_param: name=id_location COLON typ=type;
+
+// --- Types ---
+type: simple_type (LBRACK RBRACK)?;
+simple_type
+  : INT # IntType
+  | BOOLEAN # BooleanType
+  | CHAR # CharType
+  | STRING # StringType
+  | VOID # VoidType
+  | func_type # FuncType;
+func_type: LPAREN paramTypes=type_list* RPAREN ARROW returnType=type;
+type_list: type (COMMA type)*;
+
+// --- Locations ---
+location: array_location;
+array_location: member_location (LBRACK index_expr=expr RBRACK)?;
+member_location: root=id_location member=member_list?;
+member_list: (DOT identifier)+;
+id_location: identifier | PRIMID;
+identifier: ID;

@@ -1,0 +1,3 @@
+# Planning
+
+This directory contains documents created during the planning phase of the project. These documents may contain useful overviews of various design decisions, as well as the rationale behind them. They may also contain information about the project's goals, requirements, and constraints. However, they may not be up-to-date with the current state of the project, as implementation details may have diverged from the original plans. It's important that anyone using these documents understands their historical context and cross-references them with the current state of the project to ensure they are still relevant and accurate.

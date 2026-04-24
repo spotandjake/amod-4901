@@ -1,0 +1,27 @@
+module Program {
+  // This example aims to demonstrate the first class nature of functions by implementing Array.forEach
+  let arrayForEach = (f: (int) => void, arr: int[]): void => {
+    let len: int = @wasm.i32.load(@getPointer(arr));
+    let i: int = 0;
+    while (i < len) {
+      // Calling a function passed in as a parameter
+      f(arr[i]);
+      i += 1;
+    };
+  };
+  // Create our demonstration data
+  let arrLen: int = 10;
+  let arr: int[] = new int[arrLen];
+  let i: int = 0;
+  while (i < arrLen) {
+    arr[i] = i;
+    i += 1;
+  };
+  // Apply our function
+  let f = (value: int): void => {
+    Runtime.printInt(value);
+  };
+  arrayForEach(f, arr);
+  // Cleanup
+  Runtime.free(@getPointer(arr));
+}

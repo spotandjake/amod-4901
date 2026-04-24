@@ -1,0 +1,320 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Main
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Signature: {},
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: x
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode
+                  }
+                }
+              },
+              {
+                Kind: BindNode,
+                Signature: {},
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: y
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: IntegerLiteralNode
+                  }
+                }
+              },
+              {
+                Kind: BindNode,
+                Signature: {
+                  Typ: {}
+                },
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: z
+                },
+                InitExpr: {
+                  Kind: ArrayInitExpressionNode,
+                  Signature: {},
+                  SizeExpr: {
+                    Kind: LiteralExpressionNode,
+                    Literal: {
+                      Kind: IntegerLiteralNode,
+                      Value: 5
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: foo
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: foo
+                    },
+                    ReturnType: {
+                      Type: Void
+                    },
+                    Parameters: [
+                      {
+                        Kind: ParameterNode,
+                        Signature: {},
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: a
+                        }
+                      },
+                      {
+                        Kind: ParameterNode,
+                        Signature: {
+                          Type: Boolean
+                        },
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: b
+                        }
+                      },
+                      {
+                        Kind: ParameterNode,
+                        Signature: {
+                          Typ: {}
+                        },
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: c
+                        }
+                      }
+                    ],
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: IfStatementNode,
+                          Condition: {
+                            Kind: BinopExpressionNode,
+                            Lhs: {
+                              Kind: BinopExpressionNode,
+                              Lhs: {
+                                Kind: LocationExpressionNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: a
+                                }
+                              },
+                              Operator: LessThan,
+                              Rhs: {
+                                Kind: LiteralExpressionNode,
+                                Literal: {
+                                  Kind: IntegerLiteralNode,
+                                  Value: 10
+                                }
+                              }
+                            },
+                            Operator: And,
+                            Rhs: {
+                              Kind: LocationExpressionNode,
+                              Location: {
+                                Kind: IdentifierLocationNode,
+                                IsPrimitive: false,
+                                Name: b
+                              }
+                            }
+                          },
+                          TrueBranch: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: AssignmentStatementNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: x
+                                },
+                                Expression: {
+                                  Kind: BinopExpressionNode,
+                                  Lhs: {
+                                    Kind: LocationExpressionNode,
+                                    Location: {
+                                      Kind: IdentifierLocationNode,
+                                      IsPrimitive: false,
+                                      Name: x
+                                    }
+                                  },
+                                  Rhs: {
+                                    Kind: LiteralExpressionNode,
+                                    Literal: {
+                                      Kind: IntegerLiteralNode,
+                                      Value: 1
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          FalseBranch: {
+                            Kind: BlockStatementNode,
+                            Statements: [
+                              {
+                                Kind: AssignmentStatementNode,
+                                Location: {
+                                  Kind: IdentifierLocationNode,
+                                  IsPrimitive: false,
+                                  Name: x
+                                },
+                                Expression: {
+                                  Kind: BinopExpressionNode,
+                                  Lhs: {
+                                    Kind: LocationExpressionNode,
+                                    Location: {
+                                      Kind: IdentifierLocationNode,
+                                      IsPrimitive: false,
+                                      Name: x
+                                    }
+                                  },
+                                  Operator: Minus,
+                                  Rhs: {
+                                    Kind: LiteralExpressionNode,
+                                    Literal: {
+                                      Kind: IntegerLiteralNode,
+                                      Value: 1
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: bar
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: bar
+                    },
+                    ReturnType: {},
+                    Body: {
+                      Kind: BlockStatementNode,
+                      Statements: [
+                        {
+                          Kind: ReturnStatementNode,
+                          Value: {
+                            Kind: LocationExpressionNode,
+                            Location: {
+                              Kind: IdentifierLocationNode,
+                              IsPrimitive: false,
+                              Name: x
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Base
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: calloutMethod
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: calloutMethod
+                    },
+                    ReturnType: {
+                      Type: Void
+                    },
+                    Body: {
+                      Kind: BlockStatementNode
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

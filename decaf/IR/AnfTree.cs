@@ -1,6 +1,3 @@
-using Decaf.Utils;
-using System.Text.Json.Serialization;
-
 /// <summary>
 /// This file contains the definition of the ANF tree, which is the intermediate representation used in
 /// the ANF pass. The ANF tree is a simplified version of the typed tree, where all expressions are flattened.
@@ -23,46 +20,56 @@ using System.Text.Json.Serialization;
 /// More information on ANF can be found here: https://en.wikipedia.org/wiki/A-normal_form
 /// </summary>
 namespace Decaf.IR.AnfTree {
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.IR.PrimitiveDefinition;
+  using Decaf.Utils;
+
   /// <summary>
   /// An enum representing the different kinds of node in the ANF tree.
   /// 
   /// The main purpose of this is so we can see the `NodeKind` in both JSON and snapshots.
   /// </summary>
   public enum NodeKind {
-    // General
+    // --- Code Units ---
     ProgramNode,
-    BlockNode,
-    TypeNode,
-    ParameterNode,
-    // Declarations
-    ClassDeclNode,
-    MethodDeclNode,
-    PropertyDeclNode,
-    // Instructions
-    BindNode,
-    AssignmentInstruction,
-    ExprInstruction,
-    IfInstruction,
-    LoopInstruction,
-    ContinueInstruction,
-    BreakInstruction,
-    ReturnInstruction,
-    // Expressions
-    CallExpression,
-    BinopExpression,
-    PrefixExpression,
-    NewArrayExpression,
-    // Immediates
+    ModuleNode,
+    ImportNode,
+    FunctionNode,
+    // --- Instructions ---
+    BlockInstructionNode,
+    BindInstructionNode,
+    AssignmentInstructionNode,
+    IfInstructionNode,
+    LoopInstructionNode,
+    ReturnInstructionNode,
+    ContinueInstructionNode,
+    BreakInstructionNode,
+    SimpleExprInstructionNode,
+    // --- Expressions ---
+    PrefixExpressionNode,
+    BinopExpressionNode,
+    CallExpressionNode,
+    PrimCallExpressionNode,
+    ArrayInitExpressionNode,
+    ImmExpressionNode,
+    // --- Immediates ---
     ConstantImmediate,
-    LocationAccessImmediate,
-    // Locations
-    IdentifierLocation,
-    MemberLocation,
-    ArrayLocation
+    LocationImmediate,
+    // --- Literals ---
+    IntegerLiteralNode,
+    BooleanLiteralNode,
+    CharacterLiteralNode,
+    StringLiteralNode,
+    FunctionReferenceLiteralNode,
+    // --- Locations ---
+    ArrayLocationNode,
+    SymbolLocationNode,
+    // --- Other ---
+    ParameterNode
   }
-  /// <summary>
-  /// A base anf node that all other anf nodes inherit from.
-  /// </summary>
+  /// <summary>A base anf node that all other anf nodes inherit from.</summary>
   public abstract record Node {
     /// <summary>The kind of the node.</summary>
     public abstract NodeKind Kind { get; }
@@ -74,168 +81,165 @@ namespace Decaf.IR.AnfTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<TypedTree.Signature> Scope) : Node(Position) {
+  // --- Code Units ---
+  #region CodeUnits
+  /// <summary>The root node of a typed tree, it represents an entire program.</summary>
+  public sealed record ProgramNode(Position Position, ModuleNode[] Modules) : Node(Position) {
     public override NodeKind Kind => NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
-    public Scope<TypedTree.Signature> Scope { get; } = Scope;
+    public ModuleNode[] Modules { get; } = Modules;
   };
-  public record BlockNode(
+  /// <summary>A module declaration.</summary>
+  public sealed record ModuleNode(
     Position Position,
-    InstructionNode[] Instructions,
-    Scope<TypedTree.Signature> Scope
+    Symbol ID,
+    ImportNode[] Imports,
+    FunctionNode[] Functions,
+    InstructionNode.BlockNode Body,
+    Signature.Signature.ModuleSig Signature
   ) : Node(Position) {
-    public override NodeKind Kind => NodeKind.BlockNode;
-    // TODO: Was dropping the declaration nodes the right decision here???
-    public InstructionNode[] Instructions { get; } = Instructions;
-    public Scope<TypedTree.Signature> Scope { get; } = Scope;
+    public override NodeKind Kind => NodeKind.ModuleNode;
+    public Symbol ID { get; } = ID;
+    public ImportNode[] Imports { get; } = Imports;
+    public FunctionNode[] Functions { get; } = Functions;
+    public InstructionNode.BlockNode Body { get; } = Body;
+    public Signature.Signature.ModuleSig Signature { get; } = Signature;
   }
-  /// <summary>
-  /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
-  [JsonDerivedType(typeof(PropertyNode), "PropertyNode")]
-  [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
-  public abstract record DeclarationNode : Node {
-    protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
-    public record ClassNode(
+  /// <summary>An import declaration.</summary>
+  public sealed record ImportNode(
+    Position Position, Symbol ID, Signature.Signature Signature, string ExternalName, string ExternalModule
+  ) : Node(Position) {
+    public override NodeKind Kind => NodeKind.ImportNode;
+    public Symbol ID { get; } = ID;
+    public Signature.Signature Signature { get; } = Signature;
+    public string ExternalName { get; } = ExternalName;
+    public string ExternalModule { get; } = ExternalModule;
+  }
+  /// <summary>A function declaration.</summary>
+  public sealed record FunctionNode : Node {
+    // NOTE: Functions are hoisted to the top level of the module this is because they are static
+    public sealed record ParameterNode(
       Position Position,
-      string Name,
-      PropertyNode[] Fields,
-      MethodNode[] Methods,
-      Scope<TypedTree.Signature> Scope,
-      TypedTree.Signature.ClassSignature Signature
-    ) : DeclarationNode(Position) {
-      public override NodeKind Kind => NodeKind.ClassDeclNode;
-      public string Name { get; } = Name;
-      public PropertyNode[] Fields { get; } = Fields;
-      public MethodNode[] Methods { get; } = Methods;
-      public Scope<TypedTree.Signature> Scope { get; } = Scope;
-      public TypedTree.Signature.ClassSignature Signature { get; } = Signature;
+      Symbol ID,
+      Signature.Signature Signature
+    ) : Node(Position) {
+      public override NodeKind Kind => NodeKind.ParameterNode;
+      public Symbol ID { get; } = ID;
+      public Signature.Signature Signature { get; } = Signature;
     }
-    /// <summary>A property declaration.</summary>
-    public record PropertyNode(Position Position, string Name, TypedTree.Signature Signature) : DeclarationNode(Position) {
-      public override NodeKind Kind => NodeKind.PropertyDeclNode;
-      public string Name { get; } = Name;
-      public TypedTree.Signature Signature { get; } = Signature;
+    public override NodeKind Kind => NodeKind.FunctionNode;
+    public Symbol ID { get; }
+    public ParameterNode[] Parameters { get; }
+    public InstructionNode.BlockNode Body { get; }
+    public Signature.Signature.FunctionSig Signature { get; }
+    public FunctionNode(
+      Position Position,
+      Symbol ID,
+      ParameterNode[] Parameters,
+      InstructionNode.BlockNode Body,
+      Signature.Signature.FunctionSig Signature
+    ) : base(Position) {
+      this.ID = ID;
+      this.Parameters = Parameters;
+      this.Body = Body;
+      this.Signature = Signature;
     }
-    /// <summary>A method declaration.</summary>
-    public record MethodNode : DeclarationNode {
-      public record ParameterNode : DeclarationNode {
-        public override NodeKind Kind => NodeKind.ParameterNode;
-        public string Name { get; }
-        public TypedTree.Signature Signature { get; }
-        public ParameterNode(
-          Position position,
-          string name,
-          TypedTree.Signature signature
-        ) : base(position) {
-          this.Name = name;
-          this.Signature = signature;
-        }
-      }
-      public override NodeKind Kind => NodeKind.MethodDeclNode;
-      public string Name { get; }
-      public ParameterNode[] Parameters { get; }
-      public BlockNode Body { get; }
-      public Scope<TypedTree.Signature> Scope { get; }
-      public TypedTree.Signature.MethodSignature Signature { get; }
-      public MethodNode(
-        Position position,
-        string name,
-        ParameterNode[] parameters,
-        BlockNode body,
-        Scope<TypedTree.Signature> scope,
-        TypedTree.Signature.MethodSignature signature
-      ) : base(position) {
-        this.Name = name;
-        this.Parameters = parameters;
-        this.Body = body;
-        this.Scope = scope;
-        this.Signature = signature;
-      }
-    }
-  };
-  /// <summary>
-  /// The supertype for all instruction nodes, we use a supertype to ensure strict type checking.
-  /// 
-  /// In ANF an instruction is pretty much just a regular statement, the main difference is that 
-  /// instead of consuming expressions they consume immediates. With the exception of a bind instruction which is used to bind
-  /// the result of a simple expression to a variable.
-  /// </summary>
-  [JsonDerivedType(typeof(BindNode), "BindInstruction")]
-  [JsonDerivedType(typeof(AssignmentNode), "AssignmentInstruction")]
-  [JsonDerivedType(typeof(ExprNode), "ExpressionInstruction")]
-  [JsonDerivedType(typeof(IfNode), "IfInstruction")]
-  [JsonDerivedType(typeof(LoopNode), "LoopInstruction")]
-  [JsonDerivedType(typeof(ContinueNode), "ContinueInstruction")]
-  [JsonDerivedType(typeof(BreakNode), "BreakInstruction")]
-  [JsonDerivedType(typeof(ReturnNode), "ReturnInstruction")]
+  }
+  #endregion
+  // --- Instructions ---
+  #region Instructions
+  /// <summary>The supertype for all instructions.</summary>
+  [JsonDerivedType(typeof(InstructionNode.BlockNode), "BlockInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.BindNode), "BindInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.AssignmentNode), "AssignmentInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.IfNode), "IfInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.LoopNode), "LoopInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.ReturnNode), "ReturnInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.ContinueNode), "ContinueInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.BreakNode), "BreakInstructionNode")]
+  [JsonDerivedType(typeof(InstructionNode.SimpleExprInstructionNode), "SimpleExprInstructionNode")]
   public abstract record InstructionNode : Node {
     protected InstructionNode(Position position) : base(position) { }
-    /// <summary>A bind instruction, this is used to represent `int a = 1`;</summary>
-    /// <param name="Position"></param>
-    /// <param name="Location"></param>
-    /// <param name="Expression"></param>
-    public record BindNode(Position Position, LocationNode Location, ExpressionNode Expression) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.BindNode;
-      public LocationNode Location { get; } = Location;
-      public ExpressionNode Expression { get; } = Expression;
+
+    /// <summary>A block instruction.</summary>
+    public sealed record BlockNode(
+      Position Position,
+      InstructionNode[] Instructions
+    ) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.BlockInstructionNode;
+      public InstructionNode[] Instructions { get; } = Instructions;
+    }
+
+    // Variables
+
+    /// <summary>A bind instruction.</summary>
+    public sealed record BindNode(Position Position, Symbol ID, SimpleExpressionNode SimpleExpression) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.BindInstructionNode;
+      public Symbol ID { get; } = ID;
+      public SimpleExpressionNode SimpleExpression { get; } = SimpleExpression;
     };
+
     /// <summary>An assignment instruction.</summary>
-    public record AssignmentNode(
-      Position Position,
-      LocationNode Location,
-      ImmediateNode Expression
+    public sealed record AssignmentNode(
+      Position Position, LocationNode Location, ImmediateNode Imm
     ) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.AssignmentInstruction;
+      public override NodeKind Kind => NodeKind.AssignmentInstructionNode;
       public LocationNode Location { get; } = Location;
-      public ImmediateNode Expression { get; } = Expression;
+      public ImmediateNode Imm { get; } = Imm;
     };
-    /// <summary>An expression instruction.</summary>
-    public record ExprNode(Position Position, ImmediateNode Content) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.ExprInstruction;
-      public ImmediateNode Content { get; } = Content;
-    };
+
+    // Control Flow
+
     /// <summary>An if instruction.</summary>
-    public record IfNode(
-      Position Position,
-      ImmediateNode Condition,
-      BlockNode TrueBranch,
+    public sealed record IfNode(
 #nullable enable
-      BlockNode? FalseBranch
-#nullable disable
+      Position Position, ImmediateNode Condition, InstructionNode TrueBranch, InstructionNode? FalseBranch
+#nullable restore
     ) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.IfInstruction;
+      public override NodeKind Kind => NodeKind.IfInstructionNode;
       public ImmediateNode Condition { get; } = Condition;
-      public BlockNode TrueBranch { get; } = TrueBranch;
+      public InstructionNode TrueBranch { get; } = TrueBranch;
 #nullable enable
-      public BlockNode? FalseBranch { get; } = FalseBranch;
-#nullable disable
+      public InstructionNode? FalseBranch { get; } = FalseBranch;
+#nullable restore
     };
-    /// <summary>A loop instruction.</summary>
-    public record LoopNode(Position Position, BlockNode Body) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.LoopInstruction;
-      public BlockNode Body { get; } = Body;
+    /// <summary>
+    /// A loop instruction.
+    /// 
+    /// NOTE: We lower to a generic loop instead of a while loop because it is easier to generate code
+    ///       and means any optimization applied to loops can be applied to any loop.
+    /// </summary>
+    public sealed record LoopNode(Position Position, InstructionNode Body) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.LoopInstructionNode;
+      public InstructionNode Body { get; } = Body;
     };
-    /// <summary>A continue instruction.</summary>
-    public record ContinueNode(Position Position) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.ContinueInstruction;
-    };
-    /// <summary>A break instruction.</summary>
-    public record BreakNode(Position Position) : InstructionNode(Position) {
-      public override NodeKind Kind => NodeKind.BreakInstruction;
-    };
+
+    // Other
+
     /// <summary>A return instruction.</summary>
 #nullable enable
-    public record ReturnNode(Position Position, ImmediateNode? Value) : InstructionNode(Position) {
-#nullable disable
-      public override NodeKind Kind => NodeKind.ReturnInstruction;
-#nullable enable
+    public sealed record ReturnNode(Position Position, ImmediateNode? Value) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.ReturnInstructionNode;
       public ImmediateNode? Value { get; } = Value;
-#nullable disable
     };
-  };
+#nullable restore
+    /// <summary>A continue instruction.</summary>
+    public sealed record ContinueNode(Position Position) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.ContinueInstructionNode;
+    };
+    /// <summary>A break instruction.</summary>
+    public sealed record BreakNode(Position Position) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.BreakInstructionNode;
+    };
+    /// <summary>A simple expression instruction.</summary>
+    public sealed record SimpleExprInstructionNode(Position Position, SimpleExpressionNode Expr) : InstructionNode(Position) {
+      public override NodeKind Kind => NodeKind.SimpleExprInstructionNode;
+      public SimpleExpressionNode Expr { get; } = Expr;
+    };
+  }
+  #endregion
+
+  // --- Simple Expressions ---
+  #region SimpleExpressionNode
   /// <summary>
   /// The supertype for all simple expression nodes, we use a supertype to ensure strict type checking.
   /// 
@@ -246,128 +250,203 @@ namespace Decaf.IR.AnfTree {
   /// a constant / literal, so we would represent `a + b + c` as `t1 = a + b; t1 + c` where `t1` is a temporary generated
   /// variable by the anf pass.
   /// </summary>
-  [JsonDerivedType(typeof(CallNode), "CallSimpleExpression")]
-  [JsonDerivedType(typeof(BinopNode), "BinopSimpleExpression")]
-  [JsonDerivedType(typeof(PrefixNode), "PrefixSimpleExpression")]
-  [JsonDerivedType(typeof(NewArrayNode), "NewArraySimpleExpression")]
-  public abstract record ExpressionNode : Node {
-    public TypedTree.Signature ExpressionType { get; }
-    protected ExpressionNode(Position position, TypedTree.Signature expressionType) : base(position) {
+  [JsonDerivedType(typeof(SimpleExpressionNode.PrefixNode), "PrefixSimpleExpression")]
+  [JsonDerivedType(typeof(SimpleExpressionNode.BinopNode), "BinopSimpleExpression")]
+  [JsonDerivedType(typeof(SimpleExpressionNode.CallNode), "CallSimpleExpression")]
+  [JsonDerivedType(typeof(SimpleExpressionNode.PrimCallNode), "PrimCallExpression")]
+  [JsonDerivedType(typeof(SimpleExpressionNode.ArrayInitNode), "ArrayInitSimpleExpression")]
+  [JsonDerivedType(typeof(SimpleExpressionNode.ImmediateExpressionNode), "ImmediateSimpleExpression")]
+  public abstract record SimpleExpressionNode : Node {
+    public Signature.Signature ExpressionType { get; }
+    protected SimpleExpressionNode(Position position, Signature.Signature expressionType) : base(position) {
       this.ExpressionType = expressionType;
     }
-    /// <summary>A call expression.</summary>
-    public record CallNode(
-      Position Position,
-      bool IsPrimitive,
-      LocationNode Path,
-      ImmediateNode[] Arguments,
-      TypedTree.Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.CallExpression;
-      public bool IsPrimitive { get; } = IsPrimitive;
-      public LocationNode Path { get; } = Path;
-      public ImmediateNode[] Arguments { get; } = Arguments;
-    };
-    /// <summary>A binop expression.</summary>
-    public record BinopNode(
-      Position Position,
-      ImmediateNode Lhs,
-      string Operator,
-      ImmediateNode Rhs,
-      TypedTree.Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.BinopExpression;
-      public ImmediateNode Lhs { get; } = Lhs;
-      public string Operator { get; } = Operator;
-      public ImmediateNode Rhs { get; } = Rhs;
-    };
+
     /// <summary>A prefix expression.</summary>
-    public record PrefixNode(
+    public sealed record PrefixNode(
       Position Position,
-      string Operator,
+      PrefixOperator Operator,
       ImmediateNode Operand,
-      TypedTree.Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.PrefixExpression;
-      public string Operator { get; } = Operator;
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.PrefixExpressionNode;
+      public PrefixOperator Operator { get; } = Operator;
       public ImmediateNode Operand { get; } = Operand;
     };
-    /// <summary>A new array expression.</summary>
-    public record NewArrayNode(
+    /// <summary>A binary operation expression.</summary>
+    public sealed record BinopNode(
+      Position Position,
+      ImmediateNode Lhs,
+      BinaryOperator Operator,
+      ImmediateNode Rhs,
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.BinopExpressionNode;
+      public ImmediateNode Lhs { get; } = Lhs;
+      public BinaryOperator Operator { get; } = Operator;
+      public ImmediateNode Rhs { get; } = Rhs;
+    };
+    /// <summary>A call expression.</summary>
+    public sealed record CallNode(
+      Position Position,
+      LocationNode Callee,
+      ImmediateNode[] Arguments,
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.CallExpressionNode;
+      public LocationNode Callee { get; } = Callee;
+      public ImmediateNode[] Arguments { get; } = Arguments;
+    }
+    /// <summary>A primitive call expression.</summary>
+    public sealed record PrimCallNode(
+      Position Position,
+      PrimDefinition Callee,
+      ImmediateNode[] Arguments,
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.PrimCallExpressionNode;
+      public PrimDefinition Callee { get; } = Callee;
+      public ImmediateNode[] Arguments { get; } = Arguments;
+    }
+    /// <summary>An array initialization expression.</summary>
+    public sealed record ArrayInitNode(
       Position Position,
       ImmediateNode SizeImm,
-      TypedTree.Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.NewArrayExpression;
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.ArrayInitExpressionNode;
       public ImmediateNode SizeImm { get; } = SizeImm;
-    };
+    }
+    /// <summary>
+    /// An immediate expression, this is used to represent expressions that are already 
+    /// in the form of an immediate, for example a variable reference or a constant.
+    /// 
+    /// NOTE: Usually these are generated during the anf transformation with the goal to optimize 
+    ///       them away during optimizations. While there is no problem with having an immediate expression in the tree
+    ///       it does indicate that there is some indirection as all expressions should take an immediate.
+    /// </summary>
+    public sealed record ImmediateExpressionNode(
+      Position Position,
+      ImmediateNode Imm,
+      Signature.Signature ExpressionType
+    ) : SimpleExpressionNode(Position, ExpressionType) {
+      public override NodeKind Kind => NodeKind.ImmExpressionNode;
+      public ImmediateNode Imm { get; } = Imm;
+    }
   }
-  /// <summary>
-  /// The supertype for all immediate nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
+  #endregion
+  // --- Immediates ---
+  #region Immediates
+  /// <summary>The supertype for all immediate nodes.</summary>
+  [JsonDerivedType(typeof(ImmediateNode.ConstantNode), "ConstantImmediate")]
+  [JsonDerivedType(typeof(ImmediateNode.LocationImmNode), "LocationImmediate")]
   public abstract record ImmediateNode : Node {
-    protected ImmediateNode(Position position) : base(position) { }
+    public Signature.Signature Signature { get; }
+    protected ImmediateNode(Position position, Signature.Signature signature) : base(position) {
+      this.Signature = signature;
+    }
     /// <summary>
     /// A constant node, this is used to represent literals and other constant values in the IR.
     /// </summary>
-    public record ConstantNode(Position Position, TypedTree.LiteralNode Value) : ImmediateNode(Position) {
+    public record ConstantNode(
+      Position Position, LiteralNode Value, Signature.Signature Signature
+    ) : ImmediateNode(Position, Signature) {
       public override NodeKind Kind => NodeKind.ConstantImmediate;
-      public TypedTree.LiteralNode Value { get; } = Value;
+      public LiteralNode Value { get; } = Value;
     };
     /// <summary>
     /// A variable access node, this is used to represent variable accesses.
     /// </summary>
-    public record LocationAccessNode(Position Position, LocationNode Location) : ImmediateNode(Position) {
-      public override NodeKind Kind => NodeKind.LocationAccessImmediate;
+    public record LocationImmNode(
+      Position Position, LocationNode Location, Signature.Signature Signature
+    ) : ImmediateNode(Position, Signature) {
+      public override NodeKind Kind => NodeKind.LocationImmediate;
       public LocationNode Location { get; } = Location;
     };
   };
-  /// <summary>
-  /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
-  /// A location node represents any access to a variable, field or array.
-  /// </summary>
-  [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
-  [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
-  [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
+  #endregion
+  // --- Literals ---
+  #region Literals
+  // <summary>The supertype for all literal nodes.</summary>
+  [JsonDerivedType(typeof(LiteralNode.IntegerNode), "IntegerLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.BooleanNode), "BooleanLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.CharacterNode), "CharacterLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.StringNode), "StringLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.FunctionReferenceNode), "FunctionReferenceLiteral")]
+
+  public abstract record LiteralNode : Node {
+    public Signature.Signature LiteralType { get; }
+    protected LiteralNode(Position position, Signature.Signature literalType) : base(position) {
+      this.LiteralType = literalType;
+    }
+
+    /// <summary>An integer literal.</summary>
+    public sealed record IntegerNode(
+      Position Position, int Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override NodeKind Kind => NodeKind.IntegerLiteralNode;
+      public int Value { get; } = Value;
+    };
+    /// <summary>A boolean literal.</summary>
+    public sealed record BooleanNode(
+      Position Position, bool Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override NodeKind Kind => NodeKind.BooleanLiteralNode;
+      public bool Value { get; } = Value;
+    };
+    /// <summary>A character literal.</summary>
+    public sealed record CharacterNode(
+      Position Position, char Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override NodeKind Kind => NodeKind.CharacterLiteralNode;
+      public char Value { get; } = Value;
+    };
+    /// <summary>A string literal.</summary>
+    public sealed record StringNode(
+      Position Position, string Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override NodeKind Kind => NodeKind.StringLiteralNode;
+      public string Value { get; } = Value;
+    };
+    /// <summary>A function reference literal.</summary>
+    public sealed record FunctionReferenceNode(
+      Position Position, Symbol ID, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override NodeKind Kind => NodeKind.FunctionReferenceLiteralNode;
+      public Symbol ID { get; } = ID;
+    };
+  }
+  #endregion
+  // --- Locations ---
+  #region Locations
+  /// <summary>The supertype for all location nodes.</summary>
+  [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.SymbolLocation), "SymbolLocationNode")]
   public abstract record LocationNode : Node {
-    public TypedTree.Signature LocationType { get; }
-    protected LocationNode(Position position, TypedTree.Signature locationType) : base(position) { this.LocationType = locationType; }
-    /// <summary>
-    /// An identifier node, is used to represent a simple variable access of the form `x`.
-    /// </summary>
-    public record IdentifierAccessNode(
-      Position Position,
-      string Name,
-      TypedTree.Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.IdentifierLocation;
-      public string Name { get; } = Name;
-    };
-    /// <summary>
-    /// A member access node, is used to represent a member access of the form `x.y` where `x` is the root and `y` is the member.
-    /// </summary>
-    public record MemberAccessNode(
-      Position Position,
-      LocationNode Root,
-      string Member,
-      TypedTree.Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.MemberLocation;
-      public LocationNode Root { get; } = Root;
-      public string Member { get; } = Member;
-    };
-    /// <summary>
-    /// An array access node, is used to represent an array access of the form `x[y]` where `x` is the root and `y` is the index.
-    /// </summary>
-    public record ArrayAccessNode(
+    public Signature.Signature LocationType { get; }
+    protected LocationNode(Position position, Signature.Signature locationType) : base(position) {
+      this.LocationType = locationType;
+    }
+    /// <summary>An array location.</summary>
+    public sealed record ArrayNode(
       Position Position,
       LocationNode Root,
       ImmediateNode IndexImm,
-      TypedTree.Signature LocationType
+      Signature.Signature LocationType
     ) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.ArrayLocation;
+      public override NodeKind Kind => NodeKind.ArrayLocationNode;
       public LocationNode Root { get; } = Root;
       public ImmediateNode IndexImm { get; } = IndexImm;
     };
+    /// <summary>A symbolic location.</summary>
+    public sealed record SymbolLocation(
+      Position Position,
+      Symbol ID,
+      Signature.Signature LocationType
+    ) : LocationNode(Position, LocationType) {
+      public override NodeKind Kind => NodeKind.SymbolLocationNode;
+      public Symbol ID { get; } = ID;
+    };
   }
+  #endregion
 }

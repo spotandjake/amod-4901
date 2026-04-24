@@ -1,0 +1,31 @@
+// This exists to test our malloc implementation
+module Program {
+  let count: int = 100;
+  let size: int = 10000;
+
+  let ptrList: int[] = new int[count];
+
+  // Fill the pointer list
+  let i: int = 0;
+  while (i < count) {
+    ptrList[i] = Runtime.malloc(size);
+    if (i != 0) {
+      // Ensure that blocks don't magically get freed
+      if (ptrList[i] < ptrList[i - 1]) {
+        Runtime.panic("We have a problem");
+      }
+    };
+    i += 1;
+  }
+
+  // Free the pointer list
+  let j: int = 0;
+  while (j < count) {
+    Runtime.free(ptrList[j]);
+    j += 1;
+  }
+  // Try allocating a new block it should be less than our final block
+  let newPtr: int = Runtime.malloc(size);
+  //if (newPtr >= ptrList[count - 1]) @wasm.unreachable();
+  Runtime.free(newPtr);
+}

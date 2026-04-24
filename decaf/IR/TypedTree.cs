@@ -1,39 +1,11 @@
-using Decaf.IR.ParseTree;
-using Decaf.Utils;
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-// This namespace contains the definition for our typed tree.
-// The typed tree is pretty much the exact same as the parse tree except it attaches extra type information to each node.
-// This tree is generated from our typechecker and the typing information can be used later during codegen and analysis.
 namespace Decaf.IR.TypedTree {
-  // A primitive type represents the basic types in our language
-  public enum PrimitiveType {
-    Int,
-    Character,
-    String,
-    Boolean,
-    Void,
-    Null
-  }
-  // A signature represents the type information for a given declaration. This is used for type checking and method resolution.
-  [JsonDerivedType(typeof(ClassSignature), "ClassSignature")]
-  [JsonDerivedType(typeof(MethodSignature), "MethodSignature")]
-  [JsonDerivedType(typeof(ArraySignature), "ArraySignature")]
-  [JsonDerivedType(typeof(PrimitiveSignature), "PrimitiveSignature")]
-  [JsonDerivedType(typeof(CustomSignature), "CustomSignature")]
-  public abstract record Signature {
-    public Position Position { get; }
-    private Signature(Position Position) { this.Position = Position; }
-    public record ClassSignature(Position Position, Dictionary<string, Signature> Members) : Signature(Position);
-    public record MethodSignature(Position Position, Signature ReturnType, Signature[] ParameterTypes) : Signature(Position);
-    public record ArraySignature(Position Position, Signature Typ) : Signature(Position);
-    public record PrimitiveSignature(Position Position, PrimitiveType Type) : Signature(Position);
-    public record CustomSignature(Position Position, string Name) : Signature(Position);
-  }
-  /// <summary>
-  /// A base typed tree node that all other typed tree nodes inherit from.
-  /// </summary>
+  using System.Collections.Generic;
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.Utils;
+
+  /// <summary>A base typed tree node that all other parse tree nodes inherit from.</summary>
   public abstract record Node {
     /// <summary>The kind of the node.</summary>
     public abstract ParseTree.NodeKind Kind { get; }
@@ -45,345 +17,353 @@ namespace Decaf.IR.TypedTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<Signature> Scope) : Node(Position) {
-    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
-    public Scope<Signature> Scope { get; } = Scope;
-  };
-  public record BlockNode(
+
+  // --- Code Units ---
+  #region CodeUnits
+  /// <summary>The root node of a typed tree, it represents an entire program.</summary>
+  public sealed record ProgramNode(
     Position Position,
-    DeclarationNode.VariableNode[] Declarations,
-    StatementNode[] Statements,
-    Scope<Signature> Scope
+    ModuleNode[] Modules,
+    Scope<Symbol, Signature.Signature> Scope,
+    IDGenerator SymbolIdGenerator
   ) : Node(Position) {
-    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BlockNode;
-    public DeclarationNode.VariableNode[] Declarations { get; } = Declarations;
-    public StatementNode[] Statements { get; } = Statements;
-    public Scope<Signature> Scope { get; } = Scope;
-  }
-  /// <summary>
-  /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
-  [JsonDerivedType(typeof(VariableNode), "VarDeclNode")]
-  [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
-  public abstract record DeclarationNode : Node {
-    protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
-    public record ClassNode : DeclarationNode {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ClassDeclNode;
-      public string Name { get; }
-      public VariableNode[] Fields { get; }
-      public MethodNode[] Methods { get; }
-      public Scope<Signature> Scope { get; }
-      public Signature.ClassSignature Signature { get; }
-      public ClassNode(
-        Position position,
-        string name,
-        VariableNode[] fields,
-        MethodNode[] methods,
-        Scope<Signature> scope,
-        Signature.ClassSignature signature
-      ) : base(position) {
-        this.Name = name;
-        this.Fields = fields;
-        this.Methods = methods;
-        this.Scope = scope;
-        this.Signature = signature;
-      }
-    }
-    /// <summary>A variable declaration.</summary>
-    public record VariableNode : DeclarationNode {
-      public record BindNode(Position Position, string Name, Signature Signature) : Node(Position) {
-        public override ParseTree.NodeKind Kind => ParseTree.NodeKind.VarBindNode;
-        public string Name { get; } = Name;
-        public Signature Signature { get; } = Signature;
-      }
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.VariableDeclNode;
-      public BindNode[] Binds { get; }
-      public VariableNode(Position position, BindNode[] Binds) : base(position) {
-        this.Binds = Binds;
-      }
-    }
-    /// <summary>A method declaration.</summary>
-    public record MethodNode : DeclarationNode {
-      public record ParameterNode : DeclarationNode {
-        public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ParameterNode;
-        public string Name { get; }
-        public Signature Signature { get; }
-        public ParameterNode(
-          Position position,
-          string name,
-          Signature signature
-        ) : base(position) {
-          this.Name = name;
-          this.Signature = signature;
-        }
-      }
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.MethodDeclNode;
-      public string Name { get; }
-      public ParameterNode[] Parameters { get; }
-      public BlockNode Body { get; }
-      public Scope<Signature> Scope { get; }
-      public Signature.MethodSignature Signature { get; }
-      public MethodNode(
-        Position position,
-        string name,
-        ParameterNode[] parameters,
-        BlockNode body,
-        Scope<Signature> scope,
-        Signature.MethodSignature signature
-      ) : base(position) {
-        this.Name = name;
-        this.Parameters = parameters;
-        this.Body = body;
-        this.Scope = scope;
-        this.Signature = signature;
-      }
-    }
+    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ProgramNode;
+    public ModuleNode[] Modules { get; } = Modules;
+    public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
+    public IDGenerator SymbolIdGenerator { get; } = SymbolIdGenerator;
   };
-  /// <summary>
-  /// The supertype for all statement nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
-  [JsonDerivedType(typeof(ExprNode), "ExpressionStatement")]
-  [JsonDerivedType(typeof(IfNode), "IfStatement")]
-  [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
-  [JsonDerivedType(typeof(ContinueNode), "ContinueStatement")]
-  [JsonDerivedType(typeof(BreakNode), "BreakStatement")]
-  [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
+  /// <summary>A module declaration.</summary>
+  public sealed record ModuleNode(
+    Position Position,
+    Symbol ID,
+    ImportNode[] Imports,
+    StatementNode.BlockNode Body,
+    Scope<Symbol, Signature.Signature> Scope,
+    Signature.Signature.ModuleSig Signature
+  ) : Node(Position) {
+    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ModuleNode;
+    public Symbol ID { get; } = ID;
+    public ImportNode[] Imports { get; } = Imports;
+    public StatementNode.BlockNode Body { get; } = Body;
+    public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
+    public Signature.Signature.ModuleSig Signature { get; } = Signature;
+  }
+  /// <summary>An import statement, `import wasm <name:id>: <type> from "<module:string>"`.</summary>
+  public sealed record ImportNode(
+    Position Position,
+    Symbol ID,
+    Signature.Signature Signature,
+    string ExternalName,
+    string ExternalModule
+  ) : Node(Position) {
+    public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ImportNode;
+    public Symbol ID { get; } = ID;
+    public Signature.Signature Signature { get; } = Signature;
+    public string ExternalName { get; } = ExternalName;
+    public string ExternalModule { get; } = ExternalModule;
+  }
+  #endregion
+
+  // --- Statements ---
+  #region Statements
+  /// <summary>The supertype for all statements.</summary>
+  [JsonDerivedType(typeof(StatementNode.BlockNode), "BlockStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.VariableDeclNode), "VariableDeclNode")]
+  [JsonDerivedType(typeof(StatementNode.AssignmentNode), "AssignmentStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.IfNode), "IfStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.WhileNode), "WhileStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ReturnNode), "ReturnStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ContinueNode), "ContinueStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.BreakNode), "BreakStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ExprStatementNode), "ExprStatementNode")]
   public abstract record StatementNode : Node {
     protected StatementNode(Position position) : base(position) { }
-    /// <summary>An assignment statement.</summary>
-    public record AssignmentNode(
+
+    /// <summary>A block statement.</summary>
+    public sealed record BlockNode(
       Position Position,
-      LocationNode Location,
-      ExpressionNode Expression
+      StatementNode[] Statements,
+      Scope<Symbol, Signature.Signature> Scope
     ) : StatementNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.AssignmentStatement;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BlockStatementNode;
+      public StatementNode[] Statements { get; } = Statements;
+      public Scope<Symbol, Signature.Signature> Scope { get; } = Scope;
+    }
+
+    // Variables
+
+    /// <summary>A variable declaration statement.</summary>
+    public sealed record VariableDeclNode : StatementNode {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.VariableDeclNode;
+      // A single declaration bind.
+      public sealed record BindNode(
+        Position Position,
+        Symbol ID,
+        ExpressionNode InitExpr,
+        Signature.Signature Signature
+      ) : Node(Position) {
+        public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BindNode;
+        public Symbol ID { get; } = ID;
+        public ExpressionNode InitExpr { get; } = InitExpr;
+        public Signature.Signature Signature { get; } = Signature;
+      }
+      public VariableDeclNode(Position Position, IEnumerable<BindNode> Binds) : base(Position) {
+        this.Binds = Binds;
+      }
+      public IEnumerable<BindNode> Binds { get; }
+    };
+    /// <summary>An assignment statement.</summary>
+    public sealed record AssignmentNode(Position Position, LocationNode Location, ExpressionNode Expression) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.AssignmentStatementNode;
       public LocationNode Location { get; } = Location;
       public ExpressionNode Expression { get; } = Expression;
     };
-    /// <summary>An expression statement.</summary>
-    public record ExprNode(Position Position, ExpressionNode Content) : StatementNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ExprStatement;
-      public ExpressionNode Content { get; } = Content;
-    };
+
+    // Control Flow
+
     /// <summary>An if statement.</summary>
-    public record IfNode(
-      Position Position,
-      ExpressionNode Condition,
-      BlockNode TrueBranch,
+    public sealed record IfNode(
 #nullable enable
-      BlockNode? FalseBranch
-#nullable disable
+      Position Position, ExpressionNode Condition, StatementNode TrueBranch, StatementNode? FalseBranch
+#nullable restore
     ) : StatementNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IfStatement;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IfStatementNode;
       public ExpressionNode Condition { get; } = Condition;
-      public BlockNode TrueBranch { get; } = TrueBranch;
+      public StatementNode TrueBranch { get; } = TrueBranch;
 #nullable enable
-      public BlockNode? FalseBranch { get; } = FalseBranch;
-#nullable disable
+      public StatementNode? FalseBranch { get; } = FalseBranch;
+#nullable restore
     };
     /// <summary>A while loop statement.</summary>
-    public record WhileNode(Position Position, ExpressionNode Condition, BlockNode Body) : StatementNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.WhileStatement;
+    public sealed record WhileNode(Position Position, ExpressionNode Condition, StatementNode Body) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.WhileStatementNode;
       public ExpressionNode Condition { get; } = Condition;
-      public BlockNode Body { get; } = Body;
+      public StatementNode Body { get; } = Body;
     };
-    /// <summary>A continue statement.</summary>
-    public record ContinueNode(Position Position) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.ContinueStatement;
-    };
-    /// <summary>A break statement.</summary>
-    public record BreakNode(Position Position) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.BreakStatement;
-    };
+
+    // Other
+
     /// <summary>A return statement.</summary>
 #nullable enable
-    public record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {
-#nullable disable
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ReturnStatement;
-#nullable enable
+    public sealed record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ReturnStatementNode;
       public ExpressionNode? Value { get; } = Value;
-#nullable disable
     };
-  };
-  /// <summary>
-  /// The supertype for all expression nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(CallNode), "CallExpression")]
-  [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
-  [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
-  [JsonDerivedType(typeof(NewClassNode), "NewClassExpression")]
-  [JsonDerivedType(typeof(NewArrayNode), "NewArrayExpression")]
-  [JsonDerivedType(typeof(LocationAccessNode), "LocationAccessExpression")]
-  [JsonDerivedType(typeof(LiteralNode), "LiteralExpression")]
+#nullable restore
+    /// <summary>A continue statement.</summary>
+    public sealed record ContinueNode(Position Position) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ContinueStatementNode;
+    };
+    /// <summary>A break statement.</summary>
+    public sealed record BreakNode(Position Position) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BreakStatementNode;
+    };
+    /// <summary>An expression statement.</summary>
+    public sealed record ExprStatementNode(Position Position, ExpressionNode Expression) : StatementNode(Position) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ExprStatementNode;
+      public ExpressionNode Expression { get; } = Expression;
+    };
+  }
+  #endregion
+
+  // --- Expressions ---
+  #region Expressions
+  /// <summary>The supertype for all expression nodes.</summary>
+  [JsonDerivedType(typeof(ExpressionNode.PrefixNode), "PrefixExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.BinopNode), "BinopExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.CallNode), "CallExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.PrimCallNode), "PrimCallExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.ArrayInitNode), "ArrayInitExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.LocationExprNode), "LocationExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.LiteralExprNode), "LiteralExpression")]
   public abstract record ExpressionNode : Node {
-    public Signature ExpressionType { get; }
-    protected ExpressionNode(Position position, Signature expressionType) : base(position) {
+    public Signature.Signature ExpressionType { get; }
+    protected ExpressionNode(Position position, Signature.Signature expressionType) : base(position) {
       this.ExpressionType = expressionType;
     }
-    /// <summary>A call expression.</summary>
-    public record CallNode(
-      Position Position,
-      bool IsPrimitive,
-      LocationNode Path,
-      ExpressionNode[] Arguments,
-      Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CallExpression;
-      public bool IsPrimitive { get; } = IsPrimitive;
-      public LocationNode Path { get; } = Path;
-      public ExpressionNode[] Arguments { get; } = Arguments;
-    };
-    /// <summary>A binop expression.</summary>
-    public record BinopNode(
-      Position Position,
-      ExpressionNode Lhs,
-      string Operator,
-      ExpressionNode Rhs,
-      Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BinopExpression;
-      public ExpressionNode Lhs { get; } = Lhs;
-      public string Operator { get; } = Operator;
-      public ExpressionNode Rhs { get; } = Rhs;
-    };
+
     /// <summary>A prefix expression.</summary>
-    public record PrefixNode(
+    public sealed record PrefixNode(
       Position Position,
-      string Operator,
+      PrefixOperator Operator,
       ExpressionNode Operand,
-      Signature ExpressionType
+      Signature.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.PrefixExpression;
-      public string Operator { get; } = Operator;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.PrefixExpressionNode;
+      public PrefixOperator Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
     };
-    /// <summary>A new class expression.</summary>
-    public record NewClassNode(
+    /// <summary>A binary operation expression.</summary>
+    public sealed record BinopNode(
       Position Position,
-      LocationNode Path,
-      Signature ExpressionType
+      ExpressionNode Lhs,
+      BinaryOperator Operator,
+      ExpressionNode Rhs,
+      Signature.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NewArrayExpression;
-      public LocationNode Path { get; } = Path;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BinopExpressionNode;
+      public ExpressionNode Lhs { get; } = Lhs;
+      public BinaryOperator Operator { get; } = Operator;
+      public ExpressionNode Rhs { get; } = Rhs;
     };
-    /// <summary>A new array expression.</summary>
-    public record NewArrayNode(
+    /// <summary>A call expression.</summary>
+    public sealed record CallNode(
+      Position Position,
+      LocationNode Callee,
+      ExpressionNode[] Arguments,
+      Signature.Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CallExpressionNode;
+      public LocationNode Callee { get; } = Callee;
+      public ExpressionNode[] Arguments { get; } = Arguments;
+    }
+    /// <summary>A primitive call expression.</summary>
+    public sealed record PrimCallNode(
+      Position Position,
+      PrimitiveDefinition.PrimDefinition Callee,
+      ExpressionNode[] Arguments,
+      Signature.Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CallExpressionNode;
+      public PrimitiveDefinition.PrimDefinition Callee { get; } = Callee;
+      public ExpressionNode[] Arguments { get; } = Arguments;
+    }
+    /// <summary>An array initialization expression.</summary>
+    public sealed record ArrayInitNode(
       Position Position,
       ExpressionNode SizeExpr,
-      Signature ExpressionType
+      Signature.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NewArrayExpression;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ArrayInitExpressionNode;
       public ExpressionNode SizeExpr { get; } = SizeExpr;
-    };
-    /// <summary>A location access expression.</summary>
-    public record LocationAccessNode(
-      Position Position, LocationNode Content, Signature ExpressionType
-    ) : ExpressionNode(Position, ExpressionType) {
-      public override NodeKind Kind => NodeKind.LocationAccessExpression;
-      public LocationNode Content { get; } = Content;
-    };
-    /// <summary>A literal expression.</summary>
-    public record LiteralNode(
+    }
+    /// <summary>A location expression.</summary>
+    public sealed record LocationExprNode(
       Position Position,
-      TypedTree.LiteralNode Content,
-      Signature ExpressionType
+      LocationNode Location,
+      Signature.Signature ExpressionType
     ) : ExpressionNode(Position, ExpressionType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.LiteralExpression;
-      public TypedTree.LiteralNode Content { get; } = Content;
-    };
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.LocationExpressionNode;
+      public LocationNode Location { get; } = Location;
+    }
+    /// <summary>A literal expression.</summary>
+    public sealed record LiteralExprNode(
+      Position Position,
+      LiteralNode Literal,
+      Signature.Signature ExpressionType
+    ) : ExpressionNode(Position, ExpressionType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.LiteralExpressionNode;
+      public LiteralNode Literal { get; } = Literal;
+    }
   }
-  /// <summary>
-  /// The supertype for all literal nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(LiteralNodes.IntegerNode), "IntegerLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.CharacterNode), "CharLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.StringNode), "StringLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.BooleanNode), "BoolLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.NullNode), "NullLiteral")]
+  #endregion
+
+  // --- Literals ---
+  #region Literals
+  /// <summary>The supertype for all literal nodes.</summary>
+  [JsonDerivedType(typeof(LiteralNode.IntegerNode), "IntegerLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.BooleanNode), "BooleanLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.CharacterNode), "CharacterLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.StringNode), "StringLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.FunctionNode), "FunctionLiteral")]
   public abstract record LiteralNode : Node {
-    protected LiteralNode(Position position) : base(position) { }
-  };
-  namespace LiteralNodes {
-    /// <summary>An integer literal node.</summary>
-    public record IntegerNode(Position Position, int Value) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IntegerLiteral;
+    public Signature.Signature LiteralType { get; }
+    protected LiteralNode(Position position, Signature.Signature literalType) : base(position) {
+      this.LiteralType = literalType;
+    }
+
+    /// <summary>An integer literal.</summary>
+    public sealed record IntegerNode(
+      Position Position, int Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IntegerLiteralNode;
       public int Value { get; } = Value;
     };
-    /// <summary>A character literal node.</summary>
-    public record CharacterNode(Position Position, char Value) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CharacterLiteral;
-      public char Value { get; } = Value;
-    };
-    /// <summary>A string literal node.</summary>
-    public record StringNode(Position Position, string Value) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.StringLiteral;
-      public string Value { get; } = Value;
-    };
-    /// <summary>An boolean literal node.</summary>
-    public record BooleanNode(Position Position, bool Value) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BooleanLiteral;
+    /// <summary>A boolean literal.</summary>
+    public sealed record BooleanNode(
+      Position Position, bool Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.BooleanLiteralNode;
       public bool Value { get; } = Value;
     };
-    /// <summary>An null literal node.</summary>
-    public record NullNode(Position Position) : LiteralNode(Position) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.NullLiteral;
+    /// <summary>A character literal.</summary>
+    public sealed record CharacterNode(
+      Position Position, char Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.CharacterLiteralNode;
+      public char Value { get; } = Value;
     };
+    /// <summary>A string literal.</summary>
+    public sealed record StringNode(
+      Position Position, string Value, Signature.Signature LiteralType
+    ) : LiteralNode(Position, LiteralType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.StringLiteralNode;
+      public string Value { get; } = Value;
+    };
+    /// <summary>A function literal.</summary>
+    public sealed record FunctionNode : LiteralNode {
+      // A parameter node
+      public sealed record ParameterNode(
+        Position Position,
+        Symbol ID,
+        Signature.Signature Signature
+      ) : Node(Position) {
+        public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ParameterNode;
+        public Symbol ID { get; } = ID;
+        public Signature.Signature Signature { get; } = Signature;
+      }
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.FunctionLiteralNode;
+      public Symbol ID { get; }
+      public ParameterNode[] Parameters { get; }
+      public StatementNode.BlockNode Body { get; }
+      public Scope<Symbol, Signature.Signature> Scope { get; }
+      public FunctionNode(
+        Position Position,
+        Symbol ID,
+        ParameterNode[] Parameters,
+        StatementNode.BlockNode Body,
+        Scope<Symbol, Signature.Signature> Scope,
+        Signature.Signature.FunctionSig LiteralType
+      ) : base(Position, LiteralType) {
+        this.ID = ID;
+        this.Parameters = Parameters;
+        this.Body = Body;
+        this.Scope = Scope;
+      }
+    }
   }
-  /// <summary>
-  /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
-  /// A location node represents any access to a variable, field or array.
-  /// </summary>
-  [JsonDerivedType(typeof(ThisNode), "ThisLocation")]
-  [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
-  [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
-  [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
+  #endregion
+
+  // --- Locations ---
+  #region Locations
+  /// <summary>The supertype for all location nodes.</summary>
+  [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.SymbolLocation), "SymbolLocationNode")]
   public abstract record LocationNode : Node {
-    public Signature LocationType { get; }
-    protected LocationNode(Position position, Signature locationType) : base(position) { this.LocationType = locationType; }
-    /// <summary>A location node representing a `this` access.</summary>
-    public record ThisNode(Position Position, Signature LocationType) : LocationNode(Position, LocationType) {
-      public override NodeKind Kind => NodeKind.ThisLocation;
-    };
-    /// <summary>
-    /// An identifier node, is used to represent a simple variable access of the form `x`.
-    /// </summary>
-    public record IdentifierAccessNode(
-      Position Position,
-      string Name,
-      Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IdentifierLocation;
-      public string Name { get; } = Name;
-    };
-    /// <summary>
-    /// A member access node, is used to represent a member access of the form `x.y` where `x` is the root and `y` is the member.
-    /// </summary>
-    public record MemberAccessNode(
-      Position Position,
-      LocationNode Root,
-      string Member,
-      Signature LocationType
-    ) : LocationNode(Position, LocationType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.MemberLocation;
-      public LocationNode Root { get; } = Root;
-      public string Member { get; } = Member;
-    };
-    /// <summary>
-    /// An array access node, is used to represent an array access of the form `x[y]` where `x` is the root and `y` is the index.
-    /// </summary>
-    public record ArrayAccessNode(
+    public Signature.Signature LocationType { get; }
+    protected LocationNode(Position position, Signature.Signature locationType) : base(position) {
+      this.LocationType = locationType;
+    }
+    /// <summary>An array location.</summary>
+    public sealed record ArrayNode(
       Position Position,
       LocationNode Root,
       ExpressionNode IndexExpr,
-      Signature LocationType
+      Signature.Signature LocationType
     ) : LocationNode(Position, LocationType) {
-      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ArrayLocation;
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.ArrayLocationNode;
       public LocationNode Root { get; } = Root;
       public ExpressionNode IndexExpr { get; } = IndexExpr;
     };
+    /// <summary>A symbolic location.</summary>
+    public sealed record SymbolLocation(
+      Position Position,
+      Symbol ID,
+      Signature.Signature LocationType
+    ) : LocationNode(Position, LocationType) {
+      public override ParseTree.NodeKind Kind => ParseTree.NodeKind.IdentifierLocationNode;
+      public Symbol ID { get; } = ID;
+    };
   }
+  #endregion
 }

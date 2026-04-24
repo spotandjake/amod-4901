@@ -1,0 +1,58 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      Name: {
+        Kind: IdentifierLocationNode,
+        IsPrimitive: false,
+        Name: Program
+      },
+      Body: {
+        Kind: BlockStatementNode,
+        Statements: [
+          {
+            Kind: VariableDeclNode,
+            Binds: [
+              {
+                Kind: BindNode,
+                Name: {
+                  Kind: IdentifierLocationNode,
+                  IsPrimitive: false,
+                  Name: x
+                },
+                InitExpr: {
+                  Kind: LiteralExpressionNode,
+                  Literal: {
+                    Kind: FunctionLiteralNode,
+                    Name: {
+                      Kind: IdentifierLocationNode,
+                      IsPrimitive: false,
+                      Name: x
+                    },
+                    ReturnType: {
+                      Type: Void
+                    },
+                    Parameters: [
+                      {
+                        Kind: ParameterNode,
+                        Signature: {},
+                        Name: {
+                          Kind: IdentifierLocationNode,
+                          IsPrimitive: false,
+                          Name: x
+                        }
+                      }
+                    ],
+                    Body: {
+                      Kind: BlockStatementNode
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

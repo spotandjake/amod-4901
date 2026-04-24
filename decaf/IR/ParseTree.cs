@@ -1,54 +1,51 @@
-using Decaf.Utils;
-using System.Text.Json.Serialization;
-
 namespace Decaf.IR.ParseTree {
-  public enum PrimitiveType {
-    Int,
-    Boolean,
-    Void,
-    Custom
-  }
+  using System.Collections.Generic;
+  using System.Text.Json.Serialization;
+
+  using Decaf.IR.Operators;
+  using Decaf.Utils;
+
   /// <summary>
-  /// An enum to represent the different kinds of nodes in our parse tree. This is useful for pattern matching and type checking when we want to process the parse tree later on, it also allows us to easily tell the node type in serialized outputs.
+  /// An enumeration of every kind of parse tree node we have in our IR.
+  /// This mainly exists so our snapshots have a more readable name for each node kind, and each node has a unique kind 
+  /// that can be used to identify it, even after converting to JSON.
   /// </summary>
   public enum NodeKind {
-    // General
+    // --- Code Units ---
     ProgramNode,
-    BlockNode,
-    TypeNode,
-    VarBindNode,
-    ParameterNode,
-    // Declarations
-    ClassDeclNode,
-    MethodDeclNode,
+    ModuleNode,
+    ImportNode,
+    // --- Statements ---
+    BlockStatementNode,
     VariableDeclNode,
-    // Statements
-    AssignmentStatement,
-    ExprStatement,
-    IfStatement,
-    WhileStatement,
-    ContinueStatement,
-    BreakStatement,
-    ReturnStatement,
-    // Expressions
-    CallExpression,
-    BinopExpression,
-    PrefixExpression,
-    NewClassExpression,
-    NewArrayExpression,
-    LocationAccessExpression,
-    LiteralExpression,
-    // Literals
-    IntegerLiteral,
-    CharacterLiteral,
-    StringLiteral,
-    BooleanLiteral,
-    NullLiteral,
-    // Locations
-    ThisLocation,
-    IdentifierLocation,
-    MemberLocation,
-    ArrayLocation
+    AssignmentStatementNode,
+    IfStatementNode,
+    WhileStatementNode,
+    ReturnStatementNode,
+    ContinueStatementNode,
+    BreakStatementNode,
+    ExprStatementNode,
+    // --- Expressions ---
+    PrefixExpressionNode,
+    BinopExpressionNode,
+    CallExpressionNode,
+    LocationExpressionNode,
+    ArrayInitExpressionNode,
+    LiteralExpressionNode,
+    // --- Literals ---
+    IntegerLiteralNode,
+    BooleanLiteralNode,
+    CharacterLiteralNode,
+    StringLiteralNode,
+    FunctionLiteralNode,
+    // --- Locations ---
+    ArrayLocationNode,
+    MemberLocationNode,
+    IdentifierLocationNode,
+    PrimitiveLocationNode,
+    // --- Other ---
+    ParameterNode,
+    BindNode
   }
   /// <summary>
   /// A base parse tree node that all other parse tree nodes inherit from.
@@ -64,314 +61,286 @@ namespace Decaf.IR.ParseTree {
     /// <param name="position">The source position of the node.</param>
     protected Node(Position position) { this.Position = position; }
   };
-#nullable enable
-  public record ProgramNode(Position Position, DeclarationNode.ClassNode[] Classes, Scope<bool>? Scope) : Node(Position) {
+
+  // --- Code Units ---
+  #region CodeUnits
+  /// <summary>The root node of a parse tree, it represents an entire program.</summary>
+  public sealed record ProgramNode(Position Position, ModuleNode[] Modules) : Node(Position) {
     public override NodeKind Kind => NodeKind.ProgramNode;
-    public DeclarationNode.ClassNode[] Classes { get; } = Classes;
-    public Scope<bool>? Scope { get; } = Scope;
+    public ModuleNode[] Modules { get; } = Modules;
   };
-  public record BlockNode(
-    Position Position,
-    DeclarationNode.VariableNode[] Declarations,
-    StatementNode[] Statements,
-    Scope<bool>? Scope
+  /// <summary>A module declaration, `module <name:id> <body:block_stmt>`.</summary>
+  public sealed record ModuleNode(
+    Position Position, LocationNode.IdentifierNode Name, ImportNode[] Imports, StatementNode.BlockNode Body
   ) : Node(Position) {
-    public override NodeKind Kind => NodeKind.BlockNode;
-    public DeclarationNode.VariableNode[] Declarations { get; } = Declarations;
-    public StatementNode[] Statements { get; } = Statements;
-    public Scope<bool>? Scope { get; } = Scope;
+    public override NodeKind Kind => NodeKind.ModuleNode;
+    public LocationNode.IdentifierNode Name { get; } = Name;
+    public ImportNode[] Imports { get; } = Imports;
+    public StatementNode.BlockNode Body { get; } = Body;
   }
-  public record TypeNode : Node {
-    public override NodeKind Kind => NodeKind.TypeNode;
-    public PrimitiveType Type { get; }
-    public string Content { get; }
-    public TypeNode(Position position, PrimitiveType type, string content) : base(position) {
-      this.Type = type;
-      this.Content = content;
-    }
+  /// <summary>An import statement, `import wasm <name:id>: <type> from "<module:string>"`.</summary>
+  public sealed record ImportNode(
+    Position Position, LocationNode.IdentifierNode Name, Signature.Signature Signature, string Module
+  ) : Node(Position) {
+    public override NodeKind Kind => NodeKind.ImportNode;
+    public LocationNode.IdentifierNode Name { get; } = Name;
+    public Signature.Signature Signature { get; } = Signature;
+    public string Module { get; } = Module;
   }
-  /// <summary>
-  /// The supertype for all declaration nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(ClassNode), "ClassDeclNode")]
-  [JsonDerivedType(typeof(VariableNode), "VarDeclNode")]
-  [JsonDerivedType(typeof(MethodNode), "MethodDeclNode")]
-  public abstract record DeclarationNode : Node {
-    protected DeclarationNode(Position position) : base(position) { }
-    /// <summary>A class declaration.</summary>
-    public record ClassNode : DeclarationNode {
-      public override NodeKind Kind => NodeKind.ClassDeclNode;
-      public string Name { get; }
-      public string? SuperClassName { get; }
-      public VariableNode[] Fields { get; }
-      public MethodNode[] Methods { get; }
-      public Scope<bool>? Scope { get; }
-      public ClassNode(
-        Position position,
-        string name,
-        string? superClassName,
-        VariableNode[] fields,
-        MethodNode[] methods,
-        Scope<bool>? scope
-      ) : base(position) {
-        this.Name = name;
-        this.SuperClassName = superClassName;
-        this.Fields = fields;
-        this.Methods = methods;
-        this.Scope = scope;
-      }
-    }
-    /// <summary>A variable declaration.</summary>
-    public record VariableNode : DeclarationNode {
-      public record BindNode(Position Position, string Name, bool IsArray) : Node(Position) {
-        public override NodeKind Kind => NodeKind.VarBindNode;
-        public string Name { get; } = Name;
-        public bool IsArray { get; } = IsArray;
-      }
-      public override NodeKind Kind => NodeKind.VariableDeclNode;
-      public TypeNode Type { get; }
-      public BindNode[] Binds { get; }
-      public VariableNode(Position position, TypeNode Type, BindNode[] Binds) : base(position) {
-        this.Type = Type;
-        this.Binds = Binds;
-      }
-    }
-    /// <summary>A method declaration.</summary>
-    public record MethodNode : DeclarationNode {
-      public record ParameterNode : DeclarationNode {
-        public override NodeKind Kind => NodeKind.ParameterNode;
-        public TypeNode ParamType { get; }
-        public string Name { get; }
-        public bool IsArray { get; }
-        public ParameterNode(Position position, TypeNode paramType, string name, bool isArray) : base(position) {
-          this.ParamType = paramType;
-          this.Name = name;
-          this.IsArray = isArray;
-        }
-      }
-      public override NodeKind Kind => NodeKind.MethodDeclNode;
-      public TypeNode ReturnType { get; }
-      public string Name { get; }
-      public ParameterNode[] Parameters { get; }
-      public BlockNode Body { get; }
-      public Scope<bool>? Scope { get; }
-      public MethodNode(
-        Position position,
-        TypeNode returnType,
-        string name,
-        ParameterNode[] parameters,
-        BlockNode body,
-        Scope<bool>? scope
-      ) : base(position) {
-        this.ReturnType = returnType;
-        this.Name = name;
-        this.Parameters = parameters;
-        this.Body = body;
-        this.Scope = scope;
-      }
-    }
-  };
-  /// <summary>
-  /// The supertype for all statement nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(AssignmentNode), "AssignmentStatement")]
-  [JsonDerivedType(typeof(ExprNode), "ExpressionStatement")]
-  [JsonDerivedType(typeof(IfNode), "IfStatement")]
-  [JsonDerivedType(typeof(WhileNode), "WhileStatement")]
-  [JsonDerivedType(typeof(ContinueNode), "ContinueStatement")]
-  [JsonDerivedType(typeof(BreakNode), "BreakStatement")]
-  [JsonDerivedType(typeof(ReturnNode), "ReturnStatement")]
+  #endregion
+
+  // --- Statements ---
+  #region Statements
+  /// <summary>The supertype for all statements.</summary>
+  [JsonDerivedType(typeof(StatementNode.BlockNode), "BlockStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.VariableDeclNode), "VariableDeclNode")]
+  [JsonDerivedType(typeof(StatementNode.AssignmentNode), "AssignmentStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.IfNode), "IfStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.WhileNode), "WhileStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ReturnNode), "ReturnStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ContinueNode), "ContinueStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.BreakNode), "BreakStatementNode")]
+  [JsonDerivedType(typeof(StatementNode.ExprStatementNode), "ExprStatementNode")]
   public abstract record StatementNode : Node {
     protected StatementNode(Position position) : base(position) { }
-    /// <summary>An assignment statement.</summary>
-    public record AssignmentNode(
-      Position Position,
-      LocationNode Location,
-      ExpressionNode Expression
-    ) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.AssignmentStatement;
+
+    /// <summary>A block statement, `{ <statement>* }`.</summary>
+    public sealed record BlockNode(Position Position, StatementNode[] Statements) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.BlockStatementNode;
+      public StatementNode[] Statements { get; } = Statements;
+    }
+
+    // Variables
+
+    /// <summary>
+    /// A variable declaration statement, `let <binds>` where `<binds>` is a comma separated list of:
+    /// `<name:id>: <type> = <expr>`, for example `let x: int = 1, y: int[] = 2;`.
+    /// </summary>
+    public sealed record VariableDeclNode : StatementNode {
+      public override NodeKind Kind => NodeKind.VariableDeclNode;
+      // A single declaration bind.
+#nullable enable
+      public sealed record BindNode(
+        Position Position, Signature.Signature? Signature, LocationNode.IdentifierNode Name, ExpressionNode InitExpr
+      ) : Node(Position) {
+        public override NodeKind Kind => NodeKind.BindNode;
+        public Signature.Signature? Signature { get; } = Signature;
+        public LocationNode.IdentifierNode Name { get; } = Name;
+        public ExpressionNode InitExpr { get; } = InitExpr;
+      }
+#nullable restore
+      public VariableDeclNode(Position Position, IEnumerable<BindNode> Binds) : base(Position) {
+        this.Binds = Binds;
+      }
+      public IEnumerable<BindNode> Binds { get; }
+    };
+    /// <summary>An assignment statement, `<location> = <expr>;`.</summary>
+    public sealed record AssignmentNode(Position Position, LocationNode Location, ExpressionNode Expression) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.AssignmentStatementNode;
       public LocationNode Location { get; } = Location;
       public ExpressionNode Expression { get; } = Expression;
     };
-    /// <summary>An expression statement.</summary>
-    public record ExprNode(Position Position, ExpressionNode Content) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.ExprStatement;
-      public ExpressionNode Content { get; } = Content;
-    };
-    /// <summary>An if statement.</summary>
-    public record IfNode(
-      Position Position,
-      ExpressionNode Condition,
-      BlockNode TrueBranch,
-      BlockNode? FalseBranch
+
+    // Control Flow
+
+    /// <summary>An if statement, `if (<condition>) <trueBranch> else <falseBranch>`.</summary>
+    public sealed record IfNode(
+#nullable enable
+      Position Position, ExpressionNode Condition, StatementNode TrueBranch, StatementNode? FalseBranch
+#nullable restore
     ) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.IfStatement;
+      public override NodeKind Kind => NodeKind.IfStatementNode;
       public ExpressionNode Condition { get; } = Condition;
-      public BlockNode TrueBranch { get; } = TrueBranch;
-      public BlockNode? FalseBranch { get; } = FalseBranch;
+      public StatementNode TrueBranch { get; } = TrueBranch;
+#nullable enable
+      public StatementNode? FalseBranch { get; } = FalseBranch;
+#nullable restore
     };
-    /// <summary>A while loop statement.</summary>
-    public record WhileNode(Position Position, ExpressionNode Condition, BlockNode Body) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.WhileStatement;
+    /// <summary>A while loop statement, `while (<condition>) <body:block_stmt>`.</summary>
+    public sealed record WhileNode(Position Position, ExpressionNode Condition, StatementNode Body) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.WhileStatementNode;
       public ExpressionNode Condition { get; } = Condition;
-      public BlockNode Body { get; } = Body;
+      public StatementNode Body { get; } = Body;
     };
-    /// <summary>A continue statement.</summary>
-    public record ContinueNode(Position Position) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.ContinueStatement;
-    };
-    /// <summary>A break statement.</summary>
-    public record BreakNode(Position Position) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.BreakStatement;
-    };
-    /// <summary>A return statement.</summary>
-    public record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {
-      public override NodeKind Kind => NodeKind.ReturnStatement;
+
+    // Other
+
+    /// <summary>A return statement, `return <value:expr>`.</summary>
+#nullable enable
+    public sealed record ReturnNode(Position Position, ExpressionNode? Value) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.ReturnStatementNode;
       public ExpressionNode? Value { get; } = Value;
     };
-  };
-  /// <summary>
-  /// The supertype for all expression nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(CallNode), "CallExpression")]
-  [JsonDerivedType(typeof(BinopNode), "BinopExpression")]
-  [JsonDerivedType(typeof(PrefixNode), "PrefixExpression")]
-  [JsonDerivedType(typeof(LocationAccessNode), "LocationAccessExpression")]
-  [JsonDerivedType(typeof(LiteralNode), "LiteralExpression")]
+#nullable restore
+    /// <summary>A continue statement, `continue`.</summary>
+    public sealed record ContinueNode(Position Position) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.ContinueStatementNode;
+    };
+    /// <summary>A break statement, `break`.</summary>
+    public sealed record BreakNode(Position Position) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.BreakStatementNode;
+    };
+    /// <summary>An expression statement, `<expr>;`.</summary>
+    public sealed record ExprStatementNode(Position Position, ExpressionNode Expression) : StatementNode(Position) {
+      public override NodeKind Kind => NodeKind.ExprStatementNode;
+      public ExpressionNode Expression { get; } = Expression;
+    };
+  }
+  #endregion
+
+  // --- Expressions ---
+  #region Expressions
+  /// <summary>The supertype for all expression nodes.</summary>
+  [JsonDerivedType(typeof(ExpressionNode.PrefixNode), "PrefixExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.BinopNode), "BinopExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.CallNode), "CallExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.ArrayInitNode), "ArrayInitExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.LocationExprNode), "LocationExpression")]
+  [JsonDerivedType(typeof(ExpressionNode.LiteralExprNode), "LiteralExpression")]
   public abstract record ExpressionNode : Node {
     protected ExpressionNode(Position position) : base(position) { }
-    /// <summary>A call expression.</summary>
-    public record CallNode(
-      Position Position,
-      bool IsPrimitive,
-      LocationNode Path,
-      ExpressionNode[] Arguments
-    ) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.CallExpression;
-      public bool IsPrimitive { get; } = IsPrimitive;
-      public LocationNode Path { get; } = Path;
-      public ExpressionNode[] Arguments { get; } = Arguments;
-    };
-    /// <summary>A binop expression.</summary>
-    public record BinopNode(Position Position, ExpressionNode Lhs, string Operator, ExpressionNode Rhs) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.BinopExpression;
-      public ExpressionNode Lhs { get; } = Lhs;
-      public string Operator { get; } = Operator;
-      public ExpressionNode Rhs { get; } = Rhs;
-    };
-    /// <summary>A prefix expression.</summary>
-    public record PrefixNode(Position Position, string Operator, ExpressionNode Operand) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.PrefixExpression;
-      public string Operator { get; } = Operator;
+
+    /// <summary>A prefix expression, `<operator> <operand>`, for example `!x` or `~y`.</summary>
+    public sealed record PrefixNode(Position Position, PrefixOperator Operator, ExpressionNode Operand) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.PrefixExpressionNode;
+      public PrefixOperator Operator { get; } = Operator;
       public ExpressionNode Operand { get; } = Operand;
     };
-    /// <summary>A new class expression.</summary>
-    public record NewClassNode(Position Position, LocationNode Path) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.NewClassExpression;
-      public LocationNode Path { get; } = Path;
-    };
-    /// <summary>A new array expression.</summary>
-    public record NewArrayNode(
-      Position Position,
-      TypeNode Type,
-      ExpressionNode SizeExpr
+    /// <summary>A binary operation expression, `<lhs> <operator> <rhs>`, for example `x + y` or `a && b`.</summary>
+    public sealed record BinopNode(
+      Position Position, ExpressionNode Lhs, BinaryOperator Operator, ExpressionNode Rhs
     ) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.NewArrayExpression;
-      public TypeNode Type { get; } = Type;
+      public override NodeKind Kind => NodeKind.BinopExpressionNode;
+      public ExpressionNode Lhs { get; } = Lhs;
+      public BinaryOperator Operator { get; } = Operator;
+      public ExpressionNode Rhs { get; } = Rhs;
+    };
+    /// <summary>A call expression, `<callee>(<args>)`.</summary>
+    public sealed record CallNode(Position Position, LocationNode Callee, ExpressionNode[] Arguments) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.CallExpressionNode;
+      public LocationNode Callee { get; } = Callee;
+      public ExpressionNode[] Arguments { get; } = Arguments;
+    }
+    /// <summary>An array initialization expression, `new <type>[<size>]`.</summary>
+    public sealed record ArrayInitNode(
+      Position Position, Signature.Signature Signature, ExpressionNode SizeExpr
+    ) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.ArrayInitExpressionNode;
+      public Signature.Signature Signature { get; } = Signature;
       public ExpressionNode SizeExpr { get; } = SizeExpr;
-    };
-    /// <summary>A location access expression.</summary>
-    public record LocationAccessNode(Position Position, LocationNode Content) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.LocationAccessExpression;
-      public LocationNode Content { get; } = Content;
-    };
-    /// <summary>A literal expression.</summary>
-    public record LiteralNode(Position Position, ParseTree.LiteralNode Content) : ExpressionNode(Position) {
-      public override NodeKind Kind => NodeKind.LiteralExpression;
-      public ParseTree.LiteralNode Content { get; } = Content;
-    };
+    }
+    /// <summary>A location expression, `<location>`, for example `x`, `x.y` or `x[y]`.</summary>
+    public sealed record LocationExprNode(Position Position, LocationNode Location) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.LocationExpressionNode;
+      public LocationNode Location { get; } = Location;
+    }
+    /// <summary>A literal expression, `<literal>`, for example `1`, `'a'` or `"hello"`.</summary>
+    public sealed record LiteralExprNode(Position Position, LiteralNode Literal) : ExpressionNode(Position) {
+      public override NodeKind Kind => NodeKind.LiteralExpressionNode;
+      public LiteralNode Literal { get; } = Literal;
+    }
   }
-  /// <summary>
-  /// The supertype for all literal nodes, we use a supertype to ensure strict type checking.
-  /// </summary>
-  [JsonDerivedType(typeof(LiteralNodes.IntegerNode), "IntegerLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.CharacterNode), "CharLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.StringNode), "StringLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.BooleanNode), "BoolLiteral")]
-  [JsonDerivedType(typeof(LiteralNodes.NullNode), "NullLiteral")]
+  #endregion
+
+  // --- Literals ---
+  #region Literals
+  /// <summary>The supertype for all literal nodes.</summary>
+  [JsonDerivedType(typeof(LiteralNode.IntegerNode), "IntegerLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.BooleanNode), "BooleanLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.CharacterNode), "CharacterLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.StringNode), "StringLiteral")]
+  [JsonDerivedType(typeof(LiteralNode.FunctionNode), "FunctionLiteral")]
   public abstract record LiteralNode : Node {
     protected LiteralNode(Position position) : base(position) { }
-  };
-  namespace LiteralNodes {
-    /// <summary>An integer literal node.</summary>
-    public record IntegerNode(Position Position, int Value) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.IntegerLiteral;
+
+    /// <summary>An integer literal, for example `1`, `42` or `-5`.</summary>
+    public sealed record IntegerNode(Position Position, int Value) : LiteralNode(Position) {
+      public override NodeKind Kind => NodeKind.IntegerLiteralNode;
       public int Value { get; } = Value;
     };
-    /// <summary>A character literal node.</summary>
-    public record CharacterNode(Position Position, char Value) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.CharacterLiteral;
-      public char Value { get; } = Value;
-    };
-    /// <summary>A string literal node.</summary>
-    public record StringNode(Position Position, string Value) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.StringLiteral;
-      public string Value { get; } = Value;
-    };
-    /// <summary>An boolean literal node.</summary>
-    public record BooleanNode(Position Position, bool Value) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.BooleanLiteral;
+    /// <summary>A boolean literal, either `true` or `false`.</summary>
+    public sealed record BooleanNode(Position Position, bool Value) : LiteralNode(Position) {
+      public override NodeKind Kind => NodeKind.BooleanLiteralNode;
       public bool Value { get; } = Value;
     };
-    /// <summary>An null literal node.</summary>
-    public record NullNode(Position Position) : LiteralNode(Position) {
-      public override NodeKind Kind => NodeKind.NullLiteral;
+    /// <summary>A character literal, for example `'a'`, `'\n'` or `'\''`.</summary>
+    public sealed record CharacterNode(Position Position, char Value) : LiteralNode(Position) {
+      public override NodeKind Kind => NodeKind.CharacterLiteralNode;
+      public char Value { get; } = Value;
     };
+    /// <summary>A string literal, for example `"hello"`, `"world"` or `"decaf"`.</summary>
+    public sealed record StringNode(Position Position, string Value) : LiteralNode(Position) {
+      public override NodeKind Kind => NodeKind.StringLiteralNode;
+      public string Value { get; } = Value;
+    };
+    /// <summary>
+    /// A function literal, `(): <return_type> { <body> }` or `(x: int, y: string): <return_type> { <body> }`.
+    /// The name is taken from the binding as that is the only place this literal is allowed to occur.
+    /// </summary>
+    public sealed record FunctionNode : LiteralNode {
+      // A parameter node, `<name:id>: <type>`, for example `x: int` or `y: string[]`.
+      public sealed record ParameterNode(
+        Position Position,
+        Signature.Signature Signature,
+        LocationNode.IdentifierNode Name
+      ) : Node(Position) {
+        public override NodeKind Kind => NodeKind.ParameterNode;
+        public Signature.Signature Signature { get; } = Signature;
+        public LocationNode.IdentifierNode Name { get; } = Name;
+      }
+      public override NodeKind Kind => NodeKind.FunctionLiteralNode;
+      public LocationNode.IdentifierNode Name { get; }
+      public Signature.Signature ReturnType { get; }
+      public ParameterNode[] Parameters { get; }
+      public StatementNode.BlockNode Body { get; }
+      public FunctionNode(
+        Position Position,
+        LocationNode.IdentifierNode Name,
+        Signature.Signature ReturnType,
+        ParameterNode[] Parameters,
+        StatementNode.BlockNode Body
+      ) : base(Position) {
+        this.Name = Name;
+        this.ReturnType = ReturnType;
+        this.Parameters = Parameters;
+        this.Body = Body;
+      }
+    }
   }
-  /// <summary>
-  /// The supertype for all location nodes, we use a supertype to ensure strict type checking. 
-  /// A location node represents any access to a variable, field or array.
-  /// </summary>
-  [JsonDerivedType(typeof(ThisNode), "ThisLocation")]
-  [JsonDerivedType(typeof(IdentifierAccessNode), "IdentifierLocation")]
-  [JsonDerivedType(typeof(MemberAccessNode), "MemberLocation")]
-  [JsonDerivedType(typeof(ArrayAccessNode), "ArrayLocation")]
+  #endregion
+
+  // --- Locations ---
+  #region Locations
+  /// <summary>The supertype for all location nodes.</summary>
+  [JsonDerivedType(typeof(LocationNode.ArrayNode), "ArrayLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.MemberNode), "MemberLocationNode")]
+  [JsonDerivedType(typeof(LocationNode.IdentifierNode), "IdentifierLocationNode")]
   public abstract record LocationNode : Node {
+    public abstract bool IsPrimitive { get; }
     protected LocationNode(Position position) : base(position) { }
-    /// <summary>A location node representing a `this` access.</summary>
-    public record ThisNode(Position Position) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.ThisLocation;
-    };
-    /// <summary>
-    /// An identifier node, is used to represent a simple variable access of the form `x`.
-    /// </summary>
-    public record IdentifierAccessNode(Position Position, string Name) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.IdentifierLocation;
-      public string Name { get; } = Name;
-    };
-    /// <summary>
-    /// A member access node, is used to represent a member access of the form `x.y` where `x` is the root and `y` is the member.
-    /// </summary>
-    public record MemberAccessNode(
-      Position Position,
-      LocationNode Root,
-      string Member
-    ) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.MemberLocation;
-      public LocationNode Root { get; } = Root;
-      public string Member { get; } = Member;
-    };
-    /// <summary>
-    /// An array access node, is used to represent an array access of the form `x[y]` where `x` is the root and `y` is the index.
-    /// </summary>
-    public record ArrayAccessNode(
-      Position Position,
-      LocationNode Root,
-      ExpressionNode IndexExpr
-    ) : LocationNode(Position) {
-      public override NodeKind Kind => NodeKind.ArrayLocation;
+    /// <summary>An array location, `<root>[<index>]`.</summary>
+    public sealed record ArrayNode(Position Position, LocationNode Root, ExpressionNode IndexExpr) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.ArrayLocationNode;
+      public override bool IsPrimitive => Root.IsPrimitive;
       public LocationNode Root { get; } = Root;
       public ExpressionNode IndexExpr { get; } = IndexExpr;
+      public override string ToString() => $"{Root}[<indexExpr>]";
+    };
+    /// <summary>A member location, `<root>.<member>`.</summary>
+    public sealed record MemberNode(Position Position, LocationNode Root, string Member) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.MemberLocationNode;
+      public override bool IsPrimitive => Root.IsPrimitive;
+      public LocationNode Root { get; } = Root;
+      public string Member { get; } = Member;
+      public override string ToString() => $"{Root}.{Member}";
+    };
+    /// <summary>An identifier location, `<name>`.</summary>
+    public sealed record IdentifierNode(Position Position, string Name) : LocationNode(Position) {
+      public override NodeKind Kind => NodeKind.IdentifierLocationNode;
+      public override bool IsPrimitive => this.Name.StartsWith("@");
+      public string Name { get; } = Name;
+      public override string ToString() => Name;
     };
   }
+  #endregion
 }

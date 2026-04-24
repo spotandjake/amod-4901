@@ -1,0 +1,108 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: LoopInstructionNode,
+            Body: {
+              Kind: BlockInstructionNode,
+              Instructions: [
+                {
+                  Kind: BindInstructionNode,
+                  ID: {
+                    Name: __anf_temp,
+                    IsGlobal: false,
+                    ID: 3
+                  },
+                  SimpleExpression: {
+                    Kind: BinopExpressionNode,
+                    Lhs: {
+                      Kind: ConstantImmediate,
+                      Value: {
+                        Kind: IntegerLiteralNode,
+                        Value: 1,
+                        LiteralType: {}
+                      },
+                      Signature: {}
+                    },
+                    Operator: Equal,
+                    Rhs: {
+                      Kind: ConstantImmediate,
+                      Value: {
+                        Kind: IntegerLiteralNode,
+                        LiteralType: {}
+                      },
+                      Signature: {}
+                    },
+                    ExpressionType: {
+                      Type: Boolean
+                    }
+                  }
+                },
+                {
+                  Kind: IfInstructionNode,
+                  Condition: {
+                    Kind: LocationImmediate,
+                    Location: {
+                      Kind: SymbolLocationNode,
+                      ID: {
+                        Name: __anf_temp,
+                        IsGlobal: false,
+                        ID: 3
+                      },
+                      LocationType: {
+                        Type: Boolean
+                      }
+                    },
+                    Signature: {
+                      Type: Boolean
+                    }
+                  },
+                  TrueBranch: {
+                    Kind: BlockInstructionNode,
+                    Instructions: [
+                      {
+                        Kind: BindInstructionNode,
+                        ID: {
+                          Name: y,
+                          IsGlobal: false,
+                          ID: 1
+                        },
+                        SimpleExpression: {
+                          Kind: ImmExpressionNode,
+                          Imm: {
+                            Kind: ConstantImmediate,
+                            Value: {
+                              Kind: IntegerLiteralNode,
+                              LiteralType: {}
+                            },
+                            Signature: {}
+                          },
+                          ExpressionType: {}
+                        }
+                      },
+                      {
+                        Kind: BreakInstructionNode
+                      }
+                    ]
+                  },
+                  FalseBranch: {
+                    Kind: BreakInstructionNode
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      Signature: {}
+    }
+  ]
+}

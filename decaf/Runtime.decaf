@@ -1,0 +1,206 @@
+// This is the runtime for decaf, it is a simple module that includes,
+// some core functionality required by user programs.
+module Runtime {
+  // This is a WASI import that enables printing similar to posix fd_write
+  import wasm fd_write: (int, int, int, int) => int from "wasi_snapshot_preview1";
+
+  // --- Allocation ---
+  // This implements an extremely simple free list allocator, with no de-fragmentation schedule
+  let HEADER_SIZE: int = 4 * 2; // size | next | ...data
+  let freeList: int = 0;
+  let pageSize: int = 65536;
+  let malloc = (byteSize: int): int => {
+    // Align the byteSize to 4 bytes
+    let size: int = (byteSize + 3) & ~3;
+    // Setup for malloc
+    let prev: int = 0;
+    let curr: int = freeList;
+    // first-fit search
+    while (curr != 0) {
+      let blockSize: int = @wasm.i32.load(curr);
+      if (blockSize >= size) {
+        let next: int = @wasm.i32.load(curr + 4);
+        // remove from free list
+        if (prev == 0) {
+          freeList = next;
+        } else {
+          @wasm.i32.store(prev + 4, next);
+        }
+        return curr + HEADER_SIZE;
+      }
+      prev = curr;
+      curr = @wasm.i32.load(curr + 4);
+    };
+    // fallback: grow heap (very naive)
+    // TODO: Support growth when allocating more than a page
+    let ptr: int = @wasm.memory.size() * pageSize;
+    @wasm.memory.grow(1);
+    @wasm.i32.store(ptr, size);
+    return ptr + HEADER_SIZE;
+  };
+  // A function similar to malloc but clears the block to 0
+  let calloc = (byteSize: int): int => {
+    // Malloc the block
+    let pointer: int = malloc(byteSize);
+    // Zero the region in case we used it before
+    @wasm.memory.fill(pointer, 0, byteSize);
+    // Return the block pointer
+    return pointer;
+  };
+  // free
+  let free = (ptr: int): void => {
+    if (ptr == 0) return;
+    let block: int = ptr - HEADER_SIZE;
+    // push to front of free list
+    @wasm.i32.store(block + 4, freeList);
+    freeList = block;
+  };
+  // --- Primitive Data Type Allocation ---
+  let allocateArray = (length: int): int => {
+    if (length < 0) @wasm.unreachable();
+    // Compute the byteSize
+    let byteSize: int = 4 + (4 * length);
+    // Allocate the block
+    let pointer: int = calloc(byteSize);
+    // Store the length
+    @wasm.i32.store(pointer, length);
+    // Return the pointer
+    return pointer;
+  };
+  let allocateString = (length: int): int => {
+    // Compute the byteSize
+    let byteSize: int = length + 4;
+    // Allocate the block
+    let pointer: int = malloc(byteSize);
+    // Store the length
+    @wasm.i32.store(pointer, length);
+    // Return the pointer
+    return pointer;
+  };
+  // --- Equality ---
+  let stringEqual = (str1: string, str2: string): boolean => {
+    // Get the pointers
+    let strPtr1: int = @getPointer(str1);
+    let strPtr2: int = @getPointer(str2);
+    // Compare the lengths
+    let strLen1: int = @wasm.i32.load(strPtr1);
+    let strLen2: int = @wasm.i32.load(strPtr2);
+    strPtr1 += 4;
+    strPtr2 += 4;
+    if (strLen1 != strLen2) return false;
+    // Compare the characters
+    let ptr: int = 0;
+    while (ptr < strLen1) {
+      let char1: int = @wasm.i32.load8_s(strPtr1 + ptr);
+      let char2: int = @wasm.i32.load8_s(strPtr2 + ptr);
+      if (char1 != char2) return false;
+      ptr += 1;
+    };
+    return true;
+  };
+  let stringNotEqual = (str1: string, str2: string): boolean => {
+    return !stringEqual(str1, str2);
+  };
+  // --- General ---
+  let stringConcat = (str1: string, str2: string): string => {
+    // Get the string pointers
+    let strPtr1: int = @getPointer(str1);
+    let strPtr2: int = @getPointer(str2);
+    // Get the string length
+    let strLen1: int = @wasm.i32.load(strPtr1);
+    let strLen2: int = @wasm.i32.load(strPtr2);
+    // Compute the finished length
+    let strLen: int = strLen1 + strLen2;
+    // Allocate a string
+    let strPtr: int = malloc(strLen);
+    // Write the string data
+    @wasm.i32.store(strPtr, strLen);
+    @wasm.memory.copy(strPtr + 4, strPtr1 + 4, strLen1);
+    @wasm.memory.copy(strPtr + 4 + strLen1, strPtr2 + 4, strLen2);
+    // Return the string
+    return @cast.ptrToString(strPtr);
+  };
+  let panic = (errorMsg: string): void => {
+    // Setup
+    let iov: int = malloc(12); // <ptr to str> | <len of str> | <bytes written out>
+    // Get the pointer for the string
+    let ptr: int = @getPointer(errorMsg);
+    // Create our iovec (<ptr>, <len>)
+    @wasm.i32.store(iov, ptr + 4); // ptr
+    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
+    // Write to stderr
+    fd_write(2, iov, 1, iov + 8);
+    // Crash the program with a trap
+    @wasm.unreachable();
+  };
+  let itoa = (num: int): string => {
+    let isNegative: boolean = false;
+    let digitCount: int = 0;
+    let n: int = num;
+
+    if (num == 0) return "0";
+    
+    if (num < 0) {
+      isNegative = true;
+      digitCount += 1;
+      n *= -1;
+    };
+    // Count the digits
+    let tmp: int = n;
+    while (tmp != 0) {
+      tmp /= 10;
+      digitCount += 1;
+    };
+    // Allocate a block that is guaranteed to hold our string
+    let str: int = malloc(4 + digitCount);
+    // Write the length
+    @wasm.i32.store(str, digitCount);
+    digitCount -= 1;
+    // Write out negative sign
+    if (isNegative) @wasm.i32.store8(str + 4, @getPointer('-'));
+    // Extract the digits
+    while (n != 0) {
+      let digit: int = @wasm.i32.remS(n, 10);
+      n /= 10;
+      @wasm.i32.store8(str + 4 + digitCount, @getPointer('0') + digit);
+      digitCount -= 1;
+    };
+    // Cast to a str
+    return @cast.ptrToString(str);
+  };
+  let print = (str: string): void => {
+    // Setup
+    let iov: int = malloc(12); // <ptr to str> | <len of str> | <bytes written out>
+    // Get the pointer for the string
+    let ptr: int = @getPointer(str);
+    // Create our iovec (<ptr>, <len>)
+    @wasm.i32.store(iov, ptr + 4); // ptr
+    @wasm.i32.store(iov + 4, @wasm.i32.load(ptr)); // length
+    // Write
+    fd_write(1, iov, 1, iov + 8);
+    // Cleanup
+    free(iov);
+  };
+  let printInt = (num: int): void => {
+    // Setup
+    let str: string = itoa(num);
+    let newline: string = "\n";
+    // Print
+    Runtime.print(str);
+    Runtime.print(newline);
+    // Cleanup
+    free(@getPointer(str));
+    free(@getPointer(newline));
+  };
+  let printBool = (val: boolean): void => {
+    if (val) {
+      let trueStr: string = "true";
+      Runtime.print(trueStr);
+      free(@getPointer(trueStr));
+    } else {
+      let falseStr: string = "false";
+      Runtime.print(falseStr);
+      free(@getPointer(falseStr));
+    }
+  };
+}

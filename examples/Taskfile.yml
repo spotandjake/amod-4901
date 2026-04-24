@@ -1,0 +1,54 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  all:
+    desc: Runs all of the examples.
+    cmds:
+      - task: HelloWorld
+      - task: Loops
+      - task: Fibonacci
+      - task: Functions
+      - task: Random
+  HelloWorld:
+    desc: Runs the HelloWorld.decaf examples. 
+    cmds:
+      # Compile the file
+      - dotnet run --project=../decaf -- ./HelloWorld.decaf --debug --wat ./HelloWorld.wat
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references HelloWorld.wat
+  Loops:
+    desc: Runs the Loops.decaf examples. 
+    cmds:
+      # Compile the file
+      - dotnet run --project=../decaf -- ./Loops.decaf --debug --wat ./Loops.wat
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references Loops.wat
+  Fibonacci:
+    desc: Runs the Fibonacci.decaf examples. 
+    cmds:
+      # Compile the file
+      - dotnet run --project=../decaf -- ./Fibonacci.decaf --debug --wat ./Fibonacci.wat
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references Fibonacci.wat
+  Functions:
+    desc: Runs the Fibonacci.decaf examples. 
+    cmds:
+      # Compile the file
+      - dotnet run --project=../decaf -- ./Functions.decaf --debug --wat ./Functions.wat
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references Functions.wat
+  Random:
+    desc: Runs the Random.decaf examples. 
+    cmds:
+      # Compile the file
+      - dotnet run --project=../decaf -- ./Random.decaf --debug --wat ./Random.wat
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references Random.wat
+  clean:
+    desc: Cleans all the artifact files
+    cmds:
+      - rm -rf *.wasm
+      - rm -rf *.wat
+

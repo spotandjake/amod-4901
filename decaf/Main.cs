@@ -1,122 +1,92 @@
-using System;
-using System.Collections.Generic;
-using Antlr4.Runtime;
-using CommandLine;
-using System.Text.Json;
-using System.Data;
+/// <summary>
+/// This is the main entry point for the Decaf Command Line Interface (CLI).
+/// 
+/// It handles the user interactions and calls the appropriate functions from the compiler and error handling modules.
+/// </summary>
+namespace Decaf.CLI {
+  using System;
+  using System.ComponentModel;
+  using System.IO;
+  using System.Threading;
 
-using ParseTree = Decaf.IR.ParseTree;
-using TypedTree = Decaf.IR.TypedTree;
-using AnfTree = Decaf.IR.AnfTree;
-using Decaf.Utils;
-using Decaf.Frontend;
-using Decaf.MiddleEnd;
-using Decaf.MiddleEnd.TypeChecker;
-using Decaf.Backend;
-using Antlr4.Runtime.Misc;
-using Decaf.Utils.Errors;
+  using Spectre.Console;
+  using Spectre.Console.Cli;
 
-namespace Compiler {
-  public class Compiler {
-#nullable enable
-    public static DecafLexer LexString(string source, string? inputFileName) {
-      // Create Input Stream
-      AntlrInputStream inputStream = new AntlrInputStream(source) {
-        name = inputFileName ?? "<unknown file>"
-      };
-      // Create Lexer Instance
-      DecafLexer lexer = new DecafLexer(inputStream);
-      lexer.RemoveErrorListeners();
-      lexer.AddErrorListener(LexerErrorListener.Instance);
-      return lexer;
-    }
-#nullable enable
-    public static ParseTree.ProgramNode ParseTokenStream(CommonTokenStream tokenStream) {
-      DecafParser parser = new DecafParser(tokenStream);
-      parser.RemoveErrorListeners();
-      parser.AddErrorListener(ParserErrorListener.Instance);
-      ParseTree.ProgramNode program = ParseTreeMapper.MapProgramContext(parser.program());
-      return program;
-    }
-    public static ParseTree.ProgramNode SemanticAnalysis(ParseTree.ProgramNode program) {
-      var scopedTree = ScopeMapper.MapProgramNode(program, new Scope<bool>(null));
-      SemanticChecker.CheckProgramNode(scopedTree);
-      return scopedTree;
-    }
-    public static TypedTree.ProgramNode TypeChecking(ParseTree.ProgramNode program) {
-      return TypeChecker.TypeProgramNode(program);
-    }
-    public static AnfTree.ProgramNode AnfMapping(TypedTree.ProgramNode program) {
-      return AnfMapper.FromProgramNode(program);
-    }
-#nullable enable
-    public static void CompileString(string source, string? inputFileName) {
-      // Lexing
-      var lexer = LexString(source, inputFileName);
-      var tokenStream = new CommonTokenStream(lexer);
-      // NOTE: For debugging lexer token stream
-      // while (true) {
-      //   IToken token = lexer.NextToken();
-      //   if (token.Type == TokenConstants.EOF)
-      //     break;
-      //   Console.WriteLine(
-      //     $"Token Type: {DecafLexer.ruleNames[token.Type - 1]}, Text: '{token.Text}'"
-      //   );
-      // }
-      // Parsing
-      var program = ParseTokenStream(tokenStream);
-      // Semantic Analysis
-      var scopedProgram = SemanticAnalysis(program);
-      // TypeChecking
-      var TypeCheckingProgram = TypeChecking(scopedProgram);
-      // Anf Conversion
-      var anfProgram = AnfMapping(TypeCheckingProgram);
-      // TODO: Code Generation
-      string json = JsonSerializer.Serialize(anfProgram, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true });
-      Console.WriteLine(json);
-    }
+  using Decaf.Compiler;
+  using Decaf.Utils.Errors;
+  using Decaf.Utils;
+  // The settings for our CLI application.
+  public class Settings : CommandSettings {
+    [CommandArgument(0, "<input file>")]
+    [Description("The input file to be processed.")]
+    public required string InputFilePath { get; init; }
+
+    [CommandOption("-d|--debug", isRequired: false)]
+    [Description("Weather we want to debug the compiler while compiling.")]
+    [DefaultValue(false)]
+    public bool Debug { get; init; }
+
+    [CommandOption("--use-start-section", isRequired: false)]
+    [Description("Weather to use the wasm start section.")]
+    [DefaultValue(false)]
+    public bool UseStartSection { get; init; }
+
+    [CommandOption("--wat", isRequired: false)]
+    [Description("Whether we want to emit the wat output of the compiled module, and the file to write it to.")]
+    [DefaultValue(null)]
+    public string WatOutputFile { get; init; }
   }
-}
-
-namespace CLI {
-  public class Program {
-    class Options {
-      [Value(0, MetaName = "input file",
-            HelpText = "Input file to be processed.",
-            Required = true)]
-      public required string FileName { get; set; }
-      [Option('o', "output", Required = false, HelpText = "Output filename.")]
-      public string? output { get; set; }
-      [Option("debug", Required = false, HelpText = "Weather to run in debug mode or not.")]
-      public bool Debug { get; set; } = false;
-    }
-
-    static void Main(string[] args) {
-      CommandLine.Parser.Default.ParseArguments<Options>(args)
-        .WithParsed(RunOptions)
-        .WithNotParsed(HandleCommandLineErrors);
-    }
-    static void RunOptions(Options opts) {
-      // Get file absolute
-      string absPath = System.IO.Path.GetFullPath(opts.FileName);
-      string relPath = System.IO.Path.GetRelativePath(System.IO.Directory.GetCurrentDirectory(), absPath);
-      if (!System.IO.File.Exists(absPath)) {
-        Console.WriteLine($"File not found: {absPath}");
-        return;
+  // Our default command for the CLI application.
+  public class ProgramCommand : Command<Settings> {
+    protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation) {
+      // Get the absolute path of the input file
+      string absPath = Path.GetFullPath(settings.InputFilePath);
+      string relPath = Path.GetRelativePath(Directory.GetCurrentDirectory(), absPath);
+      // The file does not exist
+      if (!File.Exists(absPath)) {
+        AnsiConsole.MarkupLine($"[red]Error:[/] File not found: [yellow]{relPath}[/]");
+        return -1;
       }
-      // Read file content
-      string source = System.IO.File.ReadAllText(absPath);
-      // Compile
+      // Read the file source content
+      string source = File.ReadAllText(absPath);
+      // Compile the source content
       try {
-        // TODO: Write output to opts.output if specified
-        Compiler.Compiler.CompileString(source, relPath);
+        // Create our config
+        var config = new CompilationConfig {
+          // Global config
+          UseStartSection = settings.UseStartSection,
+          // Related to modules
+          BundleRuntime = true,
+          SkipOptimizationPasses = []
+        };
+        // Compile our program
+        var wasmModule = Compiler.CompileString(config, source, relPath);
+        // Write the file output if specified in the settings
+        if (settings.WatOutputFile != null) {
+          File.WriteAllText(settings.WatOutputFile, wasmModule.ToWat());
+        }
+        else {
+          throw new NotImplementedException("You must use `--wat` as we currently don't support wasm outputs");
+        }
       }
       catch (Exception e) {
-        ErrorHandler.HandleError(opts.Debug, e);
+        // Handle any errors that occur during compilation
+        bool rethrow = ErrorHandler.HandleError(settings.Debug, e);
+        // Rethrow the exception (NOTE: using throw here rethrows the original exception preserving the stack trace)
+        if (rethrow) throw;
+        return -1;
       }
+      return 0;
     }
-    static void HandleCommandLineErrors(IEnumerable<Error> errs) {
-      // TODO: Handle Command Line Errors
+  }
+  // The main entry point to our program.
+  class Program {
+    static int Main(string[] args) {
+      // Use SpectreConsole.CLI for our command line options
+      var app = new CommandApp<ProgramCommand>();
+      // Enable Backtraces on exceptions
+      app.Configure(config => config.PropagateExceptions());
+      return app.Run(args);
     }
   }
 }

@@ -1,0 +1,18 @@
+module Program {
+  let arrLen: int = 10;
+  let arr: int[] = new int[arrLen];
+  // Fill our array
+  let i: int = 0;
+  while (i < arrLen) {
+    arr[i] = i;
+    i += 1;
+  };
+  // Print our array
+  let j: int = 0;
+  while (j < arrLen) {
+    Runtime.printInt(arr[j]);
+    j += 1;
+  };
+  // Cleanup
+  Runtime.free(@getPointer(arr));
+}

@@ -15,7 +15,16 @@ tasks:
     desc: Builds the compiler and runs a local ./test.decaf file.
     deps:
       - build
-    cmd: dotnet run --project=decaf -- ./example.decaf --debug
+    cmds:
+      - dotnet run --project=decaf -- ./example.decaf --debug --wat ./example.wat
+      # Convert the wat to wasm
+      - wasm-tools parse example.wat -o example.wasm
+      # Reprint the wasm with offsets
+      - wasm-tools print example.wasm -p -f --indent 2 > example.wat
+      # Validate the wasm
+      - wasm-tools validate example.wasm
+      # Run the wasm
+      - wasmtime run --wasm reference-types --wasm function-references example.wasm
   # Library Commands
   test:
     desc: Runs the compiler test suite, options can be passed through `task test -- <opts>`

@@ -1,0 +1,97 @@
+﻿{
+  Modules: [
+    {
+      Kind: ModuleNode,
+      ID: {
+        Name: Program,
+        IsGlobal: true
+      },
+      Body: {
+        Kind: BlockInstructionNode,
+        Instructions: [
+          {
+            Kind: BlockInstructionNode,
+            Instructions: [
+              {
+                Kind: BindInstructionNode,
+                ID: {
+                  Name: __anf_temp,
+                  IsGlobal: false,
+                  ID: 2
+                },
+                SimpleExpression: {
+                  Kind: BinopExpressionNode,
+                  Lhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteralNode,
+                      Value: 1,
+                      LiteralType: {}
+                    },
+                    Signature: {}
+                  },
+                  Rhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteralNode,
+                      Value: 2,
+                      LiteralType: {}
+                    },
+                    Signature: {}
+                  },
+                  ExpressionType: {}
+                }
+              },
+              {
+                Kind: BindInstructionNode,
+                ID: {
+                  Name: x,
+                  IsGlobal: true,
+                  ID: 1
+                },
+                SimpleExpression: {
+                  Kind: BinopExpressionNode,
+                  Lhs: {
+                    Kind: LocationImmediate,
+                    Location: {
+                      Kind: SymbolLocationNode,
+                      ID: {
+                        Name: __anf_temp,
+                        IsGlobal: false,
+                        ID: 2
+                      },
+                      LocationType: {}
+                    },
+                    Signature: {}
+                  },
+                  Rhs: {
+                    Kind: ConstantImmediate,
+                    Value: {
+                      Kind: IntegerLiteralNode,
+                      Value: 3,
+                      LiteralType: {}
+                    },
+                    Signature: {}
+                  },
+                  ExpressionType: {}
+                }
+              }
+            ]
+          }
+        ]
+      },
+      Signature: {
+        Members: {
+          Decaf.Utils.Symbol: {}
+        },
+        Resolutions: {
+          x: {
+            Name: x,
+            IsGlobal: true,
+            ID: 1
+          }
+        }
+      }
+    }
+  ]
+}
