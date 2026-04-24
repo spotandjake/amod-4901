@@ -6,6 +6,8 @@ All of the examples can be run using `task all`.
 
 ## Hello World
 
+![Hello World](HelloWorld.png)
+
 The first example is the hello world program, which like any other programming language, is the simplest program you can effectively write. It demonstrates how to print a message to the console. This can be run using `task HelloWorld`.
 
 ## Loops
